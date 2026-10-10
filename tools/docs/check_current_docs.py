@@ -186,7 +186,7 @@ EXACT_SECTION_CONTENT = {
         "mss-shop.md",
     },
     Path("docs/docs/guide"): {"index.md", "faq.md"},
-    Path("docs/docs/coding"): {"first-contribution.md"},
+    Path("docs/docs/coding"): {"first-contribution.md", "pull-request-checks.md"},
     Path("docs/docs/devops"): {"security-policy-faq.md"},
     Path("docs/docs/operations"): set(),
 }
@@ -1162,7 +1162,7 @@ def package_and_container_contract_errors(
     if dockerfile.is_file():
         text = dockerfile.read_text(encoding="utf-8")
         required_bases = (
-            r"^FROM --platform=\$BUILDPLATFORM golang:1\.26\.6-alpine@sha256:[a-f0-9]{64} AS backend$",
+            r"^FROM --platform=\$BUILDPLATFORM golang:1\.26\.9-alpine@sha256:[a-f0-9]{64} AS backend$",
             r"^FROM --platform=\$BUILDPLATFORM node:24\.19\.0-bookworm-slim@sha256:[a-f0-9]{64} AS frontend$",
             r"^FROM alpine:3\.24\.1@sha256:[a-f0-9]{64}$",
         )

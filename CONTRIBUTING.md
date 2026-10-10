@@ -212,4 +212,4 @@ Pull Request 必须以 `main` 为目标，并说明：
 仓库迁移至 `mss-boot-sys/mss-boot-admin` 后，所有 PR 统一通过 `PR Checks`，
 按变更范围执行测试、安全扫描与构建，并由 `pr-ci` 汇总为唯一必需结果。
 失败、取消或非预期跳过都会阻止通过。完整发布验证继续由原有专用流程负责。
-详见 [PR 检查与安全基线](docs/docs/operations/ci.md)。
+详见 [PR 检查与安全基线](docs/docs/coding/pull-request-checks.md)。
