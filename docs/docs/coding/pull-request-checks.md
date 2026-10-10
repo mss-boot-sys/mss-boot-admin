@@ -8,6 +8,28 @@ Development uses `mss-boot-sys/mss-boot-admin`. Go import paths and the
 `@mss-boot-io/admin-web` package identity remain compatible with existing consumers.
 
 Every PR to `main` starts **PR Checks** (`.github/workflows/pr-checks.yml`).
+The first job waits for the repository owner `mss-boot-sys` to approve the
+`pr-ci-approval` environment before checking out or executing PR code. Each new
+commit starts a new run requiring approval and cancels the previous run.
+The owner can approve their own PR run. Rejection or cancellation fails `pr-ci`
+without checking out PR code in its failure-reporting job.
+
+This gate uses [GitHub required reviewers](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments),
+configured under **Settings → Environments → pr-ci-approval**: required reviewer
+`mss-boot-sys`, **Prevent self-review** off, administrator bypass off, no secrets
+and no branch restriction (PR merge refs must be allowed). GitHub displays this
+CI approval through its environment review UI; the job performs no deployment.
+Environment protections are repository settings and cannot be created by the
+workflow YAML alone. Keep them configured when moving or recreating the repository.
+
+Under **Settings → Actions → General**, require workflow approval for **all
+external contributors** as well. This platform check prevents a fork from
+removing the YAML environment gate and executing its modified workflow without
+approval. The environment gate also covers PRs created inside this repository.
+After enabling Actions, open the run, inspect its exact commit and choose
+**Review deployments → pr-ci-approval → Approve and deploy** to start checks,
+or reject it to stop execution. Never approve runs automatically through a bot.
+
 `tools/ci/pr_checks.py` reads the merge-base diff once, including both sides of
 renames. Mixed changes run the union of their component checks.
 The local PR contract retains the former guard's maximum of 140 changed paths

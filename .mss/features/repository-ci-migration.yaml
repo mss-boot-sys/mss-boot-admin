@@ -33,6 +33,18 @@ spec:
     - Go tests and vulnerability scans share setup per affected module; CodeQL runs only affected languages; web and docs use frozen lockfiles.
     - Documentation contract and workflow policy validation are local and require no legacy organization workflow.
     - Post-merge, manual diagnostics and exact merged-main release gates retain their separate responsibilities.
+  - id: pr-approval
+    title: Repository owner approval before PR execution
+    description: Every PR run waits for mss-boot-sys to approve the pr-ci-approval environment before the planner checks out or executes PR code.
+    priority: must
+    actor: contributor
+    module: ci-governance
+    rules:
+    - The repository environment requires mss-boot-sys as reviewer, permits that owner to approve their own runs, and disables administrator bypass.
+    - New commits create new runs requiring approval and cancel older runs. The gate must never approve itself.
+    - Rejected, cancelled or failed plans fail pr-ci without checking out or executing PR code in the aggregate job.
+    - All external contributors also require GitHub fork workflow approval so a fork cannot remove the environment guard before its first execution.
+    - Actions remains disabled until the owner enables it; no workflow run is approved during this repair.
   - id: migration-security
     title: Migrated repository and patched baselines
     description: Keep Actions disabled for the operator to enable after review; prepare the new main PR gate and repair reproducible dependency failures.
@@ -68,6 +80,14 @@ spec:
     evidence:
     - type: manual
       value: Record the exact PR commit and local validation now. Hosted validation and main protection setup follow only after the operator enables Actions.
+  - id: approval-gate
+    requirement: pr-approval
+    statement: Local governance tests enforce approval dependencies, and repository settings read-back records the required owner, bypass restriction and external contributor approval policy. A hosted approve/reject check follows operator enablement.
+    level: integration
+    required: true
+    evidence:
+    - type: command
+      value: python3 -m unittest tools.release.test_workflow_governance
   validation:
     changed: go run ./cmd/mss verify --changed
     all: go run ./cmd/mss verify --all

@@ -190,6 +190,24 @@ class WorkflowGovernanceTest(unittest.TestCase):
                 self.assertNotIn("mss-boot-io/", job.get("uses", ""), name)
                 self.assertNotIn("continue-on-error", job, name)
 
+    def test_pr_code_cannot_run_before_owner_approval(self):
+        workflow = self.workflows["pr-checks.yml"]
+        jobs = workflow["jobs"]
+        self.assertEqual(jobs["plan"]["environment"], "pr-ci-approval")
+        self.assertTrue(workflow["concurrency"]["cancel-in-progress"])
+        self.assertIn("github.event.pull_request.number", workflow["concurrency"]["group"])
+        for name in ("go", "web", "docs", "codeql"):
+            self.assertEqual(jobs[name]["needs"], "plan")
+            self.assertNotIn("always()", jobs[name]["if"])
+        steps = jobs["required"]["steps"]
+        self.assertEqual(steps[0]["if"], "${{ needs.plan.result != 'success' }}")
+        self.assertIn("exit 1", steps[0]["run"])
+        self.assertNotIn("uses", steps[0])
+        self.assertTrue(steps[1]["uses"].startswith("actions/checkout@"))
+        for step in steps[1:]:
+            self.assertNotIn("always()", step.get("if", ""))
+            self.assertNotIn("continue-on-error", step)
+
     def test_foundation_compatibility_is_a_single_local_gate(self):
         agent = self.workflows["agent-native-ci.yml"]
         root = self.workflows["release.yml"]

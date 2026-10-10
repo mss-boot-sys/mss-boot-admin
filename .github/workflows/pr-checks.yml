@@ -17,8 +17,11 @@ env:
 
 jobs:
   plan:
+    name: Approve PR checks and plan
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    # Required reviewer is configured in repository settings, not in YAML.
+    environment: pr-ci-approval
     outputs:
       plan: ${{ steps.plan.outputs.plan }}
     steps:
@@ -173,6 +176,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - name: Reject an unapproved or failed plan
+        if: ${{ needs.plan.result != 'success' }}
+        run: |
+          echo "PR approval and planning must succeed before checks can pass." >&2
+          exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
