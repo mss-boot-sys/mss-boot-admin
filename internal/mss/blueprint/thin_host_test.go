@@ -203,8 +203,8 @@ func TestApplicationTemplatePinsOneFrontendRuntimeWithoutPatches(t *testing.T) {
 	if document.Pnpm.PatchedDependencies != nil {
 		t.Fatalf("Thin Host must not inherit package patches: %#v", document.Pnpm.PatchedDependencies)
 	}
-	if document.DevDependencies["vite"] != "8.2.2" {
-		t.Fatalf("Thin Host test Vite = %q, want 8.2.2", document.DevDependencies["vite"])
+	if document.DevDependencies["vite"] != "8.3.4" {
+		t.Fatalf("Thin Host test Vite = %q, want 8.3.4", document.DevDependencies["vite"])
 	}
 }
 

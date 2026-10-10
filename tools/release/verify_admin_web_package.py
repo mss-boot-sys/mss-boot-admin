@@ -58,7 +58,6 @@ ADMIN_WEB_BUILD_ONLY_DEPENDENCIES = {
     "immer": ["8.0.4"],
     "node-fetch": ["1.7.3"],
     "path-to-regexp": ["1.7.0"],
-    "vite": ["4.5.2"],
 }
 ADMIN_WEB_DEPENDENCY_CLASSES = {
     "runtime": ADMIN_WEB_RUNTIME_DEPENDENCIES,

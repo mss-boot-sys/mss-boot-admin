@@ -2,28 +2,6 @@
   "schemaVersion": 1,
   "acceptances": [
     {
-      "advisory": "GHSA-c27g-q93r-2cwf",
-      "package": "vite",
-      "severity": "high",
-      "patchedVersions": ">=5.4.9",
-      "scopes": [
-        "web/antd-v6"
-      ],
-      "expiresOn": "2026-11-08",
-      "reason": "Umi Max 4.7.23 pins Vite 4 as an inactive alternative bundler. Development uses Utoopack, release uses Webpack, and the release bundle gate rejects Vite at runtime; overriding Umi across the Vite major boundary is not compatible."
-    },
-    {
-      "advisory": "GHSA-fx2h-pf6j-xcff",
-      "package": "vite",
-      "severity": "high",
-      "patchedVersions": ">=6.4.3",
-      "scopes": [
-        "web/antd-v6"
-      ],
-      "expiresOn": "2026-11-08",
-      "reason": "Umi Max 4.7.23 pins Vite 4 as an inactive alternative bundler. Development uses Utoopack, release uses Webpack, and the release bundle gate rejects Vite at runtime; overriding Umi across the Vite major boundary is not compatible."
-    },
-    {
       "advisory": "GHSA-r683-j2x4-v87g",
       "package": "node-fetch",
       "severity": "high",

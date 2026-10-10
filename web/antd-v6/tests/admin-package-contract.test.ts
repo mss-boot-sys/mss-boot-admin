@@ -103,7 +103,7 @@ describe('Admin web package contract', () => {
     for (const versions of Object.values(buildOnlyDependencies)) {
       expect(versions).toEqual([...new Set(versions)].sort());
     }
-    expect(packageManifest.dependencies.vite).toBe('8.2.2');
+    expect(packageManifest.dependencies.vite).toBe('8.3.4');
 
     const businessTypes = readFileSync(
       resolve(import.meta.dirname, '../package/business.d.ts'),
