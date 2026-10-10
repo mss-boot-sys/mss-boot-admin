@@ -451,3 +451,55 @@ func TestIssuerDiscoveryAndAuthorizationPOST(t *testing.T) {
 	require.NotEmpty(t, queryLocation(t, w).Get("code"))
 	require.Equal(t, 400, f.call("POST", basePath+"/authorize?client_id=duplicate", v.Encode(), map[string]string{"Content-Type": "application/x-www-form-urlencoded"}, f.cookies).Code)
 }
+
+func TestProtocolRejectsAmbiguousCredentialTransport(t *testing.T) {
+	f := setup(t)
+	f.login()
+	v, verifier := f.authValues()
+	code := queryLocation(t, f.authorize(v)).Get("code")
+	form := url.Values{"grant_type": {"authorization_code"}, "code": {code}, "redirect_uri": {f.client.RedirectURIs[0]}, "code_verifier": {verifier}}
+	basic := "Basic " + base64.StdEncoding.EncodeToString([]byte(f.client.ID+":"+f.secret))
+	for _, test := range []struct {
+		name, path, body string
+		authorizations   []string
+	}{
+		{"query grants", basePath + "/token?" + form.Encode(), "", []string{basic}},
+		{"split query and body", basePath + "/token?code=" + code, "grant_type=authorization_code", []string{basic}},
+		{"duplicate authentication", basePath + "/token", form.Encode(), []string{basic, basic}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("POST", "https://id.example.test"+test.path, strings.NewReader(test.body))
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			r.Header["Authorization"] = test.authorizations
+			w := httptest.NewRecorder()
+			f.router.ServeHTTP(w, r)
+			require.Equal(t, 400, w.Code)
+			require.Equal(t, "invalid_request", bodyJSON(t, w)["error"])
+		})
+	}
+	// Rejected transports must not consume the otherwise valid grant.
+	w := f.exchange(code, verifier, nil, f.secret)
+	require.Equal(t, 200, w.Code)
+	access := bodyJSON(t, w)["access_token"].(string)
+	for _, test := range []struct {
+		name, body string
+		duplicate  bool
+	}{
+		{"body bearer", "access_token=" + access, false},
+		{"duplicate bearer header", "", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest("POST", "https://id.example.test"+basePath+"/userinfo", strings.NewReader(test.body))
+			r.Header.Set("Authorization", "Bearer "+access)
+			if test.duplicate {
+				r.Header.Add("Authorization", "Bearer "+access)
+			}
+			w := httptest.NewRecorder()
+			f.router.ServeHTTP(w, r)
+			require.Equal(t, 400, w.Code)
+			require.Equal(t, "invalid_request", bodyJSON(t, w)["error"])
+		})
+	}
+	w = f.call("POST", basePath+"/userinfo", "", map[string]string{"Authorization": "Bearer " + access}, nil)
+	require.Equal(t, 200, w.Code)
+}

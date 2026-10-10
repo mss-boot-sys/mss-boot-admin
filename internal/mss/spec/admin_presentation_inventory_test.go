@@ -463,6 +463,7 @@ func TestAdminPresentationPageInventoryHasExactProductScope(t *testing.T) {
 		"workplace":               true,
 		"account-pages":           true,
 		"auth-pages":              true,
+		"sso-governance":          true,
 		"app-config":              true,
 		"presentation-governance": true,
 		"exception-pages":         true,
@@ -506,8 +507,8 @@ func TestAdminPresentationPageInventoryHasExactProductScope(t *testing.T) {
 	if len(extensions) != 1 {
 		t.Fatalf("extension-example page count = %d, want 1", len(extensions))
 	}
-	if len(excluded) != 7 {
-		t.Fatalf("excluded page count = %d, want 7", len(excluded))
+	if len(excluded) != 8 {
+		t.Fatalf("excluded page count = %d, want 8", len(excluded))
 	}
 	for pageKey := range wantPageKeys {
 		if _, exists := included[pageKey]; !exists {
@@ -813,7 +814,7 @@ func TestAdminPresentationPageInventoryClosesCompiledRouteDeclarations(t *testin
 	}
 
 	wantSourceHashes := map[string]string{
-		"web/antd-v6/package/core-routes.cjs":    "16c05447567ec784f98219cda20578c0c331036c977fffb0806eb44f00dca69b",
+		"web/antd-v6/package/core-routes.cjs":    "54d2b20f6cd48889da202f75bad989edf8610fb6a96b9a07357f17cd34dca7de",
 		"web/antd-v6/config/routes.generated.ts": "e6b670e37ea6133400fbf8d7283f7242e8baed4ab799512158064111af9726b9",
 		"web/antd-v6/src/generated/routes.ts":    "bc6d132bb48fa1af81522b0ad58c08d2a9c32ebe81f16ede807be91f6d87899a",
 	}
@@ -829,7 +830,7 @@ func TestAdminPresentationPageInventoryClosesCompiledRouteDeclarations(t *testin
 		fmt.Fprintf(&routeIdentities, "%s|%s|%s|%s|%s\n", route.ID, route.Path, route.RouteKind, route.Disposition, strings.Join(route.PageIDs, ","))
 	}
 	routeIdentityHash := fmt.Sprintf("%x", sha256.Sum256([]byte(routeIdentities.String())))
-	const wantRouteIdentityHash = "d3c4d7a512ea420b78ad85228404a574200d0676de29bcbd88f9a2ea844e6d57"
+	const wantRouteIdentityHash = "07cd862da59e23cb7669757bcfc31784d55480a205df87d8bbcc2c9d3d4c9953"
 	if routeIdentityHash != wantRouteIdentityHash {
 		t.Fatalf("route classification identity changed: got %s, want %s", routeIdentityHash, wantRouteIdentityHash)
 	}
@@ -850,8 +851,8 @@ func TestAdminPresentationPageInventoryParserFailsClosed(t *testing.T) {
 	}{
 		{
 			name:       "unknown field",
-			old:        "  revision: \"2\"\n",
-			new:        "  revision: \"2\"\n  unexpected: true\n",
+			old:        "  revision: \"3\"\n",
+			new:        "  revision: \"3\"\n  unexpected: true\n",
 			wantSubstr: "field unexpected not found",
 		},
 		{
@@ -931,7 +932,7 @@ func TestValidateFileDispatchesAdminPresentationPageInventory(t *testing.T) {
 	if document.Kind != AdminPresentationPageInventoryKind || document.Name != "admin-presentation-pages" {
 		t.Fatalf("validated inventory identity = %q/%q", document.Kind, document.Name)
 	}
-	if document.Summary["includedPages"] != 14 || document.Summary["extensionPages"] != 1 || document.Summary["excludedPages"] != 7 {
+	if document.Summary["includedPages"] != 14 || document.Summary["extensionPages"] != 1 || document.Summary["excludedPages"] != 8 {
 		t.Fatalf("validated inventory summary = %#v", document.Summary)
 	}
 }

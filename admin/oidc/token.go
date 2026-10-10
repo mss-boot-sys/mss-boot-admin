@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"io"
 	"net/url"
 	"strings"
 	"time"
@@ -15,6 +16,12 @@ import (
 )
 
 func (p *Provider) token(c *gin.Context) {
+	// Token credentials and grants belong in the POST body and a single
+	// authentication header, never in URLs or ambiguous duplicate headers.
+	if c.Request.URL.RawQuery != "" || len(c.Request.Header.Values("Authorization")) > 1 {
+		protocolError(c, 400, "invalid_request")
+		return
+	}
 	v, err := parameters(c)
 	if err != nil {
 		protocolError(c, 400, "invalid_request")
@@ -121,6 +128,10 @@ func (p *Provider) token(c *gin.Context) {
 	c.JSON(200, gin.H{"access_token": access, "token_type": "Bearer", "expires_in": int(tokenLifetime.Seconds()), "id_token": idToken, "scope": code.Scope})
 }
 func (p *Provider) userinfo(c *gin.Context) {
+	if len(c.Request.Header.Values("Authorization")) > 1 {
+		protocolError(c, 400, "invalid_request")
+		return
+	}
 	parts := strings.Fields(c.GetHeader("Authorization"))
 	deny := func() {
 		c.Header("WWW-Authenticate", `Bearer error="invalid_token"`)
@@ -132,6 +143,11 @@ func (p *Provider) userinfo(c *gin.Context) {
 	}
 	// Only the header bearer mechanism is accepted; credentials in URLs never work.
 	if c.Request.URL.RawQuery != "" {
+		protocolError(c, 400, "invalid_request")
+		return
+	}
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil || len(body) != 0 {
 		protocolError(c, 400, "invalid_request")
 		return
 	}

@@ -2,7 +2,7 @@ apiVersion: mss.io/v1alpha1
 kind: AdminPresentationPageInventory
 metadata:
   name: admin-presentation-pages
-  revision: "2"
+  revision: "3"
   baselineBranch: main
   baselineCommit: 6de7ef4b9bc5de48d95c6e6fefeaf0035aa8852c
   routeSources:
@@ -578,6 +578,7 @@ spec:
         - /user/register
         - /user/forget
         - /user/oauth/callback/:provider
+        - /user/oidc
         - /user/*
       sourceKind: not-applicable
       pageKind: public
@@ -588,7 +589,7 @@ spec:
       rolloutWave: excluded
       facetPolicy: none
       protectedCapabilities:
-        - Login, registration, recovery, OAuth callback, redirect, challenge, and credential behavior remain compiled.
+        - Login, registration, recovery, OAuth callback, OIDC consent, redirect, challenge, and credential behavior remain compiled.
       exclusionReason: Authentication surfaces must remain stable before a principal exists and cannot depend on authenticated presentation profiles.
     - id: app-config
       displayName:
@@ -608,6 +609,24 @@ spec:
       protectedCapabilities:
         - Security, storage, email, secret lifecycle, admission, and theme-control contracts remain compiled.
       exclusionReason: Application configuration includes secret-bearing and security-sensitive controls whose availability and order cannot be changed by presentation profiles.
+    - id: sso-governance
+      displayName:
+        zh-CN: 单点登录应用管理
+        en-US: SSO application management
+      disposition: excluded
+      eligibility: protected
+      routePatterns: [/sso]
+      sourceKind: not-applicable
+      pageKind: governance
+      dataClass: identity
+      implementationState: excluded
+      adoptionState: not-applicable
+      acceptanceState: not-applicable
+      rolloutWave: excluded
+      facetPolicy: none
+      protectedCapabilities:
+        - Client registration, application grants, one-time secrets, signing-key rotation, and security audit remain compiled.
+      exclusionReason: Identity grants and secret lifecycle controls must not be hidden, reordered, or modified through stored presentation profiles.
     - id: presentation-governance
       displayName:
         zh-CN: 页面展示配置治理
@@ -693,6 +712,12 @@ spec:
       disposition: excluded
       pageIDs: [auth-pages]
       reason: OAuth callback behavior is protected.
+    - id: core-user-oidc
+      path: /user/oidc
+      routeKind: page
+      disposition: excluded
+      pageIDs: [auth-pages]
+      reason: OIDC consent and credential redirects are protected authentication behavior.
     - id: core-user-fallback
       path: /user/*
       routeKind: fallback
@@ -903,6 +928,12 @@ spec:
       disposition: included
       pageIDs: [option-list]
       reason: Classified with option management; edit remains compiled.
+    - id: core-sso
+      path: /sso
+      routeKind: page
+      disposition: excluded
+      pageIDs: [sso-governance]
+      reason: Application grants, secrets, and signing keys require compiled security controls.
     - id: core-presentation-config
       path: /presentation-config
       routeKind: page
