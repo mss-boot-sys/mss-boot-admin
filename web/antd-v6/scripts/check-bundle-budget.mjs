@@ -29,7 +29,9 @@ const chunkBudget = readBudget('MSS_V6_CHUNK_GZIP_BUDGET_KB', 240);
 // The total is the complete lazy-loaded application corpus, not a route transfer.
 // Keep route cost bounded independently through the entry and largest-chunk budgets,
 // and retain enough corpus headroom for ordinary product growth between releases.
-const totalBudget = readBudget('MSS_V6_TOTAL_JS_GZIP_BUDGET_KB', 905);
+// The October dependency refresh measures 926.21 KiB in Admin and 932.18 KiB
+// in the external business host; see the 2026-10-10 dependency-bundle ADR.
+const totalBudget = readBudget('MSS_V6_TOTAL_JS_GZIP_BUDGET_KB', 940);
 const formatKiB = (bytes) => `${(bytes / 1024).toFixed(2)} KiB`;
 
 const listJavaScript = async (directory) => {

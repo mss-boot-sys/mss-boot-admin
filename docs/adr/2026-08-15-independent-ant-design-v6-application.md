@@ -47,8 +47,11 @@ for token-aware rules, Biome, Vitest, and Playwright.
 
 The release bundle gate treats transfer cost and total application capability as
 different signals. The gzip budgets are 32 KiB for the entry, 240 KiB for any single
-asynchronous chunk, and 960 KiB for the complete lazy-loaded JavaScript corpus. The
-total-corpus budget was recalibrated from the 900 KiB scaffold threshold after the
+asynchronous chunk, and 940 KiB for the complete lazy-loaded JavaScript corpus.
+The current total follows the
+[October dependency measurements](2026-10-10-dependency-bundle-baseline.md).
+At the initial qualification, the total-corpus budget was recalibrated to
+960 KiB from the 900 KiB scaffold threshold after the
 qualified authority and operations slices reached 936.67 KiB while the entry remained
 4.16 KiB and the largest asynchronous chunk remained 199.60 KiB. A four-way operations
 route split was rejected because it increased the same corpus to 1018.24 KiB without

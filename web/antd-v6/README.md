@@ -31,6 +31,12 @@ Package manifests, lockfiles, dependency checks and the Thin Host Blueprint
 record the same exact runtime versions. These source updates do not change
 the published stable identity described above.
 
+The release gzip budgets are 32 KiB for the entry, 240 KiB for any single chunk
+and 940 KiB for the complete JavaScript corpus. The
+[dependency bundle ADR](../../docs/adr/2026-10-10-dependency-bundle-baseline.md)
+records the reference application, external host and cold-route measurements
+behind this dependency refresh.
+
 Admin Web is the Distribution's single complete browser application: React 19,
 Ant Design 6, Umi Max, React Query, generated API contracts, authentication
 shell, page states, locales, and the narrow business-route extension.

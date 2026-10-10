@@ -32,6 +32,7 @@ spec:
         - Published Framework v1.3.8 still exposes Casbin v2 and is excluded from the Admin bump; Dependabot must not independently update this Distribution component.
         - React 19.3.0, Ant Design 6.6.5, ProComponents 3.1.15-7, Query 5.104.1 and Umi 4.7.23 remain exact singleton runtime pins.
         - Go 1.27.2 builder images use an upstream-verified immutable digest.
+        - Release gzip budgets are 32 KiB for the entry, 240 KiB for any single chunk and 940 KiB for the complete JavaScript corpus, with measured route-transfer evidence in docs/adr/2026-10-10-dependency-bundle-baseline.md.
   constraints:
     - id: publication-boundary
       type: operations
