@@ -1,6 +1,6 @@
 module github.com/mss-boot-io/mss-boot-admin/admin
 
-go 1.26.6
+go 1.26.9
 
 require (
 	github.com/alicebob/miniredis/v2 v2.39.0
@@ -31,7 +31,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
-	golang.org/x/net v0.59.0
+	golang.org/x/net v0.60.0
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/text v0.42.0
 	google.golang.org/grpc v1.83.2

@@ -35,7 +35,7 @@ spec:
     - Post-merge, manual diagnostics and exact merged-main release gates retain their separate responsibilities.
   - id: migration-security
     title: Migrated repository and patched baselines
-    description: Restore Actions and main PR protection after checking the replacement workflow; repair reproducible dependency failures.
+    description: Keep Actions disabled for the operator to enable after review; prepare the new main PR gate and repair reproducible dependency failures.
     priority: must
     actor: contributor
     module: ci-governance
@@ -67,7 +67,7 @@ spec:
     required: true
     evidence:
     - type: manual
-      value: Record the exact PR commit, Actions run URL and read-back protection settings.
+      value: Record the exact PR commit and local validation now. Hosted validation and main protection setup follow only after the operator enables Actions.
   validation:
     changed: go run ./cmd/mss verify --changed
     all: go run ./cmd/mss verify --all
@@ -77,5 +77,5 @@ spec:
     - make test-all build
   rollout:
     strategy: direct
-    migration: Enable Actions, push the topic branch through PR, and require the new pr-ci aggregate on main; retain post-merge and release gates.
+    migration: Push the topic branch through PR with local evidence. Actions remains disabled until the operator enables it; then validate the exact PR commit and configure pr-ci on main. Retain post-merge and release gates.
     rollback: Use a follow-up PR to repair or revert routing; keep required checks and PR protection enabled.

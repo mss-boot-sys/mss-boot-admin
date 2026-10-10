@@ -198,6 +198,7 @@ jobs:
             "${GITHUB_SHA}" <<'PY'
           import base64
           import hashlib
+          import os
           import json
           from pathlib import Path
           import sys
@@ -215,7 +216,7 @@ jobs:
               package.get("name") == "@mss-boot-io/admin-web"
               and package.get("version") == sys.argv[3]
               and package.get("gitHead") == sys.argv[4]
-              and source.get("repository") == "mss-boot-io/mss-boot-admin"
+              and source.get("repository") == os.environ["GITHUB_REPOSITORY"]
               and source.get("commit") == sys.argv[4]
               and artifact.get("filename") == tarball.name
               and artifact.get("size") == len(content)

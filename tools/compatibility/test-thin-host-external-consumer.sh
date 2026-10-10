@@ -445,13 +445,13 @@ jq -e \
      "test": "mss-admin-web test",
      "build": "mss-admin-web build"
    } and
-   .pnpm.overrides == {
+   (.pnpm.overrides | {react, "react-dom": .["react-dom"], antd, "@ant-design/pro-components": .["@ant-design/pro-components"], "@tanstack/react-query": .["@tanstack/react-query"], axios}) == {
      "react": "19.2.8",
      "react-dom": "19.2.8",
      "antd": "6.6.1",
      "@ant-design/pro-components": "3.1.14-6",
      "@tanstack/react-query": "5.101.4",
-     "axios": "0.33.0"
+     "axios": "0.34.0"
    } and
    (.pnpm | has("patchedDependencies") | not)' \
   "${host_root}/web/package.json" >/dev/null

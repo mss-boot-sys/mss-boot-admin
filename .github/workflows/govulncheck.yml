@@ -1,9 +1,6 @@
 name: govulncheck
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
@@ -43,7 +40,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
 
       - name: Scan Agent/Foundation module
         env:
@@ -78,7 +75,7 @@ jobs:
 
       - name: Install govulncheck
         if: matrix.module != 'none'
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
 
       - name: Scan nested module
         if: matrix.module != 'none'

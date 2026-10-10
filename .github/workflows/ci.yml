@@ -15,11 +15,6 @@ on:
       - '.github/workflows/docs.yml'
       - '.github/workflows/frontend-v6-ci.yml'
       - '.github/workflows/swagger.yml'
-  pull_request:
-    branches:
-      - main
-    # Branch protection requires the admin-ci context. Keep pull requests
-    # unfiltered so GitHub always creates that required check.
   workflow_dispatch:
 
 permissions:

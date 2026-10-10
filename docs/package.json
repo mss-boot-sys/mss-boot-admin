@@ -11,11 +11,11 @@
   "homepage": "https://docs.mss-boot-io.top",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mss-boot-io/mss-boot-admin.git",
+    "url": "https://github.com/mss-boot-sys/mss-boot-admin.git",
     "directory": "docs"
   },
   "bugs": {
-    "url": "https://github.com/mss-boot-io/mss-boot-admin/issues"
+    "url": "https://github.com/mss-boot-sys/mss-boot-admin/issues"
   },
   "scripts": {
     "audit:release": "node ../tools/security/check-pnpm-audit.mjs",
@@ -48,24 +48,28 @@
       "esbuild": "0.28.1",
       "@hono/node-server": "2.0.10",
       "body-parser@1.20.5": "1.20.6",
-      "brace-expansion@1.1.15": "1.1.18",
-      "brace-expansion@2.1.1": "2.1.4",
-      "fast-uri": "3.1.5",
+      "fast-uri": "3.1.7",
       "hono": "4.12.34",
       "immutable@4.3.8": "4.3.9",
       "immutable@5.1.6": "5.1.8",
-      "js-yaml": "4.3.1",
       "nanoid@3.3.12": "3.3.18",
       "nth-check": "2.1.1",
       "path-to-regexp": "1.9.0",
-      "piscina": "4.9.3",
       "postcss": "8.5.23",
       "react-router@6.3.0": "6.30.4",
       "react-router-dom@6.3.0": "6.30.4",
       "send": "0.19.2",
-      "svgo@2.8.2": "2.8.3",
       "uuid": "11.1.1",
-      "vite@4.5.2": "6.4.3"
+      "vite@4.5.2": "6.4.3",
+      "js-yaml@3": "3.15.2",
+      "js-yaml@4": "4.3.2",
+      "svgo@2": "2.8.4",
+      "brace-expansion@1": "1.1.21",
+      "brace-expansion@2": "2.1.7",
+      "piscina@4": "4.9.4",
+      "source-map-js": "1.2.2",
+      "proxy-addr": "2.0.8",
+      "compression": "1.8.2"
     }
   },
   "devDependencies": {

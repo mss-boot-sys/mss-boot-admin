@@ -120,7 +120,7 @@ const allowedResolvedVersions = {
   '@ant-design/pro-components': ['3.1.14-6'],
   '@tanstack/react-query': ['5.101.4'],
   '@umijs/max': ['4.7.7'],
-  axios: ['0.33.0'],
+  axios: ['0.34.0'],
   umi: ['4.7.7'],
   immer: ['8.0.4'],
 };

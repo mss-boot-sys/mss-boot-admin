@@ -12,7 +12,7 @@ write_go_mod() {
   cat >"${directory}/go.mod" <<EOF
 module example.com/mss-admin-command-boundary
 
-go 1.26.6
+go 1.26.9
 
 require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0
 

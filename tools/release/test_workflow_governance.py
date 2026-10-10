@@ -14,6 +14,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_DIR = REPOSITORY_ROOT / ".github" / "workflows"
 RETIRED_WORKFLOWS = (
     "docs-drift.yml",
+    "pr-guard.yml",
+    "mirror.yml",
+    "issue-triage.yml",
+    "weekly-digest.yml",
     "foundation-compatibility.yml",
     "frontend-cloudflare.yml",
     "release-draft.yml",
@@ -127,9 +131,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
             workflow = self.workflows[workflow_name]
             self.assertEqual(workflow["on"]["push"]["branches"], ["main"])
             self.assertNotIn("tags", workflow["on"]["push"])
-            self.assertEqual(
-                workflow["on"]["pull_request"]["branches"], ["main"]
-            )
+            self.assertNotIn("pull_request", workflow["on"])
         self.assertEqual(
             self.workflows["release.yml"]["on"]["push"]["tags"],
             ["v*.*.*"],
@@ -157,30 +159,36 @@ class WorkflowGovernanceTest(unittest.TestCase):
         ]
         self.assertEqual(present, [])
 
-    def test_pr_guard_owns_the_documentation_contract(self):
-        workflow = self.workflows["pr-guard.yml"]
-        docs_job = workflow["jobs"]["docs-contract"]
-        self.assertEqual(docs_job["name"], "docs-contract")
-        step = next(
-            item
-            for item in docs_job["steps"]
-            if item.get("name")
-            == "Require documentation for contract and workflow changes"
-        )
-        script = step["run"]
-        for required in (
-            "gh api",
-            "--paginate",
-            "--jq '.[].filename'",
-            "pulls/${PR_NUMBER}/files?per_page=100",
-            "docsChanged",
-            "governedChange",
-            "migration",
-            "sql",
-            r"^\.github\/workflows\/",
-        ):
-            with self.subTest(required=required):
-                self.assertIn(required, script)
+    def test_pr_workflow_is_the_single_scoped_fail_closed_entrypoint(self):
+        entrypoints = [name for name, workflow in self.workflows.items()
+                       if "pull_request" in workflow["on"] or "pull_request_target" in workflow["on"]]
+        self.assertEqual(entrypoints, ["pr-checks.yml"])
+        workflow = self.workflows["pr-checks.yml"]
+        self.assertEqual(workflow["on"]["pull_request"], {"branches": ["main"]})
+        self.assertEqual(workflow["permissions"], {"contents": "read"})
+        jobs = workflow["jobs"]
+        self.assertEqual(set(jobs), {"plan", "go", "web", "docs", "codeql", "required"})
+        self.assertEqual(jobs["required"]["name"], "pr-ci")
+        self.assertEqual(jobs["required"]["if"], "${{ always() }}")
+        self.assertEqual(set(jobs["required"]["needs"]), {"plan", "go", "web", "docs", "codeql"})
+        self.assertIn("--check-results", jobs["required"]["steps"][-1]["run"])
+        self.assertIn("--base", jobs["plan"]["steps"][1]["run"])
+        for job in ("go", "web", "docs", "codeql"):
+            self.assertEqual(jobs[job]["needs"], "plan")
+            self.assertIn("fromJSON(needs.plan.outputs.plan)", jobs[job]["if"])
+        go_steps = "\n".join(step.get("run", "") for step in jobs["go"]["steps"])
+        self.assertIn("go test -shuffle=on -count=1 ./...", go_steps)
+        self.assertIn("govulncheck ./...", go_steps)
+        self.assertIn("'off'", jobs["go"]["env"]["GOWORK"])
+        for name in ("web", "docs"):
+            script = "\n".join(step.get("run", "") for step in jobs[name]["steps"])
+            self.assertIn("--frozen-lockfile", script)
+            self.assertIn("audit:release", script)
+            self.assertIn("pnpm build", script)
+        for name, current in self.workflows.items():
+            for job in current["jobs"].values():
+                self.assertNotIn("mss-boot-io/", job.get("uses", ""), name)
+                self.assertNotIn("continue-on-error", job, name)
 
     def test_foundation_compatibility_is_a_single_local_gate(self):
         agent = self.workflows["agent-native-ci.yml"]
@@ -351,7 +359,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
                     self.assertIn("workflow_dispatch", triggers)
 
         framework = self.workflows["mss-boot-ci.yml"]
-        self.assertIn("pull_request", framework["on"])
+        self.assertNotIn("pull_request", framework["on"])
         jobs = framework["jobs"]
         for name in ("race", "static-and-module"):
             self.assertIn("github.event_name != 'pull_request'", jobs[name]["if"])
@@ -492,9 +500,6 @@ class WorkflowGovernanceTest(unittest.TestCase):
                 self.assertIn("contains(fromJSON(matrix.scopes)", condition)
                 self.assertNotIn("!contains", condition)
 
-    def test_mirror_does_not_watch_documentation_owned_roots(self):
-        mirror = self.workflows["mirror.yml"]
-        self.assertIn("docs/**", mirror["on"]["push"]["paths-ignore"])
 
     def test_distribution_compatibility_routes_heavy_external_consumption(self):
         workflow = self.workflows["admin-distribution-compatibility.yml"]

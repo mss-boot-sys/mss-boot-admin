@@ -37,7 +37,7 @@ go run ./cmd/mss doctor
 go run ./cmd/mss setup
 ```
 
-冻结工具链为 Go 1.26.6 和 Node.js 24。Admin Web 使用 pnpm 10.34.5；Docs
+冻结工具链为 Go 1.26.9 和 Node.js 24。Admin Web 使用 pnpm 10.34.5；Docs
 使用 `docs/package.json` 固定的 pnpm 9.15.9。仓库内开发使用 `go.work` 协调
 根工具、Framework 和 Admin；发布模块和外部消费者仍必须在 `GOWORK=off`
 下独立成立。不得向任何发布模块提交本地 `replace`。
@@ -206,3 +206,10 @@ Pull Request 必须以 `main` 为目标，并说明：
 
 提交代码即表示你同意相关贡献按本仓库的 MIT License 发布，并遵守
 `CODE_OF_CONDUCT.md`。
+
+## PR 流水线
+
+仓库迁移至 `mss-boot-sys/mss-boot-admin` 后，所有 PR 统一通过 `PR Checks`，
+按变更范围执行测试、安全扫描与构建，并由 `pr-ci` 汇总为唯一必需结果。
+失败、取消或非预期跳过都会阻止通过。完整发布验证继续由原有专用流程负责。
+详见 [PR 检查与安全基线](docs/docs/operations/ci.md)。

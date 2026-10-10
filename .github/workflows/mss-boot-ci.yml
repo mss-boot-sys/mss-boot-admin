@@ -13,18 +13,6 @@ on:
       - 'go.work.sum'
       - 'Makefile'
       - '.github/workflows/mss-boot-ci.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'mss-boot/**'
-      - '.mss/coverage.json'
-      - 'scripts/check-go-coverage.py'
-      - 'scripts/test_check_go_coverage.py'
-      - 'go.work'
-      - 'go.work.sum'
-      - 'Makefile'
-      - '.github/workflows/mss-boot-ci.yml'
   workflow_dispatch:
 
 permissions:

@@ -100,7 +100,7 @@ if (axiosRuntime.length === 0) {
   failures.push('the governed Axios request runtime is missing from the production graph');
 } else {
   const unexpectedAxiosRuntime = axiosRuntime.filter(
-    (name) => !name.includes('.pnpm/axios@0.33.0/node_modules/axios/'),
+    (name) => !name.includes('.pnpm/axios@0.34.0/node_modules/axios/'),
   );
   if (unexpectedAxiosRuntime.length > 0) {
     failures.push(
