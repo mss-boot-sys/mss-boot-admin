@@ -47,6 +47,84 @@ class PRChecksTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "maximum is 140"):
             checks.check_pr_contract(paths)
 
+    def test_migration_classification_requires_exact_bytes(self):
+        before = b'package api\nimport "github.com/mss-boot-io/mss-boot-admin/admin/models"\n'
+        after = before.replace(b'mss-boot-io', b'mss-boot-sys')
+        self.assertTrue(checks.migration_only_change('admin/api.go', before, after))
+        self.assertFalse(checks.migration_only_change('admin/api.go', before, after + b'// extra edit\n'))
+        self.assertFalse(checks.migration_only_change('admin/api.go', before, before))
+        self.assertFalse(checks.migration_only_change('admin/api.go', None, after))
+        self.assertFalse(checks.migration_only_change('admin/api.go', before, None))
+        self.assertFalse(checks.migration_only_change('data', b'\0' + before, b'\0' + after))
+
+    def test_distribution_versions_do_not_discount_third_party_dependency_updates(self):
+        before = b'require github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.7\nrequire example.com/dep v1.3.7\n'
+        expected = b'require github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.3.9\nrequire example.com/dep v1.3.7\n'
+        self.assertTrue(checks.migration_only_change('admin/go.mod', before, expected))
+        self.assertFalse(checks.migration_only_change('admin/go.mod', before, expected.replace(b'example.com/dep v1.3.7', b'example.com/dep v1.3.9')))
+        self.assertTrue(checks.migration_only_change('README.md', b'v1.3.7\n', b'v1.3.9\n'))
+        self.assertFalse(checks.migration_only_change('README.md', b'v1.3.70\n', b'v1.3.90\n'))
+
+    def test_migration_does_not_reduce_required_verification_scope(self):
+        paths = [f'admin/model{index}.go' for index in range(141)] + ['README.md']
+        with patch.object(checks, 'mechanical_migration_paths', return_value=set(paths[:-1])):
+            counts = checks.check_pr_contract(paths, base='a' * 40, head='b' * 40)
+        self.assertEqual(counts, {'total': 142, 'substantive': 1, 'migration_only': 141})
+        self.assertIn('admin', checks.plan_checks(paths)['go_modules'])
+        with patch.object(checks, 'mechanical_migration_paths', return_value=set()):
+            with self.assertRaisesRegex(ValueError, 'maximum is 140'):
+                checks.check_pr_contract(paths, base='a' * 40, head='b' * 40)
+
+    def test_migration_exemption_requires_root_module_transition(self):
+        with patch.object(checks.subprocess, 'check_output', return_value='a' * 40 + '\n'):
+            with patch.object(checks, 'git_blob', return_value=b'module github.com/mss-boot-sys/mss-boot-admin\n'):
+                self.assertEqual(checks.mechanical_migration_paths('a' * 40, 'b' * 40, ['README.md']), set())
+
+    def test_package_identity_migration_does_not_discount_dependency_edits(self):
+        before = b'{"name":"@mss-boot-io/admin-web","version":"1.3.7-development","publishConfig":{"registry": "https://registry.npmjs.org"},"dependencies":{"react":"19.3.0"}}'
+        after = before.replace(b'mss-boot-io', b'mss-boot-sys').replace(b'1.3.7-development', b'1.3.9').replace(b'registry.npmjs.org', b'npm.pkg.github.com')
+        self.assertTrue(checks.migration_only_change('web/antd-v6/package.json', before, after))
+        self.assertFalse(checks.migration_only_change('web/antd-v6/package.json', before, after.replace(b'19.3.0', b'19.4.0')))
+        self.assertFalse(checks.migration_only_change('other/package.json', before, after))
+
+    def test_real_git_migration_keeps_the_semantic_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.check_output(['git', '-C', directory, *args], text=True).strip()
+            git('init', '-q', '-b', 'main')
+            git('config', 'user.name', 'CI Test')
+            git('config', 'user.email', 'ci@example.invalid')
+            (root / 'go.mod').write_bytes(b'module ' + checks.OLD_MODULE + b'\n')
+            (root / 'README.md').write_text('Namespace migration\n')
+            for index in range(141):
+                (root / f'file{index}.go').write_bytes(b'package p\n// ' + checks.OLD_MODULE + b'\n')
+            git('add', '.')
+            git('commit', '-qm', 'base')
+            base = git('rev-parse', 'HEAD')
+            for path in root.glob('*.go'):
+                path.write_bytes(path.read_bytes().replace(checks.OLD_MODULE, checks.NEW_MODULE))
+            (root / 'go.mod').write_bytes(b'module ' + checks.NEW_MODULE + b'\n')
+            git('add', '.')
+            git('commit', '-qm', 'namespace')
+            head = git('rev-parse', 'HEAD')
+            original_run = subprocess.run
+            def run_in_repository(args, **kwargs):
+                kwargs.setdefault('cwd', root)
+                return original_run(args, **kwargs)
+            with patch.object(checks.subprocess, 'run', side_effect=run_in_repository):
+                paths = checks.changed_paths(base, head)
+                self.assertEqual(checks.check_pr_contract(paths, base=base, head=head)['substantive'], 0)
+            for path in root.glob('*.go'):
+                path.write_bytes(path.read_bytes() + b'var semanticChange = true\n')
+            git('add', '.')
+            git('commit', '-qm', 'additional behavior')
+            head = git('rev-parse', 'HEAD')
+            with patch.object(checks.subprocess, 'run', side_effect=run_in_repository):
+                paths = checks.changed_paths(base, head)
+                with self.assertRaisesRegex(ValueError, 'maximum is 140'):
+                    checks.check_pr_contract(paths, base=base, head=head)
+
     def test_invalid_comparison_never_becomes_an_empty_success(self):
         for value in ["", "main", "0" * 40, "a" * 39, "$(id)"]:
             with self.assertRaises(ValueError):

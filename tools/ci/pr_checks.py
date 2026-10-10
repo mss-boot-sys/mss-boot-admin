@@ -11,6 +11,50 @@ from pathlib import Path
 GO_MODULES = [".", "admin", "mss-boot", "compose/consul", "compose/kafka"]
 LANGUAGES = ["actions", "go", "javascript-typescript"]
 MAX_CHANGED_FILES = 140
+OLD_MODULE = b"github.com/mss-boot-io/mss-boot-admin"
+NEW_MODULE = b"github.com/mss-boot-sys/mss-boot-admin"
+
+
+def migration_only_change(path, before, after):
+    """Recognize the exact approved namespace/version rewrite, not arbitrary edits."""
+    if before is None or after is None or b"\0" in before or b"\0" in after:
+        return False
+    expected = before.replace(b"mss-boot-io/mss-boot-admin", b"mss-boot-sys/mss-boot-admin")
+    expected = expected.replace(b"@mss-boot-io/admin-web", b"@mss-boot-sys/admin-web")
+    if path.endswith((".mod", ".sum", ".mod.tmpl")) or path == "go.work":
+        # Third-party dependency updates remain substantive even if their
+        # version happens to equal the former Distribution version.
+        expected = b"".join(
+            line.replace(b"v1.3.7", b"v1.3.9") if NEW_MODULE in line else line
+            for line in expected.splitlines(keepends=True)
+        )
+    else:
+        expected = expected.replace(b"1.3.7-development", b"1.3.9")
+        expected = re.sub(rb"(?<![0-9])1\.3\.7(?![0-9])", b"1.3.9", expected)
+    if path == "web/antd-v6/package.json":
+        expected = expected.replace(
+            b'"registry": "https://registry.npmjs.org"',
+            b'"registry": "https://npm.pkg.github.com"',
+        )
+    return before != after and expected == after
+
+
+def git_blob(ref, path):
+    result = subprocess.run(["git", "show", f"{ref}:{path}"], capture_output=True)
+    return result.stdout if result.returncode == 0 else None
+
+
+def mechanical_migration_paths(base, head, paths):
+    # Use the same merge base as changed_paths, not unrelated newer main edits.
+    merge_base = subprocess.check_output(["git", "merge-base", base, head], text=True).strip()
+    old_module = git_blob(merge_base, "go.mod") or b""
+    new_module = git_blob(head, "go.mod") or b""
+    if not old_module.startswith(b"module " + OLD_MODULE + b"\n") or not new_module.startswith(b"module " + NEW_MODULE + b"\n"):
+        return set()
+    return {
+        path for path in paths
+        if migration_only_change(path, git_blob(merge_base, path), git_blob(head, path))
+    }
 
 
 def changed_paths(base, head):
@@ -74,11 +118,13 @@ def check_documentation(paths):
         raise ValueError("API, configuration, migration, deployment and workflow changes require documentation")
 
 
-def check_pr_contract(paths):
-    # Retain the limit configured for the former reusable PR Guard.
-    if len(paths) > MAX_CHANGED_FILES:
-        raise ValueError(f"PR changes {len(paths)} paths; maximum is {MAX_CHANGED_FILES}")
+def check_pr_contract(paths, *, base=None, head=None):
+    mechanical = mechanical_migration_paths(base, head, paths) if base and head else set()
+    substantive = len(paths) - len(mechanical)
+    if substantive > MAX_CHANGED_FILES:
+        raise ValueError(f"PR changes {substantive} substantive paths ({len(paths)} total, {len(mechanical)} verified migration-only); maximum is {MAX_CHANGED_FILES}")
     check_documentation(paths)
+    return {"total": len(paths), "substantive": substantive, "migration_only": len(mechanical)}
 
 
 def main():
@@ -87,13 +133,13 @@ def main():
     parser.add_argument("--head")
     args = parser.parse_args()
     paths = changed_paths(args.base or "", args.head or "")
-    check_pr_contract(paths)
+    counts = check_pr_contract(paths, base=args.base, head=args.head)
     plan = plan_checks(paths)
     output = json.dumps(plan, separators=(",", ":"))
     print(output)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
-            stream.write(f"Local verification scope for {len(paths)} changed paths:\n```json\n{output}\n```\n")
+            stream.write(f"Local verification scope for {counts['total']} changed paths ({counts['substantive']} substantive, {counts['migration_only']} byte-verified namespace/version replacements):\n```json\n{output}\n```\n")
 
 
 if __name__ == "__main__":

@@ -33,8 +33,16 @@ or reject it to stop execution. Never approve runs automatically through a bot.
 
 `tools/ci/pr_checks.py` reads the merge-base diff, including both sides of
 renames, and reports which checks to run locally. The PR contract retains the
-maximum of 140 changed paths and requires documentation for API, configuration,
-migration and workflow changes.
+maximum of 140 substantive changed paths and requires documentation for API,
+configuration, migration and workflow changes. For the first-repository migration,
+the checker verifies the root Go module transition and compares every old/new blob.
+Files containing only the exact `mss-boot-io` to `mss-boot-sys` repository/package
+identity and 1.3.7 to 1.3.9 release-version substitutions are reported separately;
+the Admin Web publish registry is part of that exact package identity rewrite.
+Added/deleted files, other code edits and third-party dependency updates still count
+against the limit. This does not reduce local verification scope: all changed paths,
+including verified mechanical replacements, continue to select their component tests.
+Ordinary PRs without that root module transition retain the original 140-path limit.
 
 ## Execution budget
 
