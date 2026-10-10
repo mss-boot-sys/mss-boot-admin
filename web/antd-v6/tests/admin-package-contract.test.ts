@@ -262,6 +262,7 @@ console.log(JSON.stringify({
         antDesignRuntime: 'all',
         antdRuntime: 'all',
         applicationShell: 'all',
+        productLocales: 'all',
         proComponents: 'all',
         queryRuntime: 'all',
         rcRuntime: 'all',

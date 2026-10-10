@@ -191,6 +191,13 @@ function defineBusinessAdmin(options = {}) {
             priority: 34,
             test: /[\\/]src[\\/](?:modules[\\/]language|shared)[\\/]/,
           },
+          productLocales: {
+            chunks: 'all',
+            enforce: true,
+            name: 'product-locales',
+            priority: 34,
+            test: /[\\/](?:package[\\/]locales|src[\\/](?:locales|generated[\\/]locales))[\\/]/,
+          },
           proComponents: {
             chunks: 'all',
             enforce: true,
