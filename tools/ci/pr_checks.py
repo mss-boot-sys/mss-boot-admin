@@ -11,6 +11,7 @@ from pathlib import Path
 GO_MODULES = [".", "admin", "mss-boot", "compose/consul", "compose/kafka"]
 LANGUAGES = ["actions", "go", "javascript-typescript"]
 JOBS = ["go", "web", "docs", "codeql"]
+MAX_CHANGED_FILES = 140
 
 
 def changed_paths(base, head):
@@ -72,6 +73,13 @@ def check_documentation(paths):
         raise ValueError("API, configuration, migration, deployment and workflow changes require documentation")
 
 
+def check_pr_contract(paths):
+    # Retain the limit configured for the former reusable PR Guard.
+    if len(paths) > MAX_CHANGED_FILES:
+        raise ValueError(f"PR changes {len(paths)} paths; maximum is {MAX_CHANGED_FILES}")
+    check_documentation(paths)
+
+
 def check_results(needs):
     if set(needs) != {"plan", *JOBS} or needs["plan"]["result"] != "success":
         raise ValueError("Missing checks or unsuccessful PR plan")
@@ -102,7 +110,7 @@ def main():
         print("Every selected PR check passed.")
         return
     paths = changed_paths(args.base or "", args.head or "")
-    check_documentation(paths)
+    check_pr_contract(paths)
     plan = plan_checks(paths)
     output = json.dumps(plan, separators=(",", ":"))
     print(output)
@@ -112,8 +120,6 @@ def main():
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
             stream.write(f"PR plan for {len(paths)} changed paths:\n```json\n{output}\n```\n")
-            if len(paths) > 140:
-                stream.write("Large PR: consider splitting review into coherent follow-up changes.\n")
 
 
 if __name__ == "__main__":

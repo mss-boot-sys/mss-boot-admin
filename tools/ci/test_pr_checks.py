@@ -41,6 +41,12 @@ class PRChecksTest(unittest.TestCase):
                     checks.check_documentation([path])
                 checks.check_documentation([path, "docs/docs/ci.md"])
 
+    def test_preserves_the_existing_pr_size_limit(self):
+        paths = [f"docs/{index}.md" for index in range(141)]
+        checks.check_pr_contract(paths[:140])
+        with self.assertRaisesRegex(ValueError, "maximum is 140"):
+            checks.check_pr_contract(paths)
+
     def test_aggregate_rejects_failure_cancellation_and_unexpected_skips(self):
         for paths in [["docs/docs/index.md"], ["go.work"], ["README.md"]]:
             plan = checks.plan_checks(paths)

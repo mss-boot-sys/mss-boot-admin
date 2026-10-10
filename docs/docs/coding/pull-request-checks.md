@@ -10,6 +10,8 @@ Development uses `mss-boot-sys/mss-boot-admin`. Go import paths and the
 Every PR to `main` starts **PR Checks** (`.github/workflows/pr-checks.yml`).
 `tools/ci/pr_checks.py` reads the merge-base diff once, including both sides of
 renames. Mixed changes run the union of their component checks.
+The local PR contract retains the former guard's maximum of 140 changed paths
+and requires documentation for API, configuration, migration and workflow changes.
 
 | Change | PR checks |
 | --- | --- |
