@@ -1,9 +1,6 @@
 name: OpenSSF Scorecard
 
 on:
-  branch_protection_rule:
-  schedule:
-    - cron: "27 20 * * 0"
   workflow_dispatch:
 
 permissions: read-all

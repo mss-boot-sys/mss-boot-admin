@@ -53,7 +53,7 @@ pnpm start
 
 A docs-only change does not require starting the backend or frontend. When documentation accompanies code, follow the nearest child `AGENTS.md` for those changed directories and run the corresponding focused checks.
 
-Pull requests that change only `docs/**` run the documentation job in the unified PR Checks workflow; unrelated component jobs are skipped and the pr-ci aggregate validates those expected skips. Main-branch Docs pushes likewise must not start Admin, Framework, frontend, Go vulnerability, CodeQL, or repository-mirror work. Changes to shared release tooling or workflow files intentionally fall back to full shared validation.
+All pull requests run only the lightweight `pr-ci` policy job. Build affected Docs locally with `make docs-build`; shared release tooling changes also require the relevant local contract tests. Main pushes and schedules start no workflows. Docs tags retain the existing site build and publication path; other broad hosted checks require an explicit manual dispatch.
 
 Architecture and roadmap documents must identify a next executable step and a measurable completion definition; avoid vague “continue improving” conclusions.
 

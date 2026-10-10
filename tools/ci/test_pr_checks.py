@@ -1,4 +1,3 @@
-import json
 import subprocess
 import tempfile
 import unittest
@@ -47,25 +46,6 @@ class PRChecksTest(unittest.TestCase):
         checks.check_pr_contract(paths[:140])
         with self.assertRaisesRegex(ValueError, "maximum is 140"):
             checks.check_pr_contract(paths)
-
-    def test_aggregate_rejects_failure_cancellation_and_unexpected_skips(self):
-        for paths in [["docs/docs/index.md"], ["go.work"], ["README.md"]]:
-            plan = checks.plan_checks(paths)
-            needs = {"plan": {"result": "success", "outputs": {"plan": json.dumps(plan)}}}
-            selected = [bool(plan["go_modules"]), plan["web"], plan["docs"], bool(plan["languages"])]
-            for job, active in zip(checks.JOBS, selected):
-                needs[job] = {"result": "success" if active else "skipped"}
-            checks.check_results(needs)
-            for job in ["plan", *checks.JOBS]:
-                previous = needs[job]["result"]
-                for result in {"success", "skipped", "cancelled", "failure"} - {previous}:
-                    needs[job]["result"] = result
-                    with self.assertRaises(ValueError):
-                        checks.check_results(needs)
-                needs[job]["result"] = previous
-            del needs["codeql"]
-            with self.assertRaises(ValueError):
-                checks.check_results(needs)
 
     def test_invalid_comparison_never_becomes_an_empty_success(self):
         for value in ["", "main", "0" * 40, "a" * 39, "$(id)"]:

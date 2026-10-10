@@ -2,15 +2,8 @@ name: Docs
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'docs/v*.*.*'
-    paths:
-      - 'docs/**'
-      - 'tools/release/**'
-      - 'tools/security/**'
-      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:

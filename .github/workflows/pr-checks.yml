@@ -12,179 +12,28 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GOTOOLCHAIN: local
   CI: 'true'
 
 jobs:
-  plan:
-    name: Approve PR checks and plan
+  checks:
+    name: pr-ci
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 5
     # Required reviewer is configured in repository settings, not in YAML.
     environment: pr-ci-approval
-    outputs:
-      plan: ${{ steps.plan.outputs.plan }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Plan checks and require documentation
-        id: plan
+      - name: Plan local verification and require documentation
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: python3 tools/ci/pr_checks.py --base "$BASE_SHA" --head "$HEAD_SHA"
-      - name: Test routing and workflow governance
+      - name: Validate lightweight PR policy
         run: |
           python3 -m pip install PyYAML==6.0.3
           python3 -m unittest discover -s tools/ci -p 'test_*.py'
           python3 -m unittest tools.release.test_workflow_governance
           node --test tools/security/check-pnpm-audit.test.mjs
-
-  go:
-    name: Go (${{ matrix.module }})
-    needs: plan
-    if: ${{ fromJSON(needs.plan.outputs.plan).go_modules[0] != null }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 40
-    strategy:
-      fail-fast: false
-      matrix:
-        module: ${{ fromJSON(needs.plan.outputs.plan).go_modules }}
-    services:
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s --health-timeout 3s --health-retries 10
-    env:
-      GOWORK: ${{ matrix.module == 'admin' && format('{0}/go.work', github.workspace) || 'off' }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.module }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version-file: ${{ matrix.module }}/go.mod
-          cache-dependency-path: '**/go.sum'
-      - name: Test affected module
-        run: go test -shuffle=on -count=1 ./...
-      - name: Scan affected module
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
-          govulncheck ./...
-
-  web:
-    needs: plan
-    if: ${{ fromJSON(needs.plan.outputs.plan).web }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 35
-    env:
-      NODE_OPTIONS: '--max-old-space-size=4096'
-    defaults:
-      run:
-        working-directory: web/antd-v6
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 10.34.5
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: web/antd-v6/pnpm-lock.yaml
-      - name: Install and check dependency graph
-        run: |
-          pnpm install --frozen-lockfile --prefer-offline
-          pnpm deps:check
-          pnpm audit:release
-      - name: Lint, typecheck and test
-        run: |
-          pnpm lint
-          pnpm test:ci
-      - name: Build and enforce runtime bundle boundaries
-        run: pnpm build:release
-
-  docs:
-    needs: plan
-    if: ${{ fromJSON(needs.plan.outputs.plan).docs }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: docs
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 9.15.9
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: docs/pnpm-lock.yaml
-      - name: Audit and build documentation
-        run: |
-          pnpm install --frozen-lockfile --prefer-offline
-          pnpm audit:release
-          pnpm build
-
-  codeql:
-    name: CodeQL (${{ matrix.language }})
-    needs: plan
-    if: ${{ fromJSON(needs.plan.outputs.plan).languages[0] != null }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      security-events: write
-      packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        language: ${{ fromJSON(needs.plan.outputs.plan).languages }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        if: matrix.language == 'go'
-        with:
-          go-version-file: go.mod
-      - uses: github/codeql-action/init@v4.38.2
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.language == 'go' && 'autobuild' || 'none' }}
-      - uses: github/codeql-action/analyze@v4.38.2
-        with:
-          category: /language:${{ matrix.language }}
-
-  required:
-    name: pr-ci
-    if: ${{ always() }}
-    needs: [plan, go, web, docs, codeql]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Reject an unapproved or failed plan
-        if: ${{ needs.plan.result != 'success' }}
-        run: |
-          echo "PR approval and planning must succeed before checks can pass." >&2
-          exit 1
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      - name: Require every selected check to pass
-        env:
-          PR_NEEDS: ${{ toJSON(needs) }}
-        run: python3 tools/ci/pr_checks.py --check-results

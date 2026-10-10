@@ -8,11 +8,11 @@ Development uses `mss-boot-sys/mss-boot-admin`. Go import paths and the
 `@mss-boot-io/admin-web` package identity remain compatible with existing consumers.
 
 Every PR to `main` starts **PR Checks** (`.github/workflows/pr-checks.yml`).
-The first job waits for the repository owner `mss-boot-sys` to approve the
+The single `pr-ci` job waits for the repository owner `mss-boot-sys` to approve the
 `pr-ci-approval` environment before checking out or executing PR code. Each new
 commit starts a new run requiring approval and cancels the previous run.
-The owner can approve their own PR run. Rejection or cancellation fails `pr-ci`
-without checking out PR code in its failure-reporting job.
+The owner can approve their own PR run. Rejection prevents checkout; cancellation
+or a failed check does not produce a successful `pr-ci` result.
 
 This gate uses [GitHub required reviewers](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments),
 configured under **Settings → Environments → pr-ci-approval**: required reviewer
@@ -30,43 +30,45 @@ After enabling Actions, open the run, inspect its exact commit and choose
 **Review deployments → pr-ci-approval → Approve and deploy** to start checks,
 or reject it to stop execution. Never approve runs automatically through a bot.
 
-`tools/ci/pr_checks.py` reads the merge-base diff once, including both sides of
-renames. Mixed changes run the union of their component checks.
-The local PR contract retains the former guard's maximum of 140 changed paths
-and requires documentation for API, configuration, migration and workflow changes.
+`tools/ci/pr_checks.py` reads the merge-base diff, including both sides of
+renames, and reports which checks to run locally. The PR contract retains the
+maximum of 140 changed paths and requires documentation for API, configuration,
+migration and workflow changes.
 
-| Change | PR checks |
+## Execution budget
+
+| Event | Actions work |
 | --- | --- |
-| Admin | Admin tests and govulncheck; Go CodeQL |
-| Framework | Framework standalone tests and govulncheck; Admin integration tests and scan; Go CodeQL |
-| Go examples | Tests and govulncheck for the affected example; Go CodeQL |
-| Frontend | Frozen install, dependency policy, audit, lint/typecheck, unit tests, release build and bundle boundaries; JavaScript CodeQL |
-| Docs | Frozen install, dependency audit and site build |
-| Shared tooling, contracts, workflows or unknown paths | All affected families and Actions CodeQL |
-| Known top-level contributor Markdown | Documentation and workflow policy checks |
+| Pull request | One approved `pr-ci` job: change scope, documentation policy, routing/workflow regression checks and the small audit-parser test suite |
+| Push to `main` | None |
+| Schedule or branch-protection change | None |
+| Release tag | Existing publication checks and necessary artifact handling; broad quality suites are not repeated |
+| Explicit manual dispatch | Optional diagnostics, or the existing one-time release candidate build |
 
-Template Markdown and Agent contracts remain shared inputs and select the full
-check set, even though their filenames end in `.md`.
+The PR job has a five-minute execution timeout, read-only repository access,
+no service containers and no Go, frontend, Docs or CodeQL matrix. A green
+`pr-ci` proves only these lightweight checks passed. It does not certify tests,
+security scans, browser behavior or release readiness.
 
-The `pr-ci` result requires the planner and every selected check to succeed.
-Unexpected skips, cancellation and failures cannot produce a passing result.
-The workflow has no trigger path filter. After the operator enables Actions and
-validates the exact PR commit, configure `main` to require `pr-ci` from GitHub
-Actions and a PR, with force pushes and deletion prohibited including for
-administrators. Actions remains disabled during this repair; the new repository
-has no branch protection configured yet. Publication still requires the exact
-reviewed merged-main commit and enforced protection.
+Run `mss verify --changed` locally for the affected components.
+Before release, qualify the exact clean merged-main commit once with
+`mss verify --all --release-evidence --expect-commit <full-sha>`.
+The existing candidate preview builds the actual release artifacts once; tag
+publication verifies and reuses those artifacts. Admin retains the focused
+public Framework dependency check, and Docs builds its independently published
+site. Version/source checks, checksums, immutable identities and registry
+publication authority remain in place. No additional release runner, evidence
+service or approval chain is introduced.
 
-Admin and Framework coverage, race and metadata checks remain on `main` and
-manual runs. Database migration, external Thin Host, browser, delivery,
-container and release qualifications keep their existing dedicated workflows
-and local commands. The PR workflow does not repeat those extended matrices.
+The heavy Admin, Framework, compatibility, migration, CodeQL, vulnerability,
+Scorecard and Swagger workflows are manual diagnostics only. They do not run
+after ordinary merges. The Agent and frontend diagnostic matrices remain manual.
 
-The old PR Guard dependency is replaced with local documentation and routing
-checks. Legacy mirror, issue triage and weekly digest workflows referenced
-unavailable old-organization repositories and have been retired. Reintroducing
-an integration requires an explicit destination and reviewed credentials; the
-new repository does not inherit a mirror or reporting destination.
+Configure `main` to require `pr-ci` and a PR after the exact workflow has been
+validated. Repository settings are a separate operator action; this source
+change does not enable Actions, approve a run or change branch protection.
+
+Legacy mirror, issue triage and weekly digest integrations remain retired.
 
 ## Dependency baseline
 

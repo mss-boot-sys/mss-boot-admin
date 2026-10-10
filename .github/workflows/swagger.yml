@@ -1,18 +1,6 @@
 name: Swagger
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'admin/**/*.go'
-      - 'admin/.swaggo'
-      - 'admin/go.mod'
-      - 'admin/go.sum'
-      - 'mss-boot/**/*.go'
-      - 'tools/verification/check_presentation_openapi.py'
-      - 'tools/verification/test_check_presentation_openapi.py'
-      - '.github/workflows/swagger.yml'
   workflow_dispatch:
 
 permissions:

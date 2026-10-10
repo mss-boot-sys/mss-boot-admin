@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan scoped PR checks and validate their aggregate, without GitHub API access."""
+"""Plan local checks and validate lightweight PR policy, without GitHub API access."""
 
 import argparse
 import json
@@ -10,7 +10,6 @@ from pathlib import Path
 
 GO_MODULES = [".", "admin", "mss-boot", "compose/consul", "compose/kafka"]
 LANGUAGES = ["actions", "go", "javascript-typescript"]
-JOBS = ["go", "web", "docs", "codeql"]
 MAX_CHANGED_FILES = 140
 
 
@@ -82,46 +81,19 @@ def check_pr_contract(paths):
     check_documentation(paths)
 
 
-def check_results(needs):
-    if set(needs) != {"plan", *JOBS} or needs["plan"]["result"] != "success":
-        raise ValueError("Missing checks or unsuccessful PR plan")
-    plan = json.loads(needs["plan"]["outputs"]["plan"])
-    if set(plan) != {"go_modules", "languages", "web", "docs"}:
-        raise ValueError("Invalid PR plan")
-    for key, allowed in (("go_modules", GO_MODULES), ("languages", LANGUAGES)):
-        if not isinstance(plan[key], list) or any(item not in allowed for item in plan[key]):
-            raise ValueError("Invalid PR matrix")
-    if type(plan["web"]) is not bool or type(plan["docs"]) is not bool:
-        raise ValueError("Invalid PR component selection")
-    selected = {"go": bool(plan["go_modules"]), "codeql": bool(plan["languages"]),
-                "web": plan["web"], "docs": plan["docs"]}
-    for job in JOBS:
-        expected = "success" if selected[job] else "skipped"
-        if needs[job]["result"] != expected:
-            raise ValueError(f"{job}: expected {expected}, got {needs[job]['result']}")
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base")
     parser.add_argument("--head")
-    parser.add_argument("--check-results", action="store_true")
     args = parser.parse_args()
-    if args.check_results:
-        check_results(json.loads(os.environ["PR_NEEDS"]))
-        print("Every selected PR check passed.")
-        return
     paths = changed_paths(args.base or "", args.head or "")
     check_pr_contract(paths)
     plan = plan_checks(paths)
     output = json.dumps(plan, separators=(",", ":"))
     print(output)
-    if os.environ.get("GITHUB_OUTPUT"):
-        with Path(os.environ["GITHUB_OUTPUT"]).open("a") as stream:
-            stream.write(f"plan={output}\n")
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
-            stream.write(f"PR plan for {len(paths)} changed paths:\n```json\n{output}\n```\n")
+            stream.write(f"Local verification scope for {len(paths)} changed paths:\n```json\n{output}\n```\n")
 
 
 if __name__ == "__main__":

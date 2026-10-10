@@ -129,9 +129,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
     def test_release_tags_do_not_retrigger_component_ci(self):
         for workflow_name in ("ci.yml", "mss-boot-ci.yml"):
             workflow = self.workflows[workflow_name]
-            self.assertEqual(workflow["on"]["push"]["branches"], ["main"])
-            self.assertNotIn("tags", workflow["on"]["push"])
-            self.assertNotIn("pull_request", workflow["on"])
+            self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
         self.assertEqual(
             self.workflows["release.yml"]["on"]["push"]["tags"],
             ["v*.*.*"],
@@ -159,54 +157,48 @@ class WorkflowGovernanceTest(unittest.TestCase):
         ]
         self.assertEqual(present, [])
 
-    def test_pr_workflow_is_the_single_scoped_fail_closed_entrypoint(self):
+    def test_pr_workflow_is_one_lightweight_read_only_job(self):
         entrypoints = [name for name, workflow in self.workflows.items()
                        if "pull_request" in workflow["on"] or "pull_request_target" in workflow["on"]]
         self.assertEqual(entrypoints, ["pr-checks.yml"])
         workflow = self.workflows["pr-checks.yml"]
-        self.assertEqual(workflow["on"]["pull_request"], {"branches": ["main"]})
+        self.assertEqual(workflow["on"], {"pull_request": {"branches": ["main"]}})
         self.assertEqual(workflow["permissions"], {"contents": "read"})
-        jobs = workflow["jobs"]
-        self.assertEqual(set(jobs), {"plan", "go", "web", "docs", "codeql", "required"})
-        self.assertEqual(jobs["required"]["name"], "pr-ci")
-        self.assertEqual(jobs["required"]["if"], "${{ always() }}")
-        self.assertEqual(set(jobs["required"]["needs"]), {"plan", "go", "web", "docs", "codeql"})
-        self.assertIn("--check-results", jobs["required"]["steps"][-1]["run"])
-        self.assertIn("--base", jobs["plan"]["steps"][1]["run"])
-        for job in ("go", "web", "docs", "codeql"):
-            self.assertEqual(jobs[job]["needs"], "plan")
-            self.assertIn("fromJSON(needs.plan.outputs.plan)", jobs[job]["if"])
-        go_steps = "\n".join(step.get("run", "") for step in jobs["go"]["steps"])
-        self.assertIn("go test -shuffle=on -count=1 ./...", go_steps)
-        self.assertIn("govulncheck ./...", go_steps)
-        self.assertIn("'off'", jobs["go"]["env"]["GOWORK"])
-        for name in ("web", "docs"):
-            script = "\n".join(step.get("run", "") for step in jobs[name]["steps"])
-            self.assertIn("--frozen-lockfile", script)
-            self.assertIn("audit:release", script)
-            self.assertIn("pnpm build", script)
-        for name, current in self.workflows.items():
-            for job in current["jobs"].values():
-                self.assertNotIn("mss-boot-io/", job.get("uses", ""), name)
-                self.assertNotIn("continue-on-error", job, name)
+        self.assertEqual(len(workflow["jobs"]), 1)
+        job = next(iter(workflow["jobs"].values()))
+        self.assertEqual(job["name"], "pr-ci")
+        self.assertLessEqual(int(job["timeout-minutes"]), 5)
+        self.assertNotIn("services", job)
+        self.assertNotIn("strategy", job)
+        self.assertNotIn("continue-on-error", job)
+        scripts = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn("tools/ci/pr_checks.py --base", scripts)
+        self.assertIn("test_workflow_governance", scripts)
+        for heavy in ("go test", "go build", "govulncheck", "pnpm install", "pnpm build", "docker ", "playwright"):
+            self.assertNotIn(heavy, scripts)
+        for step in job["steps"]:
+            self.assertNotIn("if", step)
+            self.assertNotIn("continue-on-error", step)
+            self.assertFalse(step.get("uses", "").startswith(("actions/setup-go@", "github/codeql-action/")))
 
     def test_pr_code_cannot_run_before_owner_approval(self):
         workflow = self.workflows["pr-checks.yml"]
-        jobs = workflow["jobs"]
-        self.assertEqual(jobs["plan"]["environment"], "pr-ci-approval")
-        self.assertTrue(workflow["concurrency"]["cancel-in-progress"])
+        job = next(iter(workflow["jobs"].values()))
+        self.assertEqual(job["environment"], "pr-ci-approval")
+        self.assertEqual(workflow["concurrency"]["cancel-in-progress"], "true")
         self.assertIn("github.event.pull_request.number", workflow["concurrency"]["group"])
-        for name in ("go", "web", "docs", "codeql"):
-            self.assertEqual(jobs[name]["needs"], "plan")
-            self.assertNotIn("always()", jobs[name]["if"])
-        steps = jobs["required"]["steps"]
-        self.assertEqual(steps[0]["if"], "${{ needs.plan.result != 'success' }}")
-        self.assertIn("exit 1", steps[0]["run"])
-        self.assertNotIn("uses", steps[0])
-        self.assertTrue(steps[1]["uses"].startswith("actions/checkout@"))
-        for step in steps[1:]:
-            self.assertNotIn("always()", step.get("if", ""))
-            self.assertNotIn("continue-on-error", step)
+        self.assertNotIn("if", job)
+        self.assertTrue(job["steps"][0]["uses"].startswith("actions/checkout@"))
+        self.assertEqual(job["steps"][0]["with"]["persist-credentials"], "false")
+
+    def test_main_and_schedules_never_start_workflows(self):
+        for name, workflow in self.workflows.items():
+            triggers = workflow["on"]
+            self.assertNotIn("schedule", triggers, name)
+            self.assertNotIn("branch_protection_rule", triggers, name)
+            if "push" in triggers:
+                self.assertEqual(set(triggers["push"]), {"tags"}, name)
+                self.assertTrue(triggers["push"]["tags"], name)
 
     def test_foundation_compatibility_is_a_single_local_gate(self):
         agent = self.workflows["agent-native-ci.yml"]
@@ -231,7 +223,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
         triggers = self.workflows["scorecard.yml"]["on"]
         self.assertEqual(
             set(triggers),
-            {"branch_protection_rule", "schedule", "workflow_dispatch"},
+            {"workflow_dispatch"},
         )
         self.assertNotIn("push", triggers)
 
@@ -356,34 +348,17 @@ class WorkflowGovernanceTest(unittest.TestCase):
                 self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
                 self.assertEqual(set(workflow["jobs"]), required_jobs)
 
-    def test_other_broad_component_matrices_are_post_merge_or_manual_not_pr_gates(self):
-        for workflow_name in (
-            "admin-distribution-compatibility.yml",
-            "container.yml",
-            "docs.yml",
-            "pat-migration-integration.yml",
-            "swagger.yml",
-            "theme-settings-integration.yml",
+    def test_extended_diagnostics_are_manual_only(self):
+        for name in (
+            "ci.yml", "mss-boot-ci.yml", "admin-distribution-compatibility.yml",
+            "codeql.yml", "govulncheck.yml", "scorecard.yml", "swagger.yml",
+            "pat-migration-integration.yml", "theme-settings-integration.yml",
             "v0.7-upgrade-integration.yml",
         ):
-            with self.subTest(workflow=workflow_name):
-                triggers = self.workflows[workflow_name]["on"]
-                self.assertNotIn("pull_request", triggers)
-                self.assertIn("push", triggers)
-                self.assertEqual(triggers["push"]["branches"], ["main"])
-                if workflow_name == "container.yml":
-                    self.assertIn("workflow_call", triggers)
-                else:
-                    self.assertIn("workflow_dispatch", triggers)
-
-        framework = self.workflows["mss-boot-ci.yml"]
-        self.assertNotIn("pull_request", framework["on"])
-        jobs = framework["jobs"]
-        for name in ("race", "static-and-module"):
-            self.assertIn("github.event_name != 'pull_request'", jobs[name]["if"])
-        aggregate = jobs["required"]["steps"][0]["run"]
-        self.assertIn('if [[ "${EVENT_NAME}" == "pull_request" ]]', aggregate)
-        self.assertIn('test "${RACE_RESULT}" = "skipped"', aggregate)
+            with self.subTest(workflow=name):
+                self.assertEqual(set(self.workflows[name]["on"]), {"workflow_dispatch"})
+        self.assertEqual(self.workflows["container.yml"]["on"]["push"], {"tags": ["v*.*.*"]})
+        self.assertEqual(self.workflows["docs.yml"]["on"]["push"], {"tags": ["docs/v*.*.*"]})
 
     def test_admin_module_metadata_gate_uses_a_confined_prepublication_replace(self):
         job = self.workflows["ci.yml"]["jobs"]["static-and-module"]
@@ -462,10 +437,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
 
     def test_go_vulnerability_scans_follow_owned_modules(self):
         workflow = self.workflows["govulncheck.yml"]
-        self.assertEqual(
-            set(workflow["on"]["push"]["paths-ignore"]),
-            {"docs/**", "web/**"},
-        )
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
         jobs = workflow["jobs"]
         self.assertEqual(jobs["root"]["if"], "needs.scope.outputs.scope == 'shared'")
         self.assertEqual(
@@ -521,21 +493,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
 
     def test_distribution_compatibility_routes_heavy_external_consumption(self):
         workflow = self.workflows["admin-distribution-compatibility.yml"]
-        self.assertNotIn("pull_request", workflow["on"])
-        push_paths = set(workflow["on"]["push"]["paths"])
-        for path in (
-            "admin/**",
-            "mss-boot/**",
-            "web/antd-v6/**",
-            "cmd/mss/**",
-            "internal/mss/**",
-            "templates/**",
-            ".mss/**",
-            "tools/compatibility/**",
-            "tools/release/**",
-            ".github/workflows/**",
-        ):
-            self.assertIn(path, push_paths)
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
 
         jobs = workflow["jobs"]
         condition = jobs["external-consumer"]["if"]

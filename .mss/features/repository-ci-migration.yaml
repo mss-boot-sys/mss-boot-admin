@@ -8,7 +8,7 @@ spec:
   problem: The migrated repository has disabled Actions, missing main protection, unavailable legacy reusable workflows, duplicate PR setup and failing security baselines.
   goals:
   - Restore executable workflows in mss-boot-sys/mss-boot-admin.
-  - Use one PR entrypoint and one required result with component-scoped tests and security checks.
+  - Use one lightweight PR job and keep broad verification local; hosted compute is reserved for release artifacts and explicitly requested diagnostics.
   - Repair Go and npm security failures without suppressing runtime vulnerabilities.
   nonGoals:
   - Publish releases, change Go import paths or npm package identity, or configure production PVE.
@@ -22,17 +22,18 @@ spec:
     operation: extend
   requirements:
   - id: scoped-pr-checks
-    title: One fail-closed PR result
-    description: Plan once from the PR merge-base diff and execute only affected check families.
+    title: One lightweight PR result
+    description: Plan local verification from the PR merge-base diff and run only inexpensive documentation, routing and workflow-policy checks in Actions.
     priority: must
     actor: contributor
     module: ci-governance
     rules:
-    - All PRs targeting main start the workflow without path filters; cancellation, failure and unexpectedly skipped checks fail pr-ci.
-    - Framework changes also test Admin integration; mixed component changes union their checks instead of widening every change to all modules.
-    - Go tests and vulnerability scans share setup per affected module; CodeQL runs only affected languages; web and docs use frozen lockfiles.
-    - Documentation contract and workflow policy validation are local and require no legacy organization workflow.
-    - Post-merge, manual diagnostics and exact merged-main release gates retain their separate responsibilities.
+    - All PRs targeting main start one pr-ci job without path filters or job conditions; every lightweight check must succeed.
+    - The local verification plan includes Admin integration for Framework changes and unions mixed component selections.
+    - Go tests, vulnerability scans, frontend lint and builds, docs builds and browser checks run locally; they are not PR jobs.
+    - Documentation contract and workflow policy validation use repository scripts and require no legacy organization workflow.
+    - Tag workflows retain source, version, dependency and artifact checks needed for publication; they reuse the single candidate build and never repeat broad quality suites. No new release orchestration is introduced.
+    - Main pushes, schedules and branch-protection events start no workflows. Heavy diagnostic workflows require an explicit manual dispatch.
   - id: pr-approval
     title: Repository owner approval before PR execution
     description: Every PR run waits for mss-boot-sys to approve the pr-ci-approval environment before the planner checks out or executes PR code.
@@ -42,12 +43,12 @@ spec:
     rules:
     - The repository environment requires mss-boot-sys as reviewer, permits that owner to approve their own runs, and disables administrator bypass.
     - New commits create new runs requiring approval and cancel older runs. The gate must never approve itself.
-    - Rejected, cancelled or failed plans fail pr-ci without checking out or executing PR code in the aggregate job.
+    - The single pr-ci job requires owner approval before checkout; rejected, cancelled or failed checks cannot be reported as a completed successful job.
     - All external contributors also require GitHub fork workflow approval so a fork cannot remove the environment guard before its first execution.
-    - Actions remains disabled until the owner enables it; no workflow run is approved during this repair.
+    - Actions enablement and approval remain operator-controlled; no workflow run is approved during this repair.
   - id: migration-security
     title: Migrated repository and patched baselines
-    description: Keep Actions disabled for the operator to enable after review; prepare the new main PR gate and repair reproducible dependency failures.
+    description: Prepare the lightweight PR gate and repair reproducible dependency failures without changing repository permissions or approving runs.
     priority: must
     actor: contributor
     module: ci-governance
@@ -66,7 +67,7 @@ spec:
   acceptance:
   - id: pr-routing
     requirement: scoped-pr-checks
-    statement: Docs-only, web-only, Admin, Framework, mixed, renamed and shared changes select the correct checks; gate rejects missing, failed, cancelled and unexpected skipped results.
+    statement: Docs-only, web-only, Admin, Framework, mixed, renamed and shared changes select the correct local plan; the hosted job has no component matrices, service containers or publication commands.
     level: unit
     required: true
     evidence:
@@ -97,5 +98,5 @@ spec:
     - make test-all build
   rollout:
     strategy: direct
-    migration: Push the topic branch through PR with local evidence. Actions remains disabled until the operator enables it; then validate the exact PR commit and configure pr-ci on main. Retain post-merge and release gates.
+    migration: Push the topic branch through PR with local evidence. Validate the lightweight pr-ci job and configure it on main separately. Main and schedules perform no automatic work; tag publication and optional manual diagnostics keep their existing entrypoints.
     rollback: Use a follow-up PR to repair or revert routing; keep required checks and PR protection enabled.

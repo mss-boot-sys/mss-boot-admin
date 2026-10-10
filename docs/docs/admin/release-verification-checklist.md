@@ -37,7 +37,7 @@ Distribution Tag 不重复昂贵验证，也不接受 promotion、readiness run 
 - [ ] 完整验证包含 Agent 构建、Admin/Framework race、coverage、vet 与模块元数据、独立 next-Foundation 生成和升级、CLI/MCP/doctor 身份一致性、确定性冲突、第二次升级零变更、eval、依赖审计、release workflow 合同、delivery smoke 与 Playwright E2E
 - [ ] PR、审查记录或仓库外发布台账记录完整 commit、`trackedCleanBefore: true`、`trackedCleanAfter: true`、精确命令、verify report 哈希或摘要及退出结果；本地报告单独存在不授权发布
 - [ ] Codex 内置浏览器在同一精确 commit 完成桌面、窄屏、深链、刷新、控制台和失败网络请求验收
-- [ ] PR 必需的治理、govulncheck、CodeQL 和普通 Admin 单测全部通过；Framework 变更另跑一个普通独立单测；race、coverage、vet/tidy、前端/Thin Host/容器/多数据库重型矩阵不作为 PR 合并门禁
+- [ ] 轻量 `pr-ci` 文档、路由和工作流治理检查通过；影响范围内的测试与安全检查在本地完成。`main` 和定时任务不自动运行重型矩阵；托管诊断仅按需手动触发
 - [ ] 合并后的 Root preview 仅核验同一 frozen commit 的精确发布制品，且六平台二进制、portable delivery、候选 Thin Host、SBOM、校验和和双架构 OCI 均完整
 - [ ] Admin Tag 流水线在 Framework 已公开后，以 GOWORK=off 和公共 Go Proxy 解析精确 Framework 并通过 app/business 组合测试
 - [ ] 后端和 Admin Web 依赖都精确为同一个已完成公共对账的协调版本，锁文件无漂移
