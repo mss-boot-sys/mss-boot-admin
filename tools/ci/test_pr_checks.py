@@ -26,7 +26,8 @@ class PRChecksTest(unittest.TestCase):
 
     def test_shared_and_unknown_changes_fail_toward_full_coverage(self):
         for path in [".github/workflows/pr-checks.yml", "go.work", ".mss/project.yaml",
-                     "tools/security/check-pnpm-audit.mjs", "web-new/app.tsx"]:
+                     "tools/security/check-pnpm-audit.mjs", "web-new/app.tsx",
+                     "templates/application/README.md", ".agents/skills/example/SKILL.md"]:
             with self.subTest(path=path):
                 self.assertEqual(checks.plan_checks([path]), {
                     "go_modules": checks.GO_MODULES, "languages": checks.LANGUAGES,

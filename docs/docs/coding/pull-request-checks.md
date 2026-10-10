@@ -21,7 +21,10 @@ and requires documentation for API, configuration, migration and workflow change
 | Frontend | Frozen install, dependency policy, audit, lint/typecheck, unit tests, release build and bundle boundaries; JavaScript CodeQL |
 | Docs | Frozen install, dependency audit and site build |
 | Shared tooling, contracts, workflows or unknown paths | All affected families and Actions CodeQL |
-| Contributor Markdown outside Docs | Documentation and workflow policy checks |
+| Known top-level contributor Markdown | Documentation and workflow policy checks |
+
+Template Markdown and Agent contracts remain shared inputs and select the full
+check set, even though their filenames end in `.md`.
 
 The `pr-ci` result requires the planner and every selected check to succeed.
 Unexpected skips, cancellation and failures cannot produce a passing result.

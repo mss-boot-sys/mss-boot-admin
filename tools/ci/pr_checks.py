@@ -32,8 +32,10 @@ def plan_checks(paths):
     for path in paths:
         if path.startswith("docs/"):
             docs = True
-        elif path.endswith(".md") or path.startswith((".agents/", ".codex/", ".cursor/")):
-            # Contributor instructions and Markdown have no executable component.
+        elif path in {"README.md", "README.zh-CN.md", "CONTRIBUTING.md", "AGENTS.md",
+                      "CODE_OF_CONDUCT.md", "SECURITY.md"}:
+            # Only known top-level contributor prose can skip component checks.
+            # Template Markdown and Agent contracts are inputs to generation.
             continue
         elif path.startswith("web/antd-v6/"):
             web = True
