@@ -55,6 +55,9 @@ spec:
         - Secrets are generated once, hashed at rest, absent from list responses, and removed from UI memory when the dialog closes.
         - Mutations and successful authorization/token grants carry value-free audit records; failure diagnostics never contain protocol credentials.
   constraints:
+    - id: source-repository
+      type: compatibility
+      statement: Project, Blueprint snapshot provenance and npm source metadata identify mss-boot-sys/mss-boot-admin independently of the unchanged Go import paths and npm package name; older Blueprints retain module-derived repository defaults.
     - id: auth-compatibility
       type: compatibility
       statement: Existing login, CSRF, session revocation, core composition and Go module paths remain intact; provider is disabled by default.

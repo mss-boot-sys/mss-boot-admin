@@ -700,6 +700,9 @@ func inferRepository(module string) string {
 }
 
 func foundationRepository(blueprint *Document) string {
+	if blueprint.Spec.SourceRepository != "" {
+		return blueprint.Spec.SourceRepository
+	}
 	const prefix = "github.com/"
 	if strings.HasPrefix(blueprint.Spec.SourceModule, prefix) {
 		parts := strings.Split(strings.TrimPrefix(blueprint.Spec.SourceModule, prefix), "/")

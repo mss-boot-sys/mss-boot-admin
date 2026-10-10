@@ -8,6 +8,7 @@ spec:
   sourceMode: git-tracked
   templateRoot: templates/application
   sourceModule: github.com/mss-boot-io/mss-boot-admin
+  sourceRepository: mss-boot-sys/mss-boot-admin
   sourceProjectName: mss-boot-admin
   distribution:
     name: mss-boot-admin
