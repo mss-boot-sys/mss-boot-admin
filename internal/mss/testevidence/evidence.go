@@ -696,14 +696,16 @@ func redactRepositoryPaths(value, root string) string {
 			candidates[filepath.Clean(resolved)] = true
 		}
 	}
-	paths := make([]string, 0, len(candidates)*2)
+	paths := make([]string, 0, len(candidates)*4)
 	for candidate := range candidates {
 		if candidate == "" || candidate == string(filepath.Separator) {
 			continue
 		}
-		paths = append(paths, candidate)
+		// Test selectors contain regexp-quoted paths. Redact those spellings as
+		// well as literal paths before serializing report fields to JSON.
+		paths = append(paths, candidate, regexp.QuoteMeta(candidate))
 		if slash := filepath.ToSlash(candidate); slash != candidate {
-			paths = append(paths, slash)
+			paths = append(paths, slash, regexp.QuoteMeta(slash))
 		}
 	}
 	sort.Slice(paths, func(i, j int) bool {

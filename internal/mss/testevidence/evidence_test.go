@@ -478,6 +478,34 @@ func TestRunRedactsAllReportStringFields(t *testing.T) {
 	}
 }
 
+func TestReportRedactsLiteralAndRegexpQuotedRepositoryPaths(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "checkout.[1]+(release)")
+	quoted := regexp.QuoteMeta(root)
+	report := Report{
+		Directory:  filepath.Join(root, "fixture"),
+		RunPattern: "^(" + quoted + "|TestExact)$",
+		Command:    []string{"go", "test", "-run", "^(" + quoted + ")$"},
+		Environment: map[string]string{
+			"FIXTURE_PATH":    root,
+			"FIXTURE_PATTERN": quoted,
+		},
+		Stderr: "fixture " + root + ": pattern " + quoted,
+	}
+	redactReport(&report, root)
+	if report.RunPattern != "^($REPO|TestExact)$" || report.Command[3] != "^($REPO)$" {
+		t.Fatalf("escaped selectors were not redacted: %#v", report)
+	}
+	if report.Environment["FIXTURE_PATH"] != "$REPO" || report.Environment["FIXTURE_PATTERN"] != "$REPO" {
+		t.Fatalf("environment paths were not redacted: %#v", report.Environment)
+	}
+	if report.Stderr != "fixture $REPO: pattern $REPO" {
+		t.Fatalf("stderr paths were not redacted: %q", report.Stderr)
+	}
+	if got := redactRepositoryPaths("unrelated/path", root); got != "unrelated/path" {
+		t.Fatalf("unrelated text changed: %q", got)
+	}
+}
+
 func validOptions(t *testing.T, count int, race bool, required ...string) Options {
 	t.Helper()
 	root := t.TempDir()

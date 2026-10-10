@@ -9,10 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
-
+	distribution "github.com/mss-boot-sys/mss-boot-admin"
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 func TestGenerateApplicationUsesEmbeddedSourceInEmptyDirectory(t *testing.T) {
@@ -26,13 +28,7 @@ func TestGenerateApplicationUsesEmbeddedSourceInEmptyDirectory(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chdir(originalDirectory) })
 
-	originalVersion, originalCommit, originalTimestamp := buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp
-	t.Cleanup(func() {
-		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
-	})
-	buildinfo.Version = "v1.3.9"
-	buildinfo.Commit = strings.Repeat("a", 40)
-	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
+	setAppReleaseBuild(t)
 
 	rootOverride := ""
 	command := &cobra.Command{}
@@ -50,7 +46,7 @@ func TestGenerateApplicationUsesEmbeddedSourceInEmptyDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generateApplication() error = %v", err)
 	}
-	if plan.Identities.Foundation.Version != "1.3.7" || plan.Destination != filepath.Join(working, "generated-admin") {
+	if plan.Identities.Foundation.Version != appDistribution(t).Frontend.Version || plan.Destination != filepath.Join(working, "generated-admin") {
 		t.Fatalf("standalone application plan = %#v", plan)
 	}
 	if _, err := os.Stat(filepath.Join(working, "generated-admin", "README.md")); err != nil {
@@ -92,14 +88,21 @@ func TestGenerateApplicationDefaultsToEmbeddedSourceFromFoundationSubdirectory(t
 
 func appFrontendRegistry(t *testing.T) string {
 	t.Helper()
+	frontend := appDistribution(t).Frontend
 	integrity := "sha512-" + strings.Repeat("A", 86) + "=="
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/"+frontend.Package+"/"+frontend.Version {
+			http.NotFound(writer, request)
+			return
+		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-sys/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":%q,"version":%q,"dist":{"integrity":%q,"tarball":%q}}`,
+			frontend.Package,
+			frontend.Version,
 			integrity,
-			"http://"+request.Host+"/artifacts/app-admin-web-1.3.7.tgz",
+			"http://"+request.Host+"/artifacts/app-admin-web-"+frontend.Version+".tgz",
 		)
 	}))
 	t.Cleanup(server.Close)
@@ -112,7 +115,25 @@ func setAppReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.9"
+	buildinfo.Version = appDistribution(t).Version
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
+}
+
+// appDistribution keeps release-build and registry fixtures aligned with the
+// same embedded contract used by the standalone application command.
+func appDistribution(t *testing.T) project.DistributionSpec {
+	t.Helper()
+	data, err := distribution.EmbeddedFS().ReadFile(".mss/blueprints/management-system.yaml")
+	if err != nil {
+		t.Fatalf("read embedded distribution contract: %v", err)
+	}
+	var document blueprint.Document
+	if err := yaml.Unmarshal(data, &document); err != nil {
+		t.Fatalf("decode embedded distribution contract: %v", err)
+	}
+	if problems := document.Spec.Distribution.Validate(); len(problems) != 0 {
+		t.Fatalf("invalid embedded distribution contract: %v", problems)
+	}
+	return document.Spec.Distribution
 }
