@@ -83,7 +83,7 @@ Casbin 使用并发安全的同步执行器，避免策略重载与请求鉴权�
 
 ## 源码升级：Casbin v3（未发布）
 
-当前开发源码将 Framework 与 Admin 的授权引擎统一升级到 **Casbin 3.10.0**，
+当前开发源码将 Framework 与 Admin 的授权引擎统一升级到 **Casbin 3.11.0**，
 解决 GORM adapter 3.41.0 与旧 v2 `model.Model` 不兼容导致的编译失败。
 这项变更不属于上文的已发布 v1.3.7 基线。
 

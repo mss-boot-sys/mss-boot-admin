@@ -8,7 +8,13 @@ tag namespaces.
 
 ### Changed
 
-- Migrate Framework and Admin authorization to Casbin v3.10.0 with compatible
+- Consolidate outstanding dependency updates using the upstream versions checked
+  on 2026-10-10. Move all active Go modules, workspace, image builders and Thin
+  Host toolchain templates to Go 1.27.2; refresh AWS, Kubernetes, Prometheus,
+  MongoDB driver, Go extension libraries, Admin Web and Docs dependencies.
+  Keep runtime overrides, package validators and host templates synchronized.
+  Framework version pins remain governed by the coordinated Distribution release.
+- Migrate Framework and Admin authorization to Casbin v3.11.0 with compatible
   GORM and MongoDB policy adapters. This is a breaking Go API change for callers
   that use Casbin types; policy storage and authorization rules are unchanged.
   See the unreleased migration guidance in `docs/docs/admin/permission-hardening.md`.

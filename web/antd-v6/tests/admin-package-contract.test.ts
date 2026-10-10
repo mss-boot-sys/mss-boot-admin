@@ -76,11 +76,11 @@ describe('Admin web package contract', () => {
     expect(packageManifest.mssAdminDistribution).toMatchObject({
       packageManager: packageManifest.packageManager,
       runtimeOverrides: {
-        react: '19.2.8',
-        'react-dom': '19.2.8',
-        antd: '6.6.1',
-        '@ant-design/pro-components': '3.1.14-6',
-        '@tanstack/react-query': '5.101.4',
+        react: '19.3.0',
+        'react-dom': '19.3.0',
+        antd: '6.6.5',
+        '@ant-design/pro-components': '3.1.15-7',
+        '@tanstack/react-query': '5.104.1',
         axios: '0.34.0',
       },
     });

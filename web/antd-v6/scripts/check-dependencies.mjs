@@ -9,17 +9,17 @@ const runtimeApp = await readFile(join(projectRoot, 'src/app.tsx'), 'utf8');
 const proxyConfig = await readFile(join(projectRoot, 'package/business.cjs'), 'utf8');
 
 const expected = {
-  '@ant-design/icons': '6.3.2',
-  '@ant-design/pro-components': '3.1.14-6',
-  '@tanstack/react-query': '5.101.4',
-  antd: '6.6.1',
+  '@ant-design/icons': '6.3.4',
+  '@ant-design/pro-components': '3.1.15-7',
+  '@tanstack/react-query': '5.104.1',
+  antd: '6.6.5',
   'antd-style': '4.1.0',
   d: '1.0.2',
-  react: '19.2.8',
-  'react-dom': '19.2.8',
-  '@umijs/max': '4.7.7',
+  react: '19.3.0',
+  'react-dom': '19.3.0',
+  '@umijs/max': '4.7.23',
   typescript: '7.0.2',
-  vitest: '4.1.11',
+  vitest: '5.0.3',
 };
 
 const failures = [];
@@ -114,14 +114,14 @@ const versionsFor = (name) => {
 };
 
 const allowedResolvedVersions = {
-  react: ['19.2.8'],
-  'react-dom': ['19.2.8'],
-  antd: ['6.6.1'],
-  '@ant-design/pro-components': ['3.1.14-6'],
-  '@tanstack/react-query': ['5.101.4'],
-  '@umijs/max': ['4.7.7'],
+  react: ['19.3.0'],
+  'react-dom': ['19.3.0'],
+  antd: ['6.6.5'],
+  '@ant-design/pro-components': ['3.1.15-7'],
+  '@tanstack/react-query': ['5.104.1'],
+  '@umijs/max': ['4.7.23'],
   axios: ['0.34.0'],
-  umi: ['4.7.7'],
+  umi: ['4.7.23'],
   immer: ['8.0.4'],
 };
 

@@ -18,6 +18,10 @@ updates:
         patterns: ['*']
         update-types: [minor, patch]
     labels: [area/backend, type/security]
+    # Framework is released with Admin as one Distribution. Its published
+    # version cannot be upgraded independently of the coordinated source pair.
+    ignore:
+      - dependency-name: github.com/mss-boot-io/mss-boot-admin/mss-boot
   - package-ecosystem: gomod
     directory: /mss-boot
     schedule: { interval: weekly }
@@ -27,9 +31,6 @@ updates:
         patterns: ['*']
         update-types: [minor, patch]
     labels: [area/backend, type/security]
-    ignore:
-      - dependency-name: github.com/casbin/gorm-adapter/v3
-        update-types: [version-update:semver-minor, version-update:semver-patch]
   - package-ecosystem: gomod
     directory: /compose/consul
     schedule: { interval: weekly }

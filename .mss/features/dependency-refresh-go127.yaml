@@ -1,0 +1,62 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: dependency-refresh-go127
+  displayName: Consolidate dependency upgrades and adopt Go 1.27.2
+  owner: foundation-maintainers
+spec:
+  problem: Separate dependency PRs leave frontend contracts and runtime overrides inconsistent, while the active Go toolchain must move to the patched 1.27.2 release.
+  goals:
+    - Consolidate dependency PRs 1, 2, 3, 14 and 15 into the Casbin v3 repair.
+    - Use Go 1.27.2 in every active module, workspace, builder and generated host.
+    - Keep exact frontend runtime pins synchronized across package metadata, templates, validators and installed graphs.
+  nonGoals:
+    - Publish a release or modify historical release identities and checksums.
+    - Upgrade the internal Framework module independently of the coordinated Distribution.
+  actors:
+    - id: maintainer
+      displayName: Foundation maintainer
+  modules:
+    - name: dependencies
+      kind: infrastructure
+      operation: extend
+  requirements:
+    - id: coherent-dependencies
+      title: Integrate dependency updates with their contracts
+      description: Apply the external dependency targets from the five PRs and repair resulting compatibility failures.
+      priority: must
+      actor: maintainer
+      module: dependencies
+      rules:
+        - Framework and Admin retain Casbin v3 and share compatible AWS and Kubernetes dependency versions.
+        - Published Framework v1.3.8 still exposes Casbin v2 and is excluded from the Admin bump; Dependabot must not independently update this Distribution component.
+        - React 19.3.0, Ant Design 6.6.5, ProComponents 3.1.15-7, Query 5.104.1 and Umi 4.7.23 remain exact singleton runtime pins.
+        - Go 1.27.2 builder images use an upstream-verified immutable digest.
+  constraints:
+    - id: publication-boundary
+      type: operations
+      statement: Validate the unpublished source pair without publishing, changing historical checksums or upgrading internal Distribution components independently.
+  acceptance:
+    - id: backend-validation
+      requirement: coherent-dependencies
+      statement: Root, Admin and standalone Framework tests, builds, metadata checks and the external consumer pass on Go 1.27.2.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: make test-all build compatibility-admin tidy-admin-prepublication-check
+    - id: frontend-validation
+      requirement: coherent-dependencies
+      statement: Exact dependency checks, lint, types, unit tests, release build, package allowlist and an external Thin Host pass with the updated runtime graph.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: make web-v6-lint web-v6-test web-v6-build
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+  rollout:
+    strategy: direct
+    migration: Merge the consolidated PR before a separately qualified coordinated release. No database migration is required.
+    rollback: Revert dependency manifests, locks and matching contracts together through a follow-up PR.

@@ -29,7 +29,7 @@ spec:
       actor: maintainer
       module: authorization
       rules:
-        - Framework and Admin directly pin Casbin v3.10.0 and use GORM adapter v3.41.0.
+        - Framework and Admin directly pin Casbin v3.11.0 and use GORM adapter v3.41.0.
         - MongoDB authorization uses apache/casbin-mongodb-adapter/v4 at the immutable Casbin-v3-compatible commit 67c101979371cff80af2ce7f3094a6c5b0f2dc29; its older tagged versions still depend on Casbin v2.
         - MongoDB policy adapter options use Mongo driver v2; the existing mgm application-data API retains its separate driver v1 types.
         - No active Go source imports Casbin v2, and the qualified source dependency graph excludes Casbin v2.

@@ -34,7 +34,7 @@ spec:
     reports: .mss/reports
   backend:
     language: go
-    goVersion: "1.26.9"
+    goVersion: "1.27.2"
     module: github.com/mss-boot-io/mss-boot-admin/admin
     frameworkModule: github.com/mss-boot-io/mss-boot-admin/mss-boot
     httpFramework: gin

@@ -21,7 +21,7 @@ It runs a 3-node server cluster with TLS and ACLs enabled.
 - A gossip encryption key
 
 The separate Go client example in this directory uses
-`github.com/hashicorp/consul/api v1.34.5` and requires Go 1.26.9 or newer.
+`github.com/hashicorp/consul/api v1.34.5` and requires Go 1.27.2 or newer.
 Validate it independently of the Foundation workspace from the repository root:
 
 ```bash

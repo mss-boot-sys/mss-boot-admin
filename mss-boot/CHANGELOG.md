@@ -9,7 +9,7 @@ and the project uses semantic versioning for nested-module releases.
 ### Changed
 
 - Migrate exported SQL and MongoDB enforcers and watcher interfaces to Casbin
-  v3.10.0. Callers and custom adapters must use `github.com/casbin/casbin/v3`
+  v3.11.0. Callers and custom adapters must use `github.com/casbin/casbin/v3`
   types; no v2 compatibility layer is provided.
 - Use GORM adapter v3.41.0 and the MongoDB adapter's immutable Casbin-v3 commit
   `67c101979371cff80af2ce7f3094a6c5b0f2dc29` through
