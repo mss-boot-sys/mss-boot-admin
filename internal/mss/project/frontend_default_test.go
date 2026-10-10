@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/dev"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/setup"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/dev"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/setup"
 )
 
 func TestRepositorySupportsOnlyTheIndependentV6Frontend(t *testing.T) {

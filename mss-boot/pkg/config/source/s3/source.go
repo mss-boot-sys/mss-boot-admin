@@ -21,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/source"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/source"
 )
 
 // Source is a s3 file source

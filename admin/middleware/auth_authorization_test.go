@@ -9,9 +9,9 @@ import (
 	"github.com/casbin/casbin/v3"
 	casbinmodel "github.com/casbin/casbin/v3/model"
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
 )
 
 func TestAuthorizationObjectPrefersRegisteredRouteTemplate(t *testing.T) {

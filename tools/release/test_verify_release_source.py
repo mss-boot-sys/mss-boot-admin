@@ -13,7 +13,7 @@ import verify_release_source as SOURCE  # noqa: E402
 
 
 POLICY_PATH = REPOSITORY_ROOT / ".mss" / "release-policy.yaml"
-REPOSITORY = "mss-boot-io/mss-boot-admin"
+REPOSITORY = "mss-boot-sys/mss-boot-admin"
 
 
 def run_git(repository: Path, *args: str) -> str:
@@ -43,7 +43,7 @@ def pr_payload(
                         "nodes": [
                             {
                                 "number": 474,
-                                "url": "https://github.com/mss-boot-io/mss-boot-admin/pull/474",
+                                "url": "https://github.com/mss-boot-sys/mss-boot-admin/pull/474",
                                 "merged": merged,
                                 "mergedAt": "2026-08-11T12:00:00Z" if merged else None,
                                 "baseRefName": branch,

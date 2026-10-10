@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"
-	"github.com/mss-boot-io/mss-boot-admin/admin/modules/all"
+	adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/modules/all"
 )
 
 /*

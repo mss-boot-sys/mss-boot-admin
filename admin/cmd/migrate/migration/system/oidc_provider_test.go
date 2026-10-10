@@ -3,10 +3,10 @@ package system
 import (
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/oidc"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	migrationmodels "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/oidc"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	migrationmodels "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration/models"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )

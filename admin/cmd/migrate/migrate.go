@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	admincmd "github.com/mss-boot-io/mss-boot-admin/admin/cmd"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	admincmd "github.com/mss-boot-sys/mss-boot-admin/admin/cmd"
 )
 
 // ErrDirectCommandAccess aliases the common legacy command-access error.

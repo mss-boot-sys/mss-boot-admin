@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/provider"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/provider"
 )
 
 func TestRootRegistersProviderEvidenceHelp(t *testing.T) {

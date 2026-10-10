@@ -10,20 +10,34 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 )
 
 const (
-	defaultFrontendRegistryURL = "https://registry.npmjs.org"
+	defaultFrontendRegistryURL = "https://npm.pkg.github.com"
 	frontendIntegrityToken     = "__MSS_DISTRIBUTION_FRONTEND_INTEGRITY__"
 	frontendTarballToken       = "__MSS_DISTRIBUTION_FRONTEND_TARBALL__"
 	maxFrontendMetadataBytes   = 1 << 20
 )
 
+var frontendPackageNamePattern = regexp.MustCompile(`^@[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$`)
+
 type frontendPackageResolution struct {
 	Integrity string
 	Tarball   string
+}
+
+type frontendRegistryMetadata struct {
+	Name     string                              `json:"name"`
+	Version  string                              `json:"version"`
+	Versions map[string]frontendRegistryMetadata `json:"versions"`
+	Dist     struct {
+		Integrity string `json:"integrity"`
+		Tarball   string `json:"tarball"`
+	} `json:"dist"`
 }
 
 // resolveFrontendPackageForSource resolves the immutable npm tarball URL and
@@ -72,6 +86,16 @@ func resolveFrontendPackage(ctx context.Context, registryURL, packageName, versi
 	if err != nil {
 		return frontendPackageResolution{}, fmt.Errorf("create npm metadata request: %w", err)
 	}
+	if request.URL.Scheme == "https" && request.URL.Host == "npm.pkg.github.com" {
+		token := strings.TrimSpace(os.Getenv("NODE_AUTH_TOKEN"))
+		if token == "" {
+			return frontendPackageResolution{}, errors.New("NODE_AUTH_TOKEN with GitHub Packages read access is required")
+		}
+		if strings.ContainsAny(token, " \t\r\n") {
+			return frontendPackageResolution{}, errors.New("NODE_AUTH_TOKEN must be a single token")
+		}
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
 	request.Header.Set("Accept", "application/vnd.npm.install-v1+json, application/json")
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -81,6 +105,11 @@ func resolveFrontendPackage(ctx context.Context, registryURL, packageName, versi
 	}
 	response, err := client.Do(request)
 	if err != nil {
+		var requestError *url.Error
+		if errors.As(err, &requestError) {
+			// Do not include a server-controlled redirect URL in diagnostics.
+			err = requestError.Err
+		}
 		return frontendPackageResolution{}, fmt.Errorf("fetch exact npm metadata: %w", err)
 	}
 	defer response.Body.Close()
@@ -95,16 +124,22 @@ func resolveFrontendPackage(ctx context.Context, registryURL, packageName, versi
 	if len(data) > maxFrontendMetadataBytes {
 		return frontendPackageResolution{}, fmt.Errorf("npm metadata exceeds %d bytes", maxFrontendMetadataBytes)
 	}
-	var metadata struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		Dist    struct {
-			Integrity string `json:"integrity"`
-			Tarball   string `json:"tarball"`
-		} `json:"dist"`
-	}
+	var metadata frontendRegistryMetadata
 	if err := json.Unmarshal(data, &metadata); err != nil {
 		return frontendPackageResolution{}, fmt.Errorf("decode npm metadata: %w", err)
+	}
+	if request.URL.Host == "npm.pkg.github.com" {
+		// Use the same package metadata endpoint as npm, then select the exact
+		// immutable version. Do not use dist-tags or assume the npmjs-specific
+		// package/version endpoint is available in GitHub Packages.
+		if metadata.Name != packageName {
+			return frontendPackageResolution{}, errors.New("npm package metadata identity mismatch")
+		}
+		exact, exists := metadata.Versions[version]
+		if !exists {
+			return frontendPackageResolution{}, errors.New("exact frontend version is absent from GitHub Packages metadata")
+		}
+		metadata = exact
 	}
 	if metadata.Name != packageName || metadata.Version != version {
 		return frontendPackageResolution{}, fmt.Errorf(
@@ -121,6 +156,12 @@ func resolveFrontendPackage(ctx context.Context, registryURL, packageName, versi
 	tarball, err := validFrontendTarballURL(metadata.Dist.Tarball)
 	if err != nil {
 		return frontendPackageResolution{}, fmt.Errorf("npm metadata dist.tarball: %w", err)
+	}
+	if request.URL.Host == "npm.pkg.github.com" {
+		resolvedURL, _ := url.Parse(tarball)
+		if resolvedURL.Scheme != "https" || resolvedURL.Host != "npm.pkg.github.com" {
+			return frontendPackageResolution{}, errors.New("GitHub Packages tarball must use https://npm.pkg.github.com")
+		}
 	}
 	return frontendPackageResolution{Integrity: metadata.Dist.Integrity, Tarball: tarball}, nil
 }
@@ -155,7 +196,7 @@ func validFrontendTarballURL(value string) (string, error) {
 func frontendMetadataEndpoint(registryURL, packageName, version string) (string, error) {
 	packageName = strings.TrimSpace(packageName)
 	version = strings.TrimSpace(version)
-	if packageName == "" || version == "" || strings.ContainsAny(version, "/?#") {
+	if !frontendPackageNamePattern.MatchString(packageName) || !validSemanticVersion(version) {
 		return "", errors.New("exact npm package and version are required")
 	}
 	registryURL = strings.TrimSpace(registryURL)
@@ -164,22 +205,23 @@ func frontendMetadataEndpoint(registryURL, packageName, version string) (string,
 	}
 	registry, err := url.Parse(registryURL)
 	if err != nil {
-		return "", fmt.Errorf("parse npm registry URL: %w", err)
+		return "", errors.New("invalid npm registry URL")
 	}
 	if registry.User != nil || registry.RawQuery != "" || registry.Fragment != "" ||
 		(registry.Path != "" && registry.Path != "/") {
 		return "", errors.New("npm registry URL must not contain credentials, query, fragment, or a path")
 	}
-	if registryURL == defaultFrontendRegistryURL {
-		if registry.Scheme != "https" || registry.Host != "registry.npmjs.org" {
-			return "", errors.New("default npm registry must be https://registry.npmjs.org")
-		}
+	if registry.Scheme == "https" && registry.Host == "npm.pkg.github.com" {
+		// Only this exact host may receive the process-scoped package token.
 	} else if registry.Scheme != "http" || !loopbackRegistryHost(registry.Hostname()) {
 		return "", errors.New("contributor npm registry override must be an explicit loopback HTTP endpoint")
 	}
-	plainPath := "/" + packageName + "/" + version
-	registry.Path = plainPath
-	registry.RawPath = "/" + url.PathEscape(packageName) + "/" + url.PathEscape(version)
+	registry.Path = "/" + packageName
+	registry.RawPath = "/" + url.PathEscape(packageName)
+	if registry.Host != "npm.pkg.github.com" {
+		registry.Path += "/" + version
+		registry.RawPath += "/" + url.PathEscape(version)
+	}
 	return registry.String(), nil
 }
 

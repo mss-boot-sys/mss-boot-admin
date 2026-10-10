@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	distribution "github.com/mss-boot-io/mss-boot-admin"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
+	distribution "github.com/mss-boot-sys/mss-boot-admin"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 )
 
 const embeddedBlueprintPath = ".mss/blueprints/management-system.yaml"

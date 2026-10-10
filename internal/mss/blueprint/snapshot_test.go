@@ -204,7 +204,7 @@ metadata:
   project: mss-boot-admin
 spec:
   foundation:
-    repository: mss-boot-io/mss-boot-admin
+    repository: mss-boot-sys/mss-boot-admin
     version: 0.1.0
     channel: development
   blueprint:
@@ -226,7 +226,7 @@ spec:
 		t.Fatalf("write source lock: %v", err)
 	}
 
-	inspection, err := InspectSnapshot(root, "", "mss-boot-admin", "mss-boot-io/mss-boot-admin")
+	inspection, err := InspectSnapshot(root, "", "mss-boot-admin", "mss-boot-sys/mss-boot-admin")
 	if err != nil {
 		t.Fatalf("InspectSnapshot() error = %v", err)
 	}

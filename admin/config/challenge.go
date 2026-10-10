@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
-	runtimechallenge "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/challenge"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	runtimechallenge "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/challenge"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
 	"github.com/redis/go-redis/v9"
 )
 

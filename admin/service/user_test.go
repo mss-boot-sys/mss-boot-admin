@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"

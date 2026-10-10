@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	migrationmodels "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	migrationmodels "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"

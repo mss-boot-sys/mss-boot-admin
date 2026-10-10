@@ -1,4 +1,4 @@
-import { defineBusinessAdmin } from '@mss-boot-io/admin-web/business';
+import { defineBusinessAdmin } from '@mss-boot-sys/admin-web/business';
 import { defineConfig } from '@umijs/max';
 import businessRoutes from './routes.generated';
 

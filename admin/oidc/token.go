@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"gorm.io/gorm"
 )
 

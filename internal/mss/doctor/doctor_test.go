@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 	"gopkg.in/yaml.v3"
 )
 
@@ -477,11 +477,11 @@ func doctorDistribution(version string) project.DistributionSpec {
 		Name:    "mss-boot-admin",
 		Version: version,
 		Backend: project.DistributionBackendSpec{
-			Module:  "github.com/mss-boot-io/mss-boot-admin/admin",
+			Module:  "github.com/mss-boot-sys/mss-boot-admin/admin",
 			Version: version,
 		},
 		Frontend: project.DistributionFrontendSpec{
-			Package: "@mss-boot-io/admin-web",
+			Package: "@mss-boot-sys/admin-web",
 			Version: core,
 		},
 	}
@@ -535,7 +535,7 @@ func writeDoctorGeneratedSnapshot(t *testing.T, root string) {
 	}
 	identities := blueprint.IdentitySet{
 		Foundation: blueprint.FoundationIdentity{
-			Repository: "mss-boot-io/mss-boot-admin",
+			Repository: "mss-boot-sys/mss-boot-admin",
 			Version:    "1.1.0",
 			Commit:     strings.Repeat("a", 40),
 			Timestamp:  "2026-08-10T12:00:00Z",

@@ -2,7 +2,7 @@
 
 This directory is the deployable reference Admin application and an independent Go module.
 
-- Module: `github.com/mss-boot-io/mss-boot-admin/admin`
+- Module: `github.com/mss-boot-sys/mss-boot-admin/admin`
 - Framework dependency: sibling `mss-boot/` module
 - `app/` is the complete importable application entrypoint; official and Thin
   Host binaries must compose through it instead of copying startup logic.

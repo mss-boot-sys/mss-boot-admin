@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	distribution "github.com/mss-boot-io/mss-boot-admin"
+	distribution "github.com/mss-boot-sys/mss-boot-admin"
 	"gopkg.in/yaml.v3"
 )
 

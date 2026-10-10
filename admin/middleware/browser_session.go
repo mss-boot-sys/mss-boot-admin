@@ -13,9 +13,9 @@ import (
 
 	"github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/browsersecurity"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/browsersecurity"
 	"github.com/spf13/cast"
 )
 

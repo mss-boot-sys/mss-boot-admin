@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
-	bootpkg "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
+	bootpkg "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
 )
 
 const (

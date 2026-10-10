@@ -15,7 +15,7 @@ from typing import Any, Iterable
 from check_portable_paths import check_paths
 
 
-PACKAGE_NAME = "@mss-boot-io/admin-web"
+PACKAGE_NAME = "@mss-boot-sys/admin-web"
 SCHEMA = "mss.io/admin-web-package-evidence/v1"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 ADMIN_WEB_PACKAGE_MANAGER = "pnpm@10.34.5"
@@ -165,10 +165,10 @@ def _validate_manifest(
         raise PackageError("package gitHead must equal the exact source commit")
     if manifest.get("publishConfig") != {
         "access": "public",
-        "registry": "https://registry.npmjs.org",
+        "registry": "https://npm.pkg.github.com",
     }:
         raise PackageError(
-            "package publishConfig must target the public npm registry with public access"
+            "package publishConfig must target the GitHub Packages registry with public access"
         )
     if "package/LICENSE" not in members:
         raise PackageError("package must include its MIT LICENSE file")

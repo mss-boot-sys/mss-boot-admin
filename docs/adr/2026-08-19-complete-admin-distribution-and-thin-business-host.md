@@ -7,9 +7,14 @@
 - Detailed architecture: `docs/docs/architecture/complete-admin-distribution-and-thin-business-host.zh-CN.md`
 - Continued by: `.mss/features/foundation-v1-3-3-package-first-release.yaml`, which removes the remaining Foundation-checkout requirement for downstream creation and upgrade
 
-Current release note: v1.3.7 is the current stable and adoptable Distribution.
+Historical release note: v1.3.7 was the stable Distribution at the former organization.
 The v1.3.0-rc.6 and v1.3.2 statements below record their historical release
 checkpoints and are not current adoption guidance.
+
+Release migration note (2026-10-11): v1.3.9 starts `mss-boot-sys` publication.
+The registry, namespace and release-sequence details below are historical where
+they conflict with [the new-organization release decision](./2026-10-11-new-organization-release.md).
+The composition and ownership boundaries remain in force.
 
 ## Context
 

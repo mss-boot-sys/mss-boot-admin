@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	adminpkg "github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	runtimeeventbus "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/eventbus"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	adminpkg "github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	runtimeeventbus "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/eventbus"
 )
 
 func TestCasbinRevisionReconcilesCommitPublishCrash(t *testing.T) {

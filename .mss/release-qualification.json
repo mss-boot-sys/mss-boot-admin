@@ -1,8 +1,15 @@
 {
   "schema": "mss.io/release-qualification/v1",
-  "targetVersion": "v1.3.7",
+  "targetVersion": "v1.3.9",
   "features": [
-    ".mss/features/foundation-v1-3-7-release.yaml",
+    ".mss/features/foundation-v1-3-9-release.yaml",
+    ".mss/features/native-oidc-provider.yaml",
+    ".mss/features/casbin-v3-migration.yaml",
+    ".mss/features/dependency-refresh-go127.yaml",
+    ".mss/features/admin-avatar-contributions.yaml",
+    ".mss/features/admin-workplace-contributions.yaml",
+    ".mss/features/generated-service-test-shapes.yaml",
+    ".mss/features/repository-ci-migration.yaml",
     ".mss/features/admin-presentation-configuration.yaml",
     ".mss/features/admin-presentation-publication-workflow.yaml",
     ".mss/features/admin-presentation-generation.yaml",
@@ -117,6 +124,10 @@
     {
       "path": ".mss/features/storage-runtime-v2.yaml",
       "reason": "carry-forward: accepted runtime checkpoints remain regression coverage; optional ObjectStore and RustFS maturity does not block v1.3.7."
+    },
+    {
+      "path": ".mss/features/foundation-v1-3-7-release.yaml",
+      "reason": "Historical release in mss-boot-io. Versions through v1.3.8 remain legacy history; v1.3.9 is the first release from mss-boot-sys and does not inherit npmjs/preview/promotion gates."
     }
   ]
 }

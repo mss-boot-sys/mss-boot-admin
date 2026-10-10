@@ -1,4 +1,4 @@
-module github.com/mss-boot-io/mss-boot-admin/compose/consul
+module github.com/mss-boot-sys/mss-boot-admin/compose/consul
 
 go 1.27.2
 

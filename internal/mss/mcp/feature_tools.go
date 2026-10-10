@@ -3,7 +3,7 @@ package mcp
 import (
 	"context"
 
-	featurecmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/feature"
+	featurecmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/feature"
 )
 
 func (s *Server) callFeatureTool(_ context.Context, name string, arguments map[string]any) (callToolResult, bool) {

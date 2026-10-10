@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 )
 
 func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
@@ -63,7 +63,7 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GenerateEmbedded(dry-run) error = %v", err)
 	}
-	if !plan.DryRun || !plan.Success || plan.Identities.Foundation.Version != "1.3.7" || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
+	if !plan.DryRun || !plan.Success || plan.Identities.Foundation.Version != "1.3.9" || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
 		t.Fatalf("embedded dry-run plan = %#v", plan)
 	}
 	if _, err := os.Stat(destination); !os.IsNotExist(err) {
@@ -119,8 +119,8 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, expected := range []string{
-		"releases/download/v1.3.7/install-mss.sh",
-		"--version v1.3.7",
+		"releases/download/v1.3.9/install-mss.sh",
+		"--version v1.3.9",
 		"mss doctor --strict",
 		"mss verify --all",
 	} {
@@ -165,14 +165,14 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 		}
 	}
 	if !strings.Contains(string(lockData), "resolution: {tarball: http://127.0.0.1:") ||
-		!strings.Contains(string(lockData), "/artifacts/frozen-admin-web-1.3.7.tgz, integrity: sha512-") {
+		!strings.Contains(string(lockData), "/artifacts/frozen-admin-web-1.3.9.tgz, integrity: sha512-") {
 		t.Fatalf("generated frontend lock did not resolve the exact tarball URL and integrity")
 	}
 	goModuleData, err := os.ReadFile(filepath.Join(destination, "go.mod"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(goModuleData), "github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.7 // indirect") {
+	if !strings.Contains(string(goModuleData), "github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.3.9 // indirect") {
 		t.Fatal("generated Go module does not keep the exact Framework pin in tidy readonly form")
 	}
 	for _, forbidden := range []string{"\nreplace ", "\nexclude ", "file:", "127.0.0.1", "localhost", "__MSS_"} {
@@ -221,7 +221,7 @@ func TestGenerateEmbeddedRejectsIncompleteBuildProvenance(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = "v1.3.7", "deadbeef", "2026-08-25T12:34:56Z"
+	buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = "v1.3.9", "deadbeef", "2026-08-25T12:34:56Z"
 	_, err := GenerateEmbedded(context.Background(), t.TempDir(), Options{
 		Application: Application{Name: "invalid", DisplayName: "Invalid", Module: "github.com/acme/invalid", Repository: "acme/invalid"},
 	})
@@ -278,7 +278,7 @@ func TestUpgradeEmbeddedUsesMatchingSourceAndPreservesBusinessFiles(t *testing.T
 
 	options := UpgradeOptions{
 		ApplicationRoot:              applicationRoot,
-		RequestedDistributionVersion: "v1.3.7",
+		RequestedDistributionVersion: "v1.3.9",
 		PreservedBusinessPaths:       []string{"internal/modules"},
 		FrontendRegistryURL:          registry,
 	}
@@ -286,7 +286,7 @@ func TestUpgradeEmbeddedUsesMatchingSourceAndPreservesBusinessFiles(t *testing.T
 	if err != nil {
 		t.Fatalf("UpgradeEmbedded(plan) error = %v", err)
 	}
-	if !plan.DryRun || !plan.Success || plan.FoundationRoot != "embedded://mss/1.3.7" {
+	if !plan.DryRun || !plan.Success || plan.FoundationRoot != "embedded://mss/1.3.9" {
 		t.Fatalf("embedded upgrade plan = %#v", plan)
 	}
 	if !containsEmbeddedString(plan.PreservedFiles, "internal/modules/custom/owned.go") {
@@ -321,7 +321,7 @@ func setEmbeddedReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.7"
+	buildinfo.Version = "v1.3.9"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 }
@@ -333,9 +333,9 @@ func embeddedFrontendRegistry(t *testing.T) string {
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-io/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":"@mss-boot-sys/admin-web","version":"1.3.9","dist":{"integrity":%q,"tarball":%q}}`,
 			integrity,
-			"http://"+request.Host+"/artifacts/frozen-admin-web-1.3.7.tgz",
+			"http://"+request.Host+"/artifacts/frozen-admin-web-1.3.9.tgz",
 		)
 	}))
 	t.Cleanup(server.Close)

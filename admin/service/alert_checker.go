@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center/websocket"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center/websocket"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/mem"

@@ -13,9 +13,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	adminpkg "github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	bootenum "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	adminpkg "github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	bootenum "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 )
 
 func setupAuthorizationServiceTest(t *testing.T) *gorm.DB {

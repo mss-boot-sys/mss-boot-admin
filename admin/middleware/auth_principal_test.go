@@ -6,12 +6,12 @@ import (
 	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/sessioncache"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/sessioncache"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

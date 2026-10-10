@@ -19,7 +19,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/command"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/command"
 )
 
 const defaultTimeout = 30 * time.Minute

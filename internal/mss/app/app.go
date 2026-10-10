@@ -14,12 +14,12 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/doctor"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/generator"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	setupcmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/setup"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/verify"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/doctor"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/generator"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	setupcmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/setup"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/verify"
 )
 
 // Execute runs the complete agent-facing mss CLI.

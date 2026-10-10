@@ -3,7 +3,7 @@ package pkg
 import (
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
 )
 
 const (

@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
 	gopsutilcommon "github.com/shirou/gopsutil/v3/common"
 )
 

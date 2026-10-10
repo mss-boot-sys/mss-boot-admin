@@ -94,7 +94,7 @@ if (process.env.MSS_V6_AVATAR_PROBE === '1') {
       await expect(coreFooter).toContainText('©');
       await expect(coreFooter.getByRole('link', { name: 'mss-boot-admin' })).toHaveAttribute(
         'href',
-        'https://github.com/mss-boot-io/mss-boot-admin',
+        'https://github.com/mss-boot-sys/mss-boot-admin',
       );
       const content = page.getByTestId('mss-thin-host-avatar');
       await expect(content).toHaveCount(0);

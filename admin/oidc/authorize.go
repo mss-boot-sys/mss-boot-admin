@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

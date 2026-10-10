@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 )
 
 type PresentationProfileIdentity struct {

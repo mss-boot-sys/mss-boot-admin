@@ -7,7 +7,6 @@ import unittest
 from pathlib import Path, PurePosixPath
 from unittest import mock
 
-
 MODULE_PATH = Path(__file__).with_name("verify_framework_admin_checksum.py")
 SPEC = importlib.util.spec_from_file_location(
     "verify_framework_admin_checksum", MODULE_PATH
@@ -96,8 +95,11 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
         policy_text = (
             (REPOSITORY_ROOT / ".mss" / "release-policy.yaml")
             .read_text(encoding="utf-8")
+            .replace(
+                "currentStableCommit: pending", "currentStableCommit: " + release_commit
+            )
             .replace(EXPECTED_RELEASE_COMMIT, release_commit)
-            .replace("v1.3.7", "v1.3.3")
+            .replace("v1.3.9", "v1.3.3")
         )
         policy_path = root / ".mss" / "release-policy.yaml"
         policy_path.parent.mkdir(parents=True)
@@ -116,36 +118,17 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
             self.fail(f"unsupported admin tag fixture mode: {admin_tag}")
         return release_commit
 
-    def test_published_current_stable_tree_matches_adopter_metadata(self):
-        result = CHECKSUM.verify_current_stable_repository(
-            REPOSITORY_ROOT,
-            version="v1.3.7",
-        )
-        self.assertTrue(result["success"])
-        self.assertEqual(result["version"], "v1.3.7")
-        self.assertGreater(result["candidateFiles"], 0)
-        self.assertGreater(result["adminCandidateFiles"], 0)
-        self.assertEqual(result["sum"], EXPECTED_FRAMEWORK_SUM)
-        self.assertEqual(result["goModSum"], EXPECTED_FRAMEWORK_GO_MOD_SUM)
-        self.assertEqual(
-            result["adminSum"],
-            EXPECTED_ADMIN_SUM,
-        )
-        self.assertEqual(
-            result["adminGoModSum"],
-            EXPECTED_ADMIN_GO_MOD_SUM,
-        )
-        self.assertEqual(result["dependencyMode"], "replace-free-file-proxy")
-        self.assertEqual(result["sourceMode"], "current-stable")
-        self.assertEqual(result["sourceCommit"], EXPECTED_RELEASE_COMMIT)
-        self.assertEqual(
-            result["sourceTags"],
-            {
-                "root": "v1.3.7",
-                "framework": "mss-boot/v1.3.7",
-                "admin": "admin/v1.3.7",
-            },
-        )
+    def test_pending_first_release_is_not_a_published_source_identity(self):
+        with self.assertRaisesRegex(
+            CHECKSUM.ChecksumContractError, "full lowercase commit"
+        ):
+            CHECKSUM._resolve_published_source_commit(
+                REPOSITORY_ROOT,
+                source_commit="pending",
+                head_commit=self._git(
+                    REPOSITORY_ROOT, "rev-parse", "HEAD"
+                ).stdout.strip(),
+            )
 
     def test_current_stable_uses_release_tree_after_later_component_docs_change(self):
         with tempfile.TemporaryDirectory(
@@ -266,7 +249,7 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
                         "--root",
                         str(REPOSITORY_ROOT),
                         "--version",
-                        "v1.3.7",
+                        "v1.3.9",
                         "--source-mode",
                         source_mode,
                         "--write",
@@ -297,9 +280,7 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
             self.assertEqual(licenses[0].mode, stat.S_IFREG | 0o644)
 
     def test_nested_module_license_takes_precedence_over_repository_license(self):
-        with tempfile.TemporaryDirectory(
-            prefix="mss-admin-own-license-"
-        ) as directory:
+        with tempfile.TemporaryDirectory(prefix="mss-admin-own-license-") as directory:
             root = Path(directory)
             self._init_checksum_repository(root)
             admin_license = root / "admin" / "LICENSE"
@@ -434,9 +415,7 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
             root = Path(directory)
             source = root / "mss-boot"
             source.mkdir()
-            (source / ".gitattributes").write_text(
-                "*.go text\n", encoding="utf-8"
-            )
+            (source / ".gitattributes").write_text("*.go text\n", encoding="utf-8")
             (source / "go.mod").write_text(
                 f"module {CHECKSUM.FRAMEWORK_MODULE}\n\ngo 1.26.6\n",
                 encoding="utf-8",
@@ -516,7 +495,9 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
                 )
 
     def test_checksum_refresh_rejects_head_change_before_writing(self):
-        with tempfile.TemporaryDirectory(prefix="mss-checksum-write-race-") as directory:
+        with tempfile.TemporaryDirectory(
+            prefix="mss-checksum-write-race-"
+        ) as directory:
             root = Path(directory)
             self._init_checksum_repository(root)
             head = self._git(root, "rev-parse", "HEAD").stdout.strip()
@@ -540,7 +521,9 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
             write.assert_not_called()
 
     def test_checksum_refresh_rejects_output_tampering_before_success(self):
-        with tempfile.TemporaryDirectory(prefix="mss-checksum-output-race-") as directory:
+        with tempfile.TemporaryDirectory(
+            prefix="mss-checksum-output-race-"
+        ) as directory:
             root = Path(directory)
             self._init_checksum_repository(root)
             real_write = CHECKSUM._write_if_changed
@@ -707,7 +690,9 @@ replace {CHECKSUM.FRAMEWORK_MODULE} => ./mss-boot
                     go_command="go",
                 )
 
-    def test_workspace_validation_uses_the_explicit_target_when_gowork_is_disabled(self):
+    def test_workspace_validation_uses_the_explicit_target_when_gowork_is_disabled(
+        self,
+    ):
         with tempfile.TemporaryDirectory(
             prefix="mss-framework-checksum-explicit-workspace-"
         ) as directory:

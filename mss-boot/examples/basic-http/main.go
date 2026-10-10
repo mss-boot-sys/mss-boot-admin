@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server/listener"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server/listener"
 )
 
 func main() {

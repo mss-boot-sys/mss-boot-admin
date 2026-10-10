@@ -75,6 +75,14 @@ Do not rewrite pushed history to hide intermediate fixes. Follow-up repair commi
   deployment records become the current Docs audit identity.
 - Repository rulesets and release workflows must enforce this PR-to-`main` boundary. If their enforcement is absent or fails, stop publication and repair the governance path through another pull request before continuing.
 
+## Release publication model
+
+- Starting with 1.3.9, publish this repository under `mss-boot-sys`; 1.3.8 and earlier belong to the inaccessible legacy `mss-boot-io` repository and are not prerequisites for the first release here.
+- Complete full validation locally on the exact clean merged-main commit. Tag workflows verify source/version/actor, build and package artifacts, and publish; do not introduce preview staging, stable-promotion chains, or repeated broad test matrices.
+- Publish the coordinated train in order: Framework, Admin, frontend, Root, then Docs. Publish `@mss-boot-sys/admin-web` only to GitHub Packages. No npmjs publication or Trusted Publisher/OIDC setup is required.
+- The release is complete only after its Docs content is aligned and the production documentation website is verified. The website keeps its existing domain and uses the repository or `prod` environment `CF_API_TOKEN`.
+- Only `mss-boot-sys` may initiate or rerun publication. Main requires PR merges; core release tags, package versions and image identities remain immutable. A rerun may verify matching existing bytes but must never overwrite them.
+
 ## Canonical commands
 
 Use the repository wrappers instead of inventing workstation-specific command sequences:
@@ -109,7 +117,7 @@ If `cmd/mss` is not yet available on an older branch, fall back to the Make targ
 
 ### Complete Admin distribution boundary
 
-- Root tools, `mss-boot`, `admin`, and `@mss-boot-io/admin-web` are coordinated by one Admin Distribution version even though each component remains independently publishable.
+- Root tools, `mss-boot`, `admin`, and `@mss-boot-sys/admin-web` are coordinated by one Admin Distribution version even though each component remains independently publishable.
 - `admin/app` and `admin/business` are the public compile-time composition boundary. Business modules register explicitly; package initialization must not discover modules, mount routes, or mutate the migration registry.
 - Before a coordinated Framework version exists publicly, the single exact merged-main local Admin qualification uses the repository `go.work` plus the repository-external consumer script with confined temporary replacements; lightweight PR checks do not repeat that matrix. After Framework publication, the protected Admin release workflow must resolve and test the exact public Framework version with `GOWORK=off`; never weaken that publication gate or commit a local `replace`.
 - `web/antd-v6` is both the reference frontend and the source of the single complete Admin npm package. Do not create a second SPA or split auth, layout, runtime, or contracts into independently versioned packages.

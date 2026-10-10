@@ -10,8 +10,8 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
 )
 
 func TestChallengeRuntimeStartsAndReadiesBeforePublicationThenCloses(t *testing.T) {

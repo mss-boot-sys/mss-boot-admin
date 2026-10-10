@@ -169,7 +169,7 @@ jobs:
           pnpm list --prod --json --depth Infinity > "${package_dir}/pnpm-tree.json"
           python3 ../../tools/release/verify_admin_web_package.py \
             --tarball "${tarball}" \
-            --expected-name '@mss-boot-io/admin-web' \
+            --expected-name '@mss-boot-sys/admin-web' \
             --expected-version "${package_version}" \
             --source-repository "${GITHUB_REPOSITORY}" \
             --source-commit "${GITHUB_SHA}" \

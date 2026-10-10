@@ -19,15 +19,14 @@ This document is generated deterministically from [`.mss/modules/example-supplie
 
 This checked-in page documents the Foundation reference projection. Its
 `admin/modules/**` and `web/antd-v6/**` paths are contributor evidence, not a
-downstream application layout. v1.3.5 and v1.3.6 remain immutable-partial
-trains and must not be used as complete Thin Host baselines. v1.3.7 is the
-current stable Distribution at this source commit and is adoptable through the
-published Root tools and coordinated packages. Docs is an asynchronous website
-publication and never blocks component release, stable aliases, or adoption. The
-commands below are source-only Foundation validation. The complete
-v1.3.7 distribution generates business ownership under `internal/modules/**` and
-`web/src/business/**`; its generated repository owns the adopter module page
-and validation contract.
+downstream application layout. The v1.3.9 Distribution is the first release from
+`mss-boot-sys/mss-boot-admin`; v1.3.8 and earlier belong to the former
+`mss-boot-io` organization. Adopt v1.3.9 through its versioned Root tools,
+coordinated Go modules, and `@mss-boot-sys/admin-web` on GitHub Packages.
+Documentation is aligned with this release and published with its Docs tag.
+The commands below validate the Foundation source projection. Generated
+applications own business code under `internal/modules/**` and
+`web/src/business/**`, with their own module page and validation contract.
 :::
 
 
@@ -93,7 +92,7 @@ The checked-in test is an executable contract, not proof that a browser run occu
 
 ## Generate and validate
 
-From the Foundation source repository root; these are not v1.3.7 adopter
+From the Foundation source repository root; these are not v1.3.9 adopter
 commands:
 
 ```shell

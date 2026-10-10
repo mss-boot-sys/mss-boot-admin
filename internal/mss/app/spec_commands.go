@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 func newUnifiedSpecCommand(rootOverride *string) *cobra.Command {

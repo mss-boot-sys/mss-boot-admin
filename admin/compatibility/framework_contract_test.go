@@ -9,11 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	adminrouter "github.com/mss-boot-io/mss-boot-admin/admin/router"
-	frameworkserver "github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	adminrouter "github.com/mss-boot-sys/mss-boot-admin/admin/router"
+	frameworkserver "github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
 )
 
 func TestAdminModelsUseOwnedFrameworkDatabaseHandle(t *testing.T) {

@@ -9,10 +9,10 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/source"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/source"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
 )
 
 type configManagedQueue struct {

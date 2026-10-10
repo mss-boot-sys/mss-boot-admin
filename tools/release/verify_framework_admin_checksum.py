@@ -19,8 +19,8 @@ from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
 
-FRAMEWORK_MODULE = "github.com/mss-boot-io/mss-boot-admin/mss-boot"
-ADMIN_MODULE = "github.com/mss-boot-io/mss-boot-admin/admin"
+FRAMEWORK_MODULE = "github.com/mss-boot-sys/mss-boot-admin/mss-boot"
+ADMIN_MODULE = "github.com/mss-boot-sys/mss-boot-admin/admin"
 VERSION_RE = re.compile(r"^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$")
 
 

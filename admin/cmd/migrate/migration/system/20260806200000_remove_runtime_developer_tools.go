@@ -10,12 +10,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
-	migrationmodels "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
+	migrationmodels "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

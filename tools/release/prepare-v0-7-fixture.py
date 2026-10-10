@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 OLD_MODULE = "github.com/mss-boot-io/mss-boot/pkg/migration"
-CURRENT_MODULE = "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+CURRENT_MODULE = "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 MIGRATION = Path("cmd/migrate/migration/system/20260403225953_enhance_options.go")
 ROLE_MIGRATION = Path("cmd/migrate/migration/system/1691847581348_migrate.go")
 MENU_MODEL = Path("models/menu.go")

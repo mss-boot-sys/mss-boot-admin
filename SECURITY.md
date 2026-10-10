@@ -14,21 +14,18 @@ private GitHub advisories are the preferred intake path.
 
 ## Supported versions
 
-The active `main` branch and the current stable Complete Admin Distribution are
-supported by default. v1.3.7 is the current stable and rollback baseline. Its
-coordinated Framework, Admin, frontend, Root, tools, images, and official npmjs
-package were published and reconciled from exact merged-main commit
-`77b53d41092741eac62fa6418c0bdbf87413c7cd`. Docs is an asynchronous website
-publication and never gates stable support or adopter availability; a
-`docs/v*` tag identifies only the site deployment. v1.3.5 and v1.3.6 are
-immutable partial trains and never become complete supported Distributions.
-No stored npm token may be introduced to complete or republish them.
-`.mss/release-policy.yaml` remains the authority for the supported stable,
-future candidate, stopped, and rollback identities.
-Preview and release-candidate refs remain immutable evidence but do not receive
-the stable support commitment. Older stable versions are handled case by case.
+The active `main` branch and the v1.3.9 Distribution are the new repository's
+support baseline. v1.3.9 is the first release under `mss-boot-sys`; v1.3.8 and
+earlier belong to the former `mss-boot-io` organization and are handled case by
+case. The release assets and `.mss/release-policy.yaml` identify the exact
+supported version. This source document is not proof that publication completed.
 
-## v1.3.7 security boundary
+Admin Web is published only to GitHub Packages. Workflows use a least-privilege
+`GITHUB_TOKEN`; consumers supply `read:packages` authentication through an
+environment variable. Credentials must never enter repository files, container
+layers, generated output, logs, or release archives.
+
+## v1.3.9 security boundary
 
 - Presentation profiles are untrusted, strictly data-only overlays over exact
   compiled capabilities. They cannot define code, HTML, SQL, transport, routes,

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 	"gorm.io/gorm"
 )
 

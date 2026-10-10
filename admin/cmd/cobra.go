@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 )
 
 // ErrDirectCommandAccess reports use of a legacy command-tree escape hatch.

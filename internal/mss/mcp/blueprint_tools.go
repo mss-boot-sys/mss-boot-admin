@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func (s *Server) callBlueprintTool(ctx context.Context, name string, arguments map[string]any) (callToolResult, bool) {

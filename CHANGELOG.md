@@ -6,6 +6,26 @@ tag namespaces.
 
 ## [Unreleased]
 
+No unreleased changes are recorded.
+
+## [v1.3.9] - 2026-10-11
+
+Release scope: first coordinated release under `mss-boot-sys/mss-boot-admin`.
+Publication results are recorded by the corresponding tags, Releases, registry
+assets and checksums; this source entry does not itself certify publication.
+Versions v1.3.8 and earlier belong to `mss-boot-io`; historical entries below
+retain the facts and terminology recorded at that time.
+
+### Repository migration
+
+- Move Go modules, generated hosts and package identities to `mss-boot-sys`.
+- Publish `@mss-boot-sys/admin-web@1.3.9` only to GitHub Packages; consumers
+  supply `read:packages` authentication through `NODE_AUTH_TOKEN`.
+- Qualify locally on an exact merged-main commit. Tag workflows build and
+  publish artifacts without a hosted preview or separate stable-promotion round.
+- Align and deploy Docs to the existing `https://docs.mss-boot-io.top` domain.
+
+
 ### Changed
 
 - Consolidate outstanding dependency updates using the upstream versions checked
@@ -17,7 +37,7 @@ tag namespaces.
 - Migrate Framework and Admin authorization to Casbin v3.11.0 with compatible
   GORM and MongoDB policy adapters. This is a breaking Go API change for callers
   that use Casbin types; policy storage and authorization rules are unchanged.
-  See the unreleased migration guidance in `docs/docs/admin/permission-hardening.md`.
+  See the release migration guidance in `docs/docs/admin/permission-hardening.md`.
 - Define Docs as an asynchronous website-only publication. A `docs/v*` tag now
   identifies the currently deployed site source and may be deleted then
   recreated at a later qualified merged-main descendant. Controlled creation
@@ -26,8 +46,7 @@ tag namespaces.
   Admin, Admin Web, Root, images, npm, GitHub Latest, current-stable policy, or
   adopter availability.
 - Reconcile active human documentation, Agent guidance, machine-readable feature
-  memory, ADR status notes, and component changelog labels so v1.3.7 is the sole
-  current stable and adoptable Distribution while older releases remain clearly
+  memory, ADR status notes, and component changelog labels for the v1.3.9 new-repository baseline while older releases remain clearly
   time-scoped historical evidence.
 - Update GitHub Actions dependencies to pnpm/action-setup 6.1.0,
   softprops/action-gh-release 3.0.3, github/codeql-action 4.38.2,
@@ -44,9 +63,16 @@ tag namespaces.
   equality check, but no longer reports a false failure after a successful
   publication solely because shell command substitution removed the final LF.
 
+## [v1.3.8] — former organization
+
+Released under `mss-boot-io` before the repository migration. The former
+organization is no longer visible. This entry records that historical release;
+it does not recreate its tags or infer unavailable commit, checksum or artifact
+metadata. v1.3.9 starts the release history of `mss-boot-sys/mss-boot-admin`.
+
 ## [v1.3.7] - 2026-08-31
 
-Status: **published / current stable / adoptable**. Framework, Admin, Admin Web,
+Status at original publication: **published / historical stable / adoptable**. Framework, Admin, Admin Web,
 Root tools, backend and frontend images, official npmjs, npm `latest`, GitHub
 Latest, and current-stable policy all reconcile to exact release commit
 `77b53d41092741eac62fa6418c0bdbf87413c7cd`. v1.3.7 completed the

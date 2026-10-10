@@ -4,7 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
 	"gorm.io/gorm"
 )
 

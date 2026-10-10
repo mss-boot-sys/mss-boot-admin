@@ -12,10 +12,10 @@ module example.com/mss-admin-external-consumer
 
 go 1.27.2
 
-require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0
+require github.com/mss-boot-sys/mss-boot-admin/admin v0.0.0
 
-replace github.com/mss-boot-io/mss-boot-admin/admin => ${admin_root}
-replace github.com/mss-boot-io/mss-boot-admin/mss-boot => ${framework_root}
+replace github.com/mss-boot-sys/mss-boot-admin/admin => ${admin_root}
+replace github.com/mss-boot-sys/mss-boot-admin/mss-boot => ${framework_root}
 EOF
 
 cat >"${work_dir}/main.go" <<'EOF'
@@ -26,8 +26,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
+	adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 	"gorm.io/gorm"
 )
 
@@ -70,7 +70,7 @@ package main
 import (
 	"testing"
 
-	adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"
+	adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"
 )
 
 func TestExternalApplicationConstruction(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	adminpresentation "github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	adminpresentation "github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 	"gopkg.in/yaml.v3"
 )
 

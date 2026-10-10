@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
 	"gopkg.in/yaml.v3"
 )
 

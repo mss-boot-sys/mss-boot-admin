@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm/schema"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 )
 
 const (

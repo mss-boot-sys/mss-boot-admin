@@ -1,21 +1,16 @@
 name: Framework Release
-
-on:
+'on':
   push:
     tags:
-      - 'mss-boot/v*.*.*'
-
+    - mss-boot/v*.*.*
 permissions:
   actions: read
   contents: read
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
 env:
   GOTOOLCHAIN: local
-
 jobs:
   release:
     runs-on: ubuntu-24.04
@@ -26,151 +21,137 @@ jobs:
       contents: write
       pull-requests: read
     steps:
-      - name: Require authorized release operator
-        env:
-          RELEASE_ACTOR_LOGIN: lwnmengjing
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" || "${GITHUB_TRIGGERING_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" ]]; then
-            echo "release operations must be initiated and triggered by ${RELEASE_ACTOR_LOGIN}" >&2
-            exit 1
+    - name: Require authorized release operator
+      env:
+        RELEASE_ACTOR_LOGIN: mss-boot-sys
+      run: |
+        set -euo pipefail
+        if [[ "${GITHUB_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" || "${GITHUB_TRIGGERING_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" ]]; then
+          echo "release operations must be initiated and triggered by ${RELEASE_ACTOR_LOGIN}" >&2
+          exit 1
+        fi
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Resolve framework version
+      id: version
+      run: |
+        set -euo pipefail
+
+        validate_release_version() {
+          local value="$1"
+          local unprefixed
+          local core
+          local prerelease
+          local identifier
+          local identifiers
+
+          [[ "${value}" == v* ]] || return 1
+          unprefixed="${value#v}"
+          core="${unprefixed%%-*}"
+          [[ "${core}" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || return 1
+          if [[ "${unprefixed}" != *-* ]]; then
+            return 0
           fi
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
-      - name: Resolve framework version
-        id: version
-        run: |
-          set -euo pipefail
-
-          validate_release_version() {
-            local value="$1"
-            local unprefixed
-            local core
-            local prerelease
-            local identifier
-            local identifiers
-
-            [[ "${value}" == v* ]] || return 1
-            unprefixed="${value#v}"
-            core="${unprefixed%%-*}"
-            [[ "${core}" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || return 1
-            if [[ "${unprefixed}" != *-* ]]; then
-              return 0
+          prerelease="${unprefixed#*-}"
+          [[ -n "${prerelease}" ]] || return 1
+          [[ "${prerelease}" != .* && "${prerelease}" != *. && "${prerelease}" != *..* ]] || return 1
+          IFS='.' read -r -a identifiers <<< "${prerelease}"
+          for identifier in "${identifiers[@]}"; do
+            [[ "${identifier}" =~ ^[0-9A-Za-z-]+$ ]] || return 1
+            if [[ "${identifier}" =~ ^[0-9]+$ && "${identifier}" =~ ^0[0-9]+$ ]]; then
+              return 1
             fi
-            prerelease="${unprefixed#*-}"
-            [[ -n "${prerelease}" ]] || return 1
-            [[ "${prerelease}" != .* && "${prerelease}" != *. && "${prerelease}" != *..* ]] || return 1
-            IFS='.' read -r -a identifiers <<< "${prerelease}"
-            for identifier in "${identifiers[@]}"; do
-              [[ "${identifier}" =~ ^[0-9A-Za-z-]+$ ]] || return 1
-              if [[ "${identifier}" =~ ^[0-9]+$ && "${identifier}" =~ ^0[0-9]+$ ]]; then
-                return 1
-              fi
-            done
-          }
+          done
+        }
 
-          version="${GITHUB_REF_NAME#mss-boot/}"
-          if ! validate_release_version "${version}"; then
-            echo "Invalid framework tag: ${GITHUB_REF_NAME}" >&2
-            exit 1
-          fi
-          resolved_commit="$(git rev-parse "${GITHUB_REF_NAME}^{commit}")"
-          if [[ "${resolved_commit}" != "${GITHUB_SHA}" ]]; then
-            echo "framework tag resolves to ${resolved_commit}, not ${GITHUB_SHA}" >&2
-            exit 1
-          fi
-          prerelease=false
-          if [[ "${version}" == *-* ]]; then
-            prerelease=true
-          fi
-          {
-            echo "version=${version}"
-            echo "prerelease=${prerelease}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Verify merged-main release source
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 tools/release/verify_release_source.py \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${GITHUB_SHA}" \
-            --tag "${GITHUB_REF_NAME}" \
-            --policy .mss/release-policy.yaml
-
-      - name: Enforce reviewed public release target
-        env:
-          FRAMEWORK_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          python3 tools/release/check_release_policy.py \
-            --component framework \
-            --version "${FRAMEWORK_VERSION}" \
-            --tag "${GITHUB_REF_NAME}"
-
-      - name: Require successful exact artifact preview
-        env:
-          FRAMEWORK_VERSION: ${{ steps.version.outputs.version }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          bash tools/release/resolve_successful_preview.sh \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${GITHUB_SHA}" \
-            --version "${FRAMEWORK_VERSION}" \
-            --actor lwnmengjing
-
-      - name: Reconcile existing public component release
-        id: release-state
-        env:
-          FRAMEWORK_PRERELEASE: ${{ steps.version.outputs.prerelease }}
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          if release_json="$(gh release view "${GITHUB_REF_NAME}" --json tagName,isDraft,isPrerelease 2>/dev/null)"; then
-            jq -e \
-              --arg tag "${GITHUB_REF_NAME}" \
-              --argjson prerelease "${FRAMEWORK_PRERELEASE}" \
-              '.tagName == $tag and .isPrerelease == $prerelease' \
-              <<< "${release_json}" >/dev/null
-            echo "public=$(jq -r '.isDraft == false' <<< "${release_json}")" >> "${GITHUB_OUTPUT}"
-          else
-            echo 'public=false' >> "${GITHUB_OUTPUT}"
-          fi
-
-      - name: Prepare component-scoped release notes
-        id: release-notes
-        env:
-          FRAMEWORK_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          notes_file="${RUNNER_TEMP}/framework-release-notes.md"
-          : > "${notes_file}"
-          {
-            echo "# mss-boot ${FRAMEWORK_VERSION}"
-            echo
-            echo '## Install'
-            echo
-            echo '```shell'
-            echo "go get github.com/mss-boot-io/mss-boot-admin/mss-boot@${FRAMEWORK_VERSION}"
-            echo '```'
-            echo
-            echo "Source commit: \`${GITHUB_SHA}\`"
-            echo
-            echo 'Broad quality verification was completed locally on the exact clean merged-main commit. As the first irreversible component, this workflow also confirms the exact artifact-staging preview before publication.'
-          } >> "${notes_file}"
-          echo "path=${notes_file}" >> "${GITHUB_OUTPUT}"
-
-      - name: Publish framework release
-        if: steps.release-state.outputs.public != 'true'
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
-        with:
-          tag_name: ${{ github.ref_name }}
-          target_commitish: ${{ github.sha }}
-          name: mss-boot ${{ steps.version.outputs.version }}
-          body_path: ${{ steps.release-notes.outputs.path }}
-          prerelease: ${{ steps.version.outputs.prerelease }}
-          make_latest: false
+        version="${GITHUB_REF_NAME#mss-boot/}"
+        if ! validate_release_version "${version}"; then
+          echo "Invalid framework tag: ${GITHUB_REF_NAME}" >&2
+          exit 1
+        fi
+        resolved_commit="$(git rev-parse "${GITHUB_REF_NAME}^{commit}")"
+        if [[ "${resolved_commit}" != "${GITHUB_SHA}" ]]; then
+          echo "framework tag resolves to ${resolved_commit}, not ${GITHUB_SHA}" >&2
+          exit 1
+        fi
+        prerelease=false
+        if [[ "${version}" == *-* ]]; then
+          prerelease=true
+        fi
+        {
+          echo "version=${version}"
+          echo "prerelease=${prerelease}"
+        } >> "${GITHUB_OUTPUT}"
+    - name: Verify merged-main release source
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/verify_release_source.py \
+          --repository "${GITHUB_REPOSITORY}" \
+          --commit "${GITHUB_SHA}" \
+          --tag "${GITHUB_REF_NAME}" \
+          --policy .mss/release-policy.yaml
+    - name: Enforce reviewed public release target
+      env:
+        FRAMEWORK_VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        python3 tools/release/check_release_policy.py \
+          --component framework \
+          --version "${FRAMEWORK_VERSION}" \
+          --tag "${GITHUB_REF_NAME}"
+    - name: Reconcile existing public component release
+      id: release-state
+      env:
+        FRAMEWORK_PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        if release_json="$(gh release view "${GITHUB_REF_NAME}" --json tagName,targetCommitish,isDraft,isPrerelease 2> "${RUNNER_TEMP}/release-inspection.err")"; then
+          jq -e \
+            --arg tag "${GITHUB_REF_NAME}" \
+            --arg commit "${GITHUB_SHA}" \
+            --argjson prerelease "${FRAMEWORK_PRERELEASE}" \
+            '.tagName == $tag and .targetCommitish == $commit and .isPrerelease == $prerelease' \
+            <<< "${release_json}" >/dev/null
+          echo "public=$(jq -r '.isDraft == false' <<< "${release_json}")" >> "${GITHUB_OUTPUT}"
+        elif grep -Eqi 'release not found|HTTP 404|Not Found' "${RUNNER_TEMP}/release-inspection.err"; then
+          echo 'public=false' >> "${GITHUB_OUTPUT}"
+        else
+          echo 'release absence could not be verified' >&2
+          exit 1
+        fi
+    - name: Prepare component-scoped release notes
+      id: release-notes
+      env:
+        FRAMEWORK_VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        notes_file="${RUNNER_TEMP}/framework-release-notes.md"
+        : > "${notes_file}"
+        {
+          echo "# mss-boot ${FRAMEWORK_VERSION}"
+          echo
+          echo '## Install'
+          echo
+          echo '```shell'
+          echo "go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@${FRAMEWORK_VERSION}"
+          echo '```'
+          echo
+          echo "Source commit: \`${GITHUB_SHA}\`"
+          echo
+          echo 'Broad quality verification was completed locally on the exact clean merged-main commit.'
+        } >> "${notes_file}"
+        echo "path=${notes_file}" >> "${GITHUB_OUTPUT}"
+    - name: Publish framework release
+      if: steps.release-state.outputs.public != 'true'
+      uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+      with:
+        tag_name: ${{ github.ref_name }}
+        target_commitish: ${{ github.sha }}
+        name: mss-boot ${{ steps.version.outputs.version }}
+        body_path: ${{ steps.release-notes.outputs.path }}
+        prerelease: ${{ steps.version.outputs.prerelease }}
+        make_latest: false

@@ -1,14 +1,14 @@
 # 自定义头像面板、顶部操作区和页脚
 
-本文对应尚未发布的 Foundation 源码能力。
+本文对应 v1.3.9 的编译期头像、页头与页脚业务扩展能力。
 
-已发布的 v1.3.7 不包含本页介绍的扩展接口。
+已发布的 v1.3.9 不包含本页介绍的扩展接口。
 采用包含该能力的正式 Admin Distribution 后，Thin Host 可以在桌面和移动端的
 同一个头像面板中注册自己的 React 内容。官方继续管理账户中心、个人设置、
 退出登录和会话清理。没有注册内容时，保留官方账户菜单。
 
 该能力的机器契约见
-[`admin-avatar-contributions`](https://github.com/mss-boot-io/mss-boot-admin/blob/main/.mss/features/admin-avatar-contributions.yaml)。
+[`admin-avatar-contributions`](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/features/admin-avatar-contributions.yaml)。
 Foundation 提供通用内容扩展；数据、文案、接口和业务规则由宿主负责。
 
 ## 注册内容
@@ -16,7 +16,7 @@ Foundation 提供通用内容扩展；数据、文案、接口和业务规则由
 在业务目录添加 `web/src/business/avatar.ts`：
 
 ```ts
-import { defineAvatarContributions } from '@mss-boot-io/admin-web/runtime';
+import { defineAvatarContributions } from '@mss-boot-sys/admin-web/runtime';
 import { lazy } from 'react';
 
 export default defineAvatarContributions([
@@ -28,7 +28,7 @@ export default defineAvatarContributions([
 国际化和查询 Provider。例如下面的中性示例只展示当前用户，并提供关闭按钮：
 
 ```tsx | pure
-import type { AvatarContext } from '@mss-boot-io/admin-web/runtime';
+import type { AvatarContext } from '@mss-boot-sys/admin-web/runtime';
 import { useIntl } from '@umijs/max';
 import { Button, Space, Typography } from 'antd';
 
@@ -97,7 +97,7 @@ Escape 返回头像按钮，点击外部或将焦点移出面板会关闭；外�
 这两个位置共用 `web/src/business/layout.ts` 注册文件：
 
 ```ts
-import { defineLayoutContributions } from '@mss-boot-io/admin-web/runtime';
+import { defineLayoutContributions } from '@mss-boot-sys/admin-web/runtime';
 import { lazy } from 'react';
 
 export default defineLayoutContributions([

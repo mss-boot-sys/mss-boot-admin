@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/source"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/source"
 )
 
 type s3BootstrapTestEntity struct {

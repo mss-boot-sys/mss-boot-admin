@@ -4,14 +4,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/controller"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/controller"
 )
 
 func init() {

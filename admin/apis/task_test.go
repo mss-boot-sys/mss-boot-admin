@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server/task"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server/task"
 )
 
 func TestTaskOperateRejectsUserTaskActionsWhenSchedulerDisabled(t *testing.T) {

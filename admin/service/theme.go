@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 )
 
 const (

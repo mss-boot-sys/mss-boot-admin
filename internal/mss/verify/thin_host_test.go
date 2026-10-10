@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/command"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/generator"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/command"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/generator"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 func TestValidateThinHostStructureRequiresGlueAndRejectsFoundationCore(t *testing.T) {
@@ -93,7 +93,7 @@ func TestValidateThinHostStructureRejectsDistributionDependencyDriftAndPrivateIm
     "test": "mss-admin-web test",
     "build": "mss-admin-web build"
   },
-  "dependencies": {"@mss-boot-io/admin-web": "1.3.1"}
+  "dependencies": {"@mss-boot-sys/admin-web": "1.3.1"}
 }
 `)
 	writeThinHostTestFile(t, root, "web/src/generated/routes.ts", "import x from '@/shared/runtime';\nexport default x;\n")
@@ -113,11 +113,28 @@ func TestValidateThinHostStructureRejectsPrivateRegistryCredential(t *testing.T)
 	root := t.TempDir()
 	ctx := thinHostVerifyContext(root, ".", "web", "internal/modules")
 	writeThinHostStructure(t, ctx)
-	writeThinHostTestFile(t, root, "web/.npmrc", "@mss-boot-io:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=committed-token\n")
+	writeThinHostTestFile(t, root, "web/.npmrc", "@mss-boot-sys:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=committed-token\n")
 
 	result := validateThinHostStructure(ctx)
-	if result.ExitCode == 0 || !strings.Contains(result.Error, "public npm registry") {
+	if result.ExitCode == 0 || !strings.Contains(result.Error, "only the NODE_AUTH_TOKEN placeholder") {
 		t.Fatalf("committed package token was accepted: %#v", result)
+	}
+}
+
+func TestValidateFrozenFrontendTarballRejectsCredentialsAndWrongRegistry(t *testing.T) {
+	for _, value := range []string{
+		"", "https://registry.npmjs.org/package.tgz", "https://npm.pkg.github.com.attacker.test/package.tgz",
+		"https://token@npm.pkg.github.com/package.tgz", "https://npm.pkg.github.com/package.tgz?token=secret",
+		"http://npm.pkg.github.com/package.tgz", "https://npm.pkg.github.com:444/package.tgz",
+	} {
+		if validFrozenFrontendTarball(value) {
+			t.Fatalf("unsafe frozen tarball accepted: %q", value)
+		}
+	}
+	for _, value := range []string{"https://npm.pkg.github.com/download/@mss-boot-sys/admin-web/1.3.9/frozen", "http://127.0.0.1:4873/package.tgz", "http://[::1]:4873/package.tgz"} {
+		if !validFrozenFrontendTarball(value) {
+			t.Fatalf("valid frozen tarball rejected: %q", value)
+		}
 	}
 }
 
@@ -133,10 +150,10 @@ func TestValidateThinHostStructureRequiresFrozenDistributionChecksums(t *testing
 		t.Fatalf("incomplete frozen dependency inputs were accepted: %#v", result)
 	}
 	for _, expected := range []string{
-		"go.sum must contain an exact non-placeholder checksum for github.com/mss-boot-io/mss-boot-admin/admin v1.3.0",
-		"go.sum must contain an exact non-placeholder checksum for github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.0/go.mod",
-		"pnpm-lock.yaml must pin frontend specifier @mss-boot-io/admin-web@1.3.0",
-		"pnpm-lock.yaml must contain the frozen package snapshot for @mss-boot-io/admin-web@1.3.0",
+		"go.sum must contain an exact non-placeholder checksum for github.com/mss-boot-sys/mss-boot-admin/admin v1.3.0",
+		"go.sum must contain an exact non-placeholder checksum for github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.3.0/go.mod",
+		"pnpm-lock.yaml must pin frontend specifier @mss-boot-sys/admin-web@1.3.0",
+		"pnpm-lock.yaml must contain the frozen package snapshot for @mss-boot-sys/admin-web@1.3.0",
 	} {
 		if !strings.Contains(result.Error, expected) {
 			t.Errorf("frozen dependency error %q does not contain %q", result.Error, expected)
@@ -148,7 +165,7 @@ func TestValidateThinHostStructureRejectsMissingFrontendTarballIntegrity(t *test
 	root := t.TempDir()
 	ctx := thinHostVerifyContext(root, ".", "web", "internal/modules")
 	writeThinHostStructure(t, ctx)
-	writeThinHostTestFile(t, root, "web/pnpm-lock.yaml", "lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      '@mss-boot-io/admin-web':\n        specifier: 1.3.0\n        version: 1.3.0\npackages:\n  '@mss-boot-io/admin-web@1.3.0':\n    resolution: {}\n")
+	writeThinHostTestFile(t, root, "web/pnpm-lock.yaml", "lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      '@mss-boot-sys/admin-web':\n        specifier: 1.3.0\n        version: 1.3.0\npackages:\n  '@mss-boot-sys/admin-web@1.3.0':\n    resolution: {}\n")
 
 	result := validateThinHostStructure(ctx)
 	if result.ExitCode == 0 || !strings.Contains(result.Error, "sha512 tarball integrity") {
@@ -357,8 +374,8 @@ func thinHostVerifyContext(root, backend, frontend, modules string) *project.Con
 				Distribution: project.DistributionSpec{
 					Name:     "mss-boot-admin",
 					Version:  "v1.3.0",
-					Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-io/mss-boot-admin/admin", Version: "v1.3.0"},
-					Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-io/admin-web", Version: "1.3.0"},
+					Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-sys/mss-boot-admin/admin", Version: "v1.3.0"},
+					Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-sys/admin-web", Version: "1.3.0"},
 				},
 				RepositoryLayout: map[string]string{
 					"kind":           "thin-host",
@@ -372,7 +389,7 @@ func thinHostVerifyContext(root, backend, frontend, modules string) *project.Con
 				},
 				Backend: project.BackendSpec{
 					Module:          "github.com/acme/orders-admin",
-					FrameworkModule: "github.com/mss-boot-io/mss-boot-admin/mss-boot",
+					FrameworkModule: "github.com/mss-boot-sys/mss-boot-admin/mss-boot",
 				},
 				Frontend: project.FrontendSpec{PackageManagerVersion: "10.34.5"},
 			},
@@ -418,11 +435,11 @@ func writeThinHostStructure(t *testing.T, ctx *project.Context) {
     "test": "mss-admin-web test",
     "build": "mss-admin-web build"
   },
-  "dependencies": {"@mss-boot-io/admin-web": "1.3.0"}
+  "dependencies": {"@mss-boot-sys/admin-web": "1.3.0"}
 }
 `,
-		joinRepositoryPath(frontend, ".npmrc"):                              "registry=https://registry.npmjs.org/\nsave-exact=true\n",
-		joinRepositoryPath(frontend, "pnpm-lock.yaml"):                      "lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      '@mss-boot-io/admin-web':\n        specifier: 1.3.0\n        version: 1.3.0\npackages:\n  '@mss-boot-io/admin-web@1.3.0':\n    resolution: {integrity: sha512-" + strings.Repeat("A", 86) + "==}\n",
+		joinRepositoryPath(frontend, ".npmrc"):                              "registry=https://registry.npmjs.org/\n@mss-boot-sys:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\nsave-exact=true\n",
+		joinRepositoryPath(frontend, "pnpm-lock.yaml"):                      "lockfileVersion: '9.0'\nimporters:\n  .:\n    dependencies:\n      '@mss-boot-sys/admin-web':\n        specifier: 1.3.0\n        version: 1.3.0\npackages:\n  '@mss-boot-sys/admin-web@1.3.0':\n    resolution: {tarball: https://npm.pkg.github.com/download/@mss-boot-sys/admin-web/1.3.0/frozen, integrity: sha512-" + strings.Repeat("A", 86) + "==}\n",
 		joinRepositoryPath(frontend, "tsconfig.json"):                       "{\n  \"extends\": \"./src/.umi/tsconfig.json\"\n}\n",
 		joinRepositoryPath(frontend, "config/config.ts"):                    "import { defineBusinessAdmin } from '" + distribution.Frontend.Package + "/business';\nimport businessRoutes from './business-routes';\nexport default defineBusinessAdmin({ businessRoutes, routeRegistrations: './src/route-registrations.ts', useUtoopack: true });\n",
 		joinRepositoryPath(frontend, "config/business-routes.ts"):           "import type { AdminBusinessRoute } from '" + distribution.Frontend.Package + "/business';\nimport customBusinessRoutes from '../src/business/routes.config';\nimport generatedBusinessRoutes from './business-routes.generated';\nconst businessRoutes: AdminBusinessRoute[] = [...generatedBusinessRoutes, ...customBusinessRoutes];\nexport default businessRoutes;\n",

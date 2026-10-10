@@ -14,11 +14,11 @@ func TestDistributionSpecRequiresOneSemanticVersionCore(t *testing.T) {
 		Name:    "mss-boot-admin",
 		Version: "v1.3.0",
 		Backend: DistributionBackendSpec{
-			Module:  "github.com/mss-boot-io/mss-boot-admin/admin",
+			Module:  "github.com/mss-boot-sys/mss-boot-admin/admin",
 			Version: "v1.3.0",
 		},
 		Frontend: DistributionFrontendSpec{
-			Package: "@mss-boot-io/admin-web",
+			Package: "@mss-boot-sys/admin-web",
 			Version: "1.3.0",
 		},
 	}
@@ -69,8 +69,8 @@ func TestContextValidatesExplicitThinHostLayout(t *testing.T) {
 				Distribution: DistributionSpec{
 					Name:     "mss-boot-admin",
 					Version:  "v1.3.0",
-					Backend:  DistributionBackendSpec{Module: "github.com/mss-boot-io/mss-boot-admin/admin", Version: "v1.3.0"},
-					Frontend: DistributionFrontendSpec{Package: "@mss-boot-io/admin-web", Version: "1.3.0"},
+					Backend:  DistributionBackendSpec{Module: "github.com/mss-boot-sys/mss-boot-admin/admin", Version: "v1.3.0"},
+					Frontend: DistributionFrontendSpec{Package: "@mss-boot-sys/admin-web", Version: "1.3.0"},
 				},
 				RepositoryLayout: map[string]string{
 					"kind":           "thin-host",

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 )
 
 func TestOptionNormalizeOwnsDefaultsAndItemIdentifiers(t *testing.T) {

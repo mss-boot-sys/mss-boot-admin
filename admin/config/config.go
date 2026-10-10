@@ -13,14 +13,14 @@ import (
 	"github.com/casbin/casbin/v3"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/source"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/queue"
-	responsegorm "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions/gorm"
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/source"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/queue"
+	responsegorm "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions/gorm"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
 )
 
 //go:embed *.yml

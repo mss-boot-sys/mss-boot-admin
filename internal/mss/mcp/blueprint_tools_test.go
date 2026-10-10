@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func TestBlueprintToolDefinitionsAreComplete(t *testing.T) {
@@ -227,7 +227,7 @@ func TestEmbeddedUpgradeLifecyclePreservesThinHostBusinessFiles(t *testing.T) {
 	if !dryRun.DryRun || !dryRun.Success || dryRun.FoundationRoot != "embedded://mss/1.3.7" {
 		t.Fatalf("embedded upgrade dry-run = %#v", dryRun)
 	}
-	if dryRun.ToDistribution.Version != "v1.3.7" || dryRun.ToIdentities.Foundation.Commit != strings.Repeat("a", 40) {
+	if dryRun.ToDistribution.Version != "v1.3.9" || dryRun.ToIdentities.Foundation.Commit != strings.Repeat("a", 40) {
 		t.Fatalf("upgrade target is not bound to release build identity: %#v", dryRun.ToIdentities)
 	}
 	if !containsString(dryRun.PreservedFiles, "internal/modules/custom/owned.go") {
@@ -271,7 +271,7 @@ func setMCPReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.7"
+	buildinfo.Version = "v1.3.9"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 }
@@ -283,7 +283,7 @@ func mcpFrontendRegistry(t *testing.T) string {
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-io/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":"@mss-boot-sys/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
 			integrity,
 			"http://"+request.Host+"/artifacts/mcp-admin-web-1.3.7.tgz",
 		)

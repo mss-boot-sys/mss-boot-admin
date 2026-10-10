@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
 )
 
 func newNewCommand(rootOverride *string) *cobra.Command {

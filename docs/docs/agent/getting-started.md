@@ -1,13 +1,13 @@
 ---
 title: Agent 协作起步
 order: 2
-description: 人类维护者如何在 v1.3.7 Foundation 与 Thin Host 中为 AI Agent 选择正确权威入口
+description: 人类维护者如何在 v1.3.9 Foundation 与 Thin Host 中为 AI Agent 选择正确权威入口
 ---
 
 # Agent 协作起步
 
 本页是**给人类看的协作说明**，帮助维护者把任务交给 AI Agent；它不是可执行 Agent
-指令，也不替代仓库内合同。v1.3.7 是当前协调稳定版，v1.3.5 与 v1.3.6 已永久停止。
+指令，也不替代仓库内合同。v1.3.9 是新仓库的首发基线，旧组织版本保留为历史记录。
 Docs 网站可通过独立 `docs/v*` 标签异步候补，其部署状态不阻断组件发布或 Thin Host
 采用。
 
@@ -16,8 +16,8 @@ Docs 网站可通过独立 `docs/v*` 标签异步候补，其部署状态不阻�
 | 要完成的工作 | Agent 的权威入口 | 人类应检查什么 |
 | --- | --- | --- |
 | 修改 mss-boot-admin Foundation | 根与目标目录最近的 `AGENTS.md`，再读 `.mss/` 和适用的 `.agents/skills/` | 工作树、PR 边界、模块所有权、受影响验证 |
-| 修改 v1.3.7 生成的 Thin Host | 生成仓库自己的 `AGENTS.md`、`.mss/` 和本地 `.agents/skills/` | 是否固定 v1.3.7、业务文件是否保持自有 |
-| 创建新的 Thin Host | 人类先按[快速开始](/getting-started)安装正式 v1.3.7 工具 | 是否从 Root Release 二进制和空目录开始 |
+| 修改 v1.3.9 生成的 Thin Host | 生成仓库自己的 `AGENTS.md`、`.mss/` 和本地 `.agents/skills/` | 是否固定 v1.3.9、业务文件是否保持自有 |
+| 创建新的 Thin Host | 人类先按[快速开始](/getting-started)安装正式 v1.3.9 工具 | 是否从 Root Release 二进制和空目录开始 |
 | 了解公开能力 | 本站产品与架构页面 | 不把网页当成 Agent 的写入授权 |
 
 两种 Agent 上下文不能混用。Foundation checkout 中的源码命令用于贡献者验证，不是
@@ -70,7 +70,7 @@ Docs 网站可通过独立 `docs/v*` 标签异步候补，其部署状态不阻�
 2. 机器合同、生成结果、测试和人类说明互相一致；
 3. 变更保留后端授权、迁移和恢复边界；
 4. 声称通过的检查有精确命令、提交和可复现结果；
-5. 若涉及 v1.3.7 采用，所有依赖来自正式公共身份，而不是本地替代。
+5. 若涉及 v1.3.9 采用，所有依赖来自正式公共身份，而不是本地替代。
 
 具体升级所有权见[Blueprint 与升级](/agent/blueprints-and-upgrades)，CLI/MCP 与 Skill
 分层见[Skills 与 MCP](/agent/skills-and-mcp)。

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 )
 
 func TestNormalizeSelfProfileUpdatesUsesAnExactClearableAllowlist(t *testing.T) {

@@ -2,34 +2,31 @@
 
 [简体中文](./README.zh-CN.md)
 
-mss-boot is an agent-native management-system foundation. **v1.3.7 is the
-current stable and adoptable Complete Admin Distribution.** Every component was
-qualified and published from merged `main` commit
-`77b53d41092741eac62fa6418c0bdbf87413c7cd`; generated Thin Hosts pin this
-exact coordinated version instead of combining independent component versions.
+mss-boot is an agent-native management-system foundation. **v1.3.9 is the first
+Complete Admin Distribution for `mss-boot-sys/mss-boot-admin`.** Versions v1.3.8
+and earlier belong to the former `mss-boot-io` organization. Historical records
+are retained without recreating their tags or artifacts in this repository.
 
-The public Docs website is released independently and may follow the component
-train. A `docs/v*` tag identifies only a website deployment: missing, failed,
-or temporarily stale Docs deployment never blocks Framework, Admin, frontend,
-tool, image, npm, or stable-alias publication. Checked-in human and Agent
-guidance remains versioned with the source contracts.
+The commands below describe the v1.3.9 release contract and apply when the
+corresponding [Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.3.9)
+and packages are available. All components must resolve to the same qualified
+merged `main` commit; publication results are verified from their actual assets.
 
-## Stable distribution identities
+## Distribution identities
 
-| Surface | v1.3.7 identity |
+| Surface | v1.3.9 identity |
 | --- | --- |
-| Root tools, backend image, and GitHub Release | `v1.3.7` |
-| Reusable Go Framework | `mss-boot/v1.3.7` |
-| Importable Admin Go module | `admin/v1.3.7` |
-| Complete Admin Web | `web/antd-v6/v1.3.7` / `@mss-boot-io/admin-web@1.3.7` |
-| Documentation website | independently deployed from a versioned `docs/v*` website tag |
+| Root tools, backend image, and GitHub Release | `v1.3.9` |
+| Reusable Go Framework | `mss-boot/v1.3.9` |
+| Importable Admin Go module | `admin/v1.3.9` |
+| Complete Admin Web | `web/antd-v6/v1.3.9` / `@mss-boot-sys/admin-web@1.3.9` |
+| Documentation website | `docs/v1.3.9` at https://docs.mss-boot-io.top |
 
-v1.3.5 and v1.3.6 remain immutable partial release trains. Their existing
-tags, Releases, and artifacts are audit evidence, not compatible substitutes
-for the stable train. Do not mix stopped-train components with a source
-checkout, a local `replace`, or an absent package identity.
+Admin Web is published only to GitHub Packages (`npm.pkg.github.com`); package
+downloads require GitHub authentication. The website retains its existing
+domain and records its deployed version and full source commit in `/release.json`.
 
-## Install the v1.3.7 tools
+## Install the v1.3.9 tools
 
 The versioned installers verify release checksums, install both `mss` and
 `mss-mcp`, do not use `sudo`, and do not modify a shell profile.
@@ -38,8 +35,8 @@ Linux or macOS:
 
 ```shell
 curl -fL -o install-mss.sh \
-  https://github.com/mss-boot-io/mss-boot-admin/releases/download/v1.3.7/install-mss.sh
-bash ./install-mss.sh --version v1.3.7
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.3.9/install-mss.sh
+bash ./install-mss.sh --version v1.3.9
 export PATH="$HOME/.local/bin:$PATH"
 mss --version
 mss-mcp --version
@@ -49,19 +46,19 @@ Windows PowerShell:
 
 ```powershell
 Invoke-WebRequest `
-  https://github.com/mss-boot-io/mss-boot-admin/releases/download/v1.3.7/install-mss.ps1 `
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.3.9/install-mss.ps1 `
   -OutFile install-mss.ps1
-& .\install-mss.ps1 -Version v1.3.7
+& .\install-mss.ps1 -Version v1.3.9
 $env:Path = "$env:LOCALAPPDATA\Programs\mss\bin;$env:Path"
 mss --version
 mss-mcp --version
 ```
 
-## Consume the stable packages
+## Consume the release packages
 
 Pin the exact coordinated Go and npm versions. The Admin module contains no
-committed local `replace`, and the official npmjs package installs without a
-registry token. Run the Go commands from the root of an **existing external
+committed local `replace`. Configure GitHub Packages authentication as described
+in the [package guide](./docs/docs/getting-started/packages.md). Run the Go commands from the root of an **existing external
 consumer module** (a directory containing `go.mod`); for a clean public-resolution
 check from an empty directory, use the [external consumer procedure](./docs/docs/getting-started/packages.md).
 Run the npm command separately from an **existing frontend package root** (the
@@ -70,19 +67,19 @@ directory containing its `package.json`, normally `web/` in a Thin Host).
 Go module root:
 
 ```shell
-go get github.com/mss-boot-io/mss-boot-admin/mss-boot@v1.3.7
-go get github.com/mss-boot-io/mss-boot-admin/admin@v1.3.7
+go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.3.9
+go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.3.9
 ```
 
 Frontend package root:
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-io/admin-web@1.3.7
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.3.9
 ```
 
-The npm `latest` tag currently resolves to `1.3.7`, but Thin Hosts still pin
-the exact version. Official npm publication uses GitHub Actions Trusted
-Publishing; no stored npm token is part of the release contract.
+Thin Hosts pin the exact version. Set `NODE_AUTH_TOKEN` from a local secret store
+with `read:packages`; never commit the token. The generated `.npmrc` contains
+only the scoped registry and an environment-variable reference.
 
 ## Create and start a Thin Host
 
@@ -108,25 +105,31 @@ password.
 
 ## Upgrade a Thin Host
 
-Back up code, configuration, and the database; install the target v1.3.7 tools;
+The namespace changes require migrating owned Go imports from
+`github.com/mss-boot-io/mss-boot-admin` to
+`github.com/mss-boot-sys/mss-boot-admin`, the npm scope to `@mss-boot-sys`, and
+package registry authentication. Go 1.27.2 and Casbin v3 are required; callers
+using exported Casbin types must adapt imports and compile their integrations.
+
+Back up code, configuration, and the database; install the target v1.3.9 tools;
 and verify both binaries before planning. A supported three-way upgrade requires
 the generated `.mss/blueprint-manifest.json`:
 
 ```shell
 mss --version
 mss-mcp --version
-mss upgrade admin v1.3.7 --format json
-mss upgrade admin v1.3.7 --apply --yes --format json
+mss upgrade admin v1.3.9 --format json
+mss upgrade admin v1.3.9 --apply --yes --format json
 mss doctor --strict
 mss verify --all
-mss upgrade admin v1.3.7 --format json
+mss upgrade admin v1.3.9 --format json
 ```
 
 The first and final commands are read-only; the final plan must contain no
 create, update, delete, or conflict operations. The upgrade engine changes only
 Blueprint-managed files and preserves business-owned and unknown files. A
 hand-assembled repository or one missing its manifest must generate a clean
-v1.3.7 baseline in a new directory and migrate business-owned specifications
+v1.3.9 baseline in a new directory and migrate business-owned specifications
 and files instead of fabricating a manifest.
 
 ## Architecture boundary
@@ -159,7 +162,7 @@ model for humans; it is not an executable instruction source. Start with the
 [quick start](./docs/docs/getting-started/index.md),
 [package boundary](./docs/docs/getting-started/packages.md),
 [tooling contract](./docs/docs/getting-started/tooling.md), and
-[v1.3.7 release record](./docs/docs/releases/v1-3-7.md).
+[v1.3.9 release record](./docs/docs/releases/v1-3-9.md).
 
 Foundation contributors should use
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the nearest `AGENTS.md` for

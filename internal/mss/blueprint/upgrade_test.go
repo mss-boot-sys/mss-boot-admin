@@ -118,7 +118,7 @@ func TestAdminDistributionUpgradePlansReadOnlyThenAppliesAndPreservesUnknownBusi
 	if applied.DryRun || !applied.Success {
 		t.Fatalf("applied Admin Distribution plan = %#v", applied)
 	}
-	assertContains(t, goModPath, "github.com/mss-boot-io/mss-boot-admin/admin v1.4.0")
+	assertContains(t, goModPath, "github.com/mss-boot-sys/mss-boot-admin/admin v1.4.0")
 	assertContains(t, filepath.Join(applicationRoot, "internal", "modules", "supplier", "custom.go"), "const Custom = true")
 	snapshot, err := ReadSnapshot(applicationRoot, "")
 	if err != nil {

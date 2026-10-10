@@ -1,6 +1,6 @@
 package config
 
-import "github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+import "github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 
 // Presentation owns startup-only safety controls. RecoveryMode is
 // intentionally absent from AppConfig and every Admin mutation endpoint so a

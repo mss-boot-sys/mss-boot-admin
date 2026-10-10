@@ -16,11 +16,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	larkauthen "github.com/larksuite/oapi-sdk-go/v3/service/authen/v1"
-	corePKG "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
-	runtimechallenge "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/challenge"
+	corePKG "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
+	runtimechallenge "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/challenge"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 	"gorm.io/gorm"
@@ -28,8 +28,8 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 )
 
 /*

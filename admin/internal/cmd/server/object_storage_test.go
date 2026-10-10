@@ -12,8 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	adminconfig "github.com/mss-boot-io/mss-boot-admin/admin/config"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	adminconfig "github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 func TestStorageInstalledBeforeApplicationDelivery(t *testing.T) {

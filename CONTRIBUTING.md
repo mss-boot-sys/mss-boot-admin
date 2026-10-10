@@ -1,19 +1,19 @@
 # Contributing to mss-boot-admin
 
-感谢你参与 mss-boot-admin。当前仓库维护 Admin Distribution 的源代码、测试、文档、
-生成器，以及 v1.3.7 当前稳定版和 v1.3.5、v1.3.6 不可变部分发布合同。
+感谢你参与 mss-boot-admin。当前仓库维护 Admin Distribution 的源代码、测试、文档和
+生成器。v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首次发布；v1.3.8 及更早版本属于
+原 `mss-boot-io` 组织，保留历史记录，不要求补发旧制品。
 
-如果你只是创建业务系统，请不要按本文 clone Foundation，也不要添加本地
-`replace`。v1.3.5 已永久停止；v1.3.6 已永久停止；两者都是不完整且不可续的发布列车，
-不能用于创建或升级应用。v1.3.7 已完成组件、npm、镜像、稳定别名与 current-stable
-对账，是当前可采用版本；请先阅读[快速开始](docs/docs/getting-started/index.md)。Docs 网站
-Tag 与部署是独立、异步的展示面，不阻断组件发布或采用。
-本文只适用于修改 Foundation 本身的贡献者。
+本文只适用于修改 Foundation 本身的贡献者。创建业务系统请先阅读
+[快速开始](docs/docs/getting-started/index.md)，不要 clone Foundation 或添加本地
+`replace`。发布变更必须经 PR 合入 `main`，在同一干净提交完成本地验证，然后创建
+组件标签。流水线负责构建与发布制品；npm 只发布 GitHub Packages，Docs 需实际部署并
+核对线上版本。
 
 ## 提交问题
 
 Bug 和功能建议统一提交到
-[GitHub Issues](https://github.com/mss-boot-io/mss-boot-admin/issues)。请提供：
+[GitHub Issues](https://github.com/mss-boot-sys/mss-boot-admin/issues)。请提供：
 
 - 可复现步骤、预期结果和实际结果；
 - 操作系统以及 Go、Node.js、pnpm 版本；
@@ -30,7 +30,7 @@ Bug 和功能建议统一提交到
 ```shell
 git clone https://github.com/YOUR_USERNAME/mss-boot-admin.git
 cd mss-boot-admin
-git remote add upstream https://github.com/mss-boot-io/mss-boot-admin.git
+git remote add upstream https://github.com/mss-boot-sys/mss-boot-admin.git
 
 go run ./cmd/mss context
 go run ./cmd/mss doctor
@@ -65,7 +65,7 @@ git switch -c feature/short-description
 - `admin/` 是完整可导入 Admin 后端；新业务能力优先放在
   `admin/modules/<name>/`。
 - `web/antd-v6/` 同时是参考前端和唯一完整的
-  `@mss-boot-io/admin-web` 包，不得建立第二套 SPA。
+  `@mss-boot-sys/admin-web` 包，不得建立第二套 SPA。
 - `docs/` 是当前仓库内的文档站，不是独立 `mss-boot-docs` checkout。
 - `.mss/` 保存机器可执行事实；长期说明放在 `docs/docs/`，架构决策放在
   `docs/adr/`。
@@ -172,7 +172,7 @@ go run ./cmd/mss verify --changed
 ```text
 feat(module): add supplier approval workflow
 fix(upgrade): preserve downstream-owned files
-docs(release): record v1.3.6 immutable partial state
+docs(release): align v1.3.9 migration guidance
 ```
 
 只暂存本次变更，提交前检查差异和敏感信息：
@@ -201,8 +201,8 @@ Pull Request 必须以 `main` 为目标，并说明：
 ## 获取帮助
 
 - 文档：https://docs.mss-boot-io.top
-- Issues：https://github.com/mss-boot-io/mss-boot-admin/issues
-- Discussions：https://github.com/mss-boot-io/mss-boot-admin/discussions
+- Issues：https://github.com/mss-boot-sys/mss-boot-admin/issues
+- Discussions：https://github.com/mss-boot-sys/mss-boot-admin/discussions
 
 提交代码即表示你同意相关贡献按本仓库的 MIT License 发布，并遵守
 `CODE_OF_CONDUCT.md`。

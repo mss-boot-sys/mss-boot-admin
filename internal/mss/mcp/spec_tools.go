@@ -4,7 +4,7 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 func (s *Server) callSpecificationTool(_ context.Context, name string, arguments map[string]any) (callToolResult, bool) {

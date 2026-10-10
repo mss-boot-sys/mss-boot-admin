@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	devcmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/dev"
+	devcmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/dev"
 )
 
 func newDevCommand(rootOverride *string) *cobra.Command {

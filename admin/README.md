@@ -1,21 +1,13 @@
 # Importable Admin application
 
-## v1.3.7 stable status
+## v1.3.9 release identity
 
-v1.3.7 is the current stable, adoptable Complete Admin Distribution. The public
-module `github.com/mss-boot-io/mss-boot-admin/admin@v1.3.7` was qualified with
-the matching Framework, Admin Web, Root tools, and images from exact merged-main
-commit `77b53d41092741eac62fa6418c0bdbf87413c7cd`. Consumers must pin the complete
-v1.3.7 train and must not combine this module with another patch or a local
-replacement.
-
-v1.3.5 and v1.3.6 remain immutable partial trains. v1.3.6 published the Admin
-identity `github.com/mss-boot-io/mss-boot-admin/admin@v1.3.6` from commit
-`b1fe47a3a83209574e09d53526b122dd2cbc5277`, but that train never completed.
-Each public component remains immutable audit evidence and is not, by itself, a
-complete Thin Host distribution. The Docs website publishes independently; a
-Docs failure or later versioned Docs revision does not change this Admin
-module's stable identity.
+`github.com/mss-boot-sys/mss-boot-admin/admin@v1.3.9` is the Admin module for the
+first release from `mss-boot-sys/mss-boot-admin`. Pin the matching Framework,
+Admin Web and Root tools. Versions v1.3.8 and earlier remain releases of the
+former `mss-boot-io` organization; this namespace change requires updating
+business imports and rebuilding integrations. See the [release guide](../docs/docs/releases/v1-3-9.md)
+for Go 1.27.2, Casbin v3 and OIDC migration notes.
 
 ## Composition contract
 
@@ -32,7 +24,7 @@ import (
     "context"
     "log"
 
-    "github.com/mss-boot-io/mss-boot-admin/admin/app"
+    "github.com/mss-boot-sys/mss-boot-admin/admin/app"
     "github.com/acme/orders-admin/internal/modules/orders"
 )
 
@@ -50,11 +42,11 @@ Do not copy Admin startup, security middleware, migrations, or core routes into
 a business repository. A business module may extend the protected group only
 through `admin/business`; UI visibility never replaces backend authorization.
 
-The v1.3.7 tool generates this composition as part of a version-bound Thin Host.
+The v1.3.9 tool generates this composition as part of a version-bound Thin Host.
 Use the public Root tool and package onboarding guide instead of copying this
 repository's Admin source into a business application.
 
-The v1.3.7 bootstrap contract reads the initial administrator password
+The v1.3.9 bootstrap contract reads the initial administrator password
 through hidden input or a one-use `MSS_ADMIN_INITIAL_PASSWORD` secret, stores
 only a one-way verifier, and exposes no default password. The generated local
 application identity is user `admin` at `http://127.0.0.1:8001`.

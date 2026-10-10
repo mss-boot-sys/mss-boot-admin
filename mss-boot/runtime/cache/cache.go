@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
 )
 
 const (

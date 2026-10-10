@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/search/gorms"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/search/gorms"
 )
 
 func TestUserSearchStatusAcceptsOnlySupportedExactValues(t *testing.T) {

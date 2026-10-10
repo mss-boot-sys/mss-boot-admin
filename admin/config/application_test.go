@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 func TestApplicationInitConfiguresModeAndStaticRoutes(t *testing.T) {

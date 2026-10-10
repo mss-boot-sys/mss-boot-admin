@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func newUpgradeCommand(rootOverride *string) *cobra.Command {

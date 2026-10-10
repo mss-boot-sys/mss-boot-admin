@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/browsersecurity"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/browsersecurity"
 	"github.com/redis/go-redis/v9"
 )
 

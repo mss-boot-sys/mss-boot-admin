@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
 	"gopkg.in/yaml.v3"
 )
 

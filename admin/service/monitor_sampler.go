@@ -16,7 +16,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	psnet "github.com/shirou/gopsutil/v3/net"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
 )
 
 const monitorSlowSampleInterval = 30 * time.Second

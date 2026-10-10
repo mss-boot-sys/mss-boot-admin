@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
 )
 
 func TestResponseMutationAndClone(t *testing.T) {

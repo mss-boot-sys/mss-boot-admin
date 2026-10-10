@@ -9,9 +9,9 @@ import (
 	"io"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 	"gorm.io/gorm"
 )
 

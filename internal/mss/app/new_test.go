@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 )
 
 func TestGenerateApplicationUsesEmbeddedSourceInEmptyDirectory(t *testing.T) {
@@ -30,7 +30,7 @@ func TestGenerateApplicationUsesEmbeddedSourceInEmptyDirectory(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.7"
+	buildinfo.Version = "v1.3.9"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 
@@ -97,7 +97,7 @@ func appFrontendRegistry(t *testing.T) string {
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-io/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":"@mss-boot-sys/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
 			integrity,
 			"http://"+request.Host+"/artifacts/app-admin-web-1.3.7.tgz",
 		)
@@ -112,7 +112,7 @@ func setAppReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.7"
+	buildinfo.Version = "v1.3.9"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 }

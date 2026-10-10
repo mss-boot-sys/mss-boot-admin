@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	configgormdb "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	configgormdb "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )

@@ -2,7 +2,7 @@ package actions
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
 )
 
 // WriteOperation identifies the control boundary that produced an error.

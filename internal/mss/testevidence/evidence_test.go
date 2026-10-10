@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/command"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/command"
 )
 
 func TestRunRejectsMissingRequiredTestEvidence(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/testevidence"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/testevidence"
 )
 
 type testEvidenceRunner func(context.Context, testevidence.Options) (testevidence.Report, error)

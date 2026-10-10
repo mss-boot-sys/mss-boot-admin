@@ -10,12 +10,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	compatcmd "github.com/mss-boot-io/mss-boot-admin/admin/cmd"
-	internalcmd "github.com/mss-boot-io/mss-boot-admin/admin/internal/cmd"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
-	corepresentation "github.com/mss-boot-io/mss-boot-admin/admin/presentation/core"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	compatcmd "github.com/mss-boot-sys/mss-boot-admin/admin/cmd"
+	internalcmd "github.com/mss-boot-sys/mss-boot-admin/admin/internal/cmd"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
+	corepresentation "github.com/mss-boot-sys/mss-boot-admin/admin/presentation/core"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 )
 
 var (

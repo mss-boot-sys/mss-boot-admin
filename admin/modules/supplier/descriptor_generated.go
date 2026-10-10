@@ -3,7 +3,7 @@
 package supplier
 
 import (
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 )
 
 // Descriptor returns this module's immutable metadata projection.

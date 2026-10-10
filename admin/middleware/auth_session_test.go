@@ -10,15 +10,15 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/sessioncache"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/sessioncache"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
 )
 
 // setupAuthSessionTest wires the bits of middleware.Init that

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
-	runtimeresource "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
+	runtimeresource "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 const (

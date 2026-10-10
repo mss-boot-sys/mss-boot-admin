@@ -37,15 +37,15 @@ import {
   PageForbidden,
   PageLoading,
   type InitialState,
-} from '@mss-boot-io/admin-web/runtime';
-import { compilePortablePresentationPattern } from '@mss-boot-io/admin-web/runtime/presentation';
+} from '@mss-boot-sys/admin-web/runtime';
+import { compilePortablePresentationPattern } from '@mss-boot-sys/admin-web/runtime/presentation';
 import {
   buildPresentationConditionContext,
   evaluatePresentationCondition,
   PresentationFieldControl,
   renderPresentationValue,
   usePagePresentation,
-} from '@mss-boot-io/admin-web/runtime/presentation/client';
+} from '@mss-boot-sys/admin-web/runtime/presentation/client';
 import { generatedPresentationRegistry } from '../../presentation-registry.generated';
 import { supplierAPI } from './api';
 import { buildSupplierQuery, getSupplierCapabilities } from './contract';

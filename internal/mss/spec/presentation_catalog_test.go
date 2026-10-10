@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	distribution "github.com/mss-boot-io/mss-boot-admin"
+	distribution "github.com/mss-boot-sys/mss-boot-admin"
 )
 
 func TestPresentationCatalogEmbeddedClosedInventoryAndLimits(t *testing.T) {

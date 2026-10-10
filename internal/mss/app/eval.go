@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	evalcmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/eval"
+	evalcmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/eval"
 )
 
 type evalRunner func(context.Context, string, evalcmd.RunOptions) (evalcmd.Report, error)

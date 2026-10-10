@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center/websocket"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center/websocket"
 )
 
 func canonicalWebSocketTestTicket(fill byte) string {

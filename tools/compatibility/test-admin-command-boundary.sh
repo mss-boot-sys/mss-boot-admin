@@ -14,10 +14,10 @@ module example.com/mss-admin-command-boundary
 
 go 1.27.2
 
-require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0
+require github.com/mss-boot-sys/mss-boot-admin/admin v0.0.0
 
-replace github.com/mss-boot-io/mss-boot-admin/admin => ${admin_root}
-replace github.com/mss-boot-io/mss-boot-admin/mss-boot => ${framework_root}
+replace github.com/mss-boot-sys/mss-boot-admin/admin => ${admin_root}
+replace github.com/mss-boot-sys/mss-boot-admin/mss-boot => ${framework_root}
 EOF
 }
 
@@ -31,7 +31,7 @@ import (
 	"context"
 	"log"
 
-	adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"
+	adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"
 )
 
 func main() {
@@ -74,10 +74,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"
-	admincmd "github.com/mss-boot-io/mss-boot-admin/admin/cmd"
-	"github.com/mss-boot-io/mss-boot-admin/admin/cmd/migrate"
-	"github.com/mss-boot-io/mss-boot-admin/admin/cmd/server"
+	adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"
+	admincmd "github.com/mss-boot-sys/mss-boot-admin/admin/cmd"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/cmd/migrate"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/cmd/server"
 )
 
 func requireError(label string, err, target error) {
@@ -177,10 +177,10 @@ expect_compile_failure() {
 
 expect_compile_failure \
   internal-command-tree \
-  'use of internal package github.com/mss-boot-io/mss-boot-admin/admin/internal/cmd not allowed' \
+  'use of internal package github.com/mss-boot-sys/mss-boot-admin/admin/internal/cmd not allowed' \
   'package main
 
-import admincmd "github.com/mss-boot-io/mss-boot-admin/admin/internal/cmd"
+import admincmd "github.com/mss-boot-sys/mss-boot-admin/admin/internal/cmd"
 
 func main() { _ = admincmd.New }'
 

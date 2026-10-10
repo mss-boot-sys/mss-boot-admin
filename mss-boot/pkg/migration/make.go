@@ -23,7 +23,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
 	"gorm.io/gorm"
 )
 

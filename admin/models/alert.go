@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions"
 )
 
 /*

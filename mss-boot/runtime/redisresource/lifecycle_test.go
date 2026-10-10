@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	runtimeresource "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	runtimeresource "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 func TestStartFailureCleansUpExactlyOnce(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/mss-boot-io/mss-boot-admin/mss-boot/proto"
+	//"github.com/mss-boot-sys/mss-boot-admin/mss-boot/proto"
 	"golang.org/x/net/websocket"
 	"google.golang.org/grpc/metadata"
 	"gorm.io/gorm"

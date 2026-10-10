@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
 )
 
 func TestMonitorSnapshotRequiresFirstSuccessfulSample(t *testing.T) {

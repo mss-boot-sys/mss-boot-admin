@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"github.com/redis/go-redis/v9"
 )
 

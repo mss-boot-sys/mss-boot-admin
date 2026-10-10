@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 // Compile and execute the generated tests, not just their syntax: an empty
@@ -101,8 +101,8 @@ func TestGeneratedServiceOptionalEventsAndPatterns(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			mod = []byte(strings.Replace(string(mod), "module github.com/mss-boot-io/mss-boot-admin/admin", "module example.test/generated-service", 1))
-			mod = append(mod, []byte(fmt.Sprintf("\nrequire github.com/mss-boot-io/mss-boot-admin/admin v1.3.7\nreplace github.com/mss-boot-io/mss-boot-admin/admin => %q\nreplace github.com/mss-boot-io/mss-boot-admin/mss-boot => %q\n", filepath.Join(repository, "admin"), filepath.Join(repository, "mss-boot")))...)
+			mod = []byte(strings.Replace(string(mod), "module github.com/mss-boot-sys/mss-boot-admin/admin", "module example.test/generated-service", 1))
+			mod = append(mod, []byte(fmt.Sprintf("\nrequire github.com/mss-boot-sys/mss-boot-admin/admin v1.3.9\nreplace github.com/mss-boot-sys/mss-boot-admin/admin => %q\nreplace github.com/mss-boot-sys/mss-boot-admin/mss-boot => %q\n", filepath.Join(repository, "admin"), filepath.Join(repository, "mss-boot")))...)
 			if err := os.WriteFile(filepath.Join(root, "go.mod"), mod, 0o600); err != nil {
 				t.Fatal(err)
 			}

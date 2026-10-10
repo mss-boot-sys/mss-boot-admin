@@ -10,7 +10,7 @@ keywords: [admin observability metrics pprof logs websocket]
 
 ## 目标
 
-适用基线：当前稳定版 **mss-boot-admin v1.3.7**。
+适用基线：发行版 **mss-boot-admin v1.3.9**。
 
 为 `mss-boot-admin` 提供统一的问题排查与运行观察路径。
 

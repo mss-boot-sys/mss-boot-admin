@@ -3,18 +3,16 @@
 ## Scope
 
 The documentation site lives in `docs/` of the
-[`mss-boot-io/mss-boot-admin`](https://github.com/mss-boot-io/mss-boot-admin)
+[`mss-boot-sys/mss-boot-admin`](https://github.com/mss-boot-sys/mss-boot-admin)
 repository. It is an independently publishable component, not a separate source
 repository. Product prose, implementation, tests, and `.mss/` machine contracts
 must describe the same behavior.
 
-Release-state baseline for this source-only contributor guide: v1.3.5 and
-v1.3.6 are permanently stopped immutable partial trains. The reviewed release
-policy is authoritative for the current stable version. v1.3.7 has completed
-its Distribution surfaces, stable aliases, and final current-stable policy
-reconciliation and is adoptable. Docs is asynchronous and non-blocking: its `docs/v*`
-tag identifies only website publication, and its absence or failure never gates
-Distribution components, aliases, current stable, or adopter availability.
+This guide targets v1.3.9, the first release under the new organization. Earlier
+versions belong to `mss-boot-io` and retain their historical records. Validate
+locally on the exact merged-main commit, publish artifact tags, then deploy Docs
+and verify the public `/release.json` plus browser-visible content. Source changes
+alone are not evidence that publication or deployment completed.
 
 Use these locations consistently:
 
@@ -34,10 +32,10 @@ newer train.
   `release.json`, and browser verification without making those checks a
   Distribution release prerequisite.
 - Use a Conventional Commits title, for example
-  `docs(release): reconcile v1.3.7 stable guidance`.
+  `docs(release): reconcile v1.3.9 stable guidance`.
 - State the applicable version, branch, or commit for current-behavior claims.
 - Use repository-relative source paths and links. Public GitHub links must point
-  to `mss-boot-io/mss-boot-admin` unless the target is genuinely external.
+  to `mss-boot-sys/mss-boot-admin` unless the target is genuinely external.
 - Keep Chinese and English descriptions synchronized when they form one public
   contract.
 - Never include credentials, private endpoints, personal absolute paths, or

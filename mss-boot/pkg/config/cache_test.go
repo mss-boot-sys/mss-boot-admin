@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
 )
 
 func TestCacheInitInvalidRedisConfigurationDegradesWithoutRegistering(t *testing.T) {

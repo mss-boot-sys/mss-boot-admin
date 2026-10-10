@@ -1,13 +1,13 @@
 # Business content on the workplace
 
-Status: proposed compile-time extension; not available in published v1.3.7.
+Version scope: v1.3.9 compile-time extension. External integration acceptance must be verified for the consuming host.
 
 For other shared interface regions, see [avatar, header, and footer customization](./avatar-panel-customization.md).
 
 Foundation keeps ownership of `/workplace`, its greeting, quick links, monitoring, authentication and layout. After adopting a coordinated distribution containing this extension, add the business-owned `web/src/business/workplace.ts`:
 
 ```ts
-import { defineWorkplaceContributions } from '@mss-boot-io/admin-web/runtime';
+import { defineWorkplaceContributions } from '@mss-boot-sys/admin-web/runtime';
 import { OrdersWorkspace } from './orders/OrdersWorkspace';
 
 export default defineWorkplaceContributions([

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 var (

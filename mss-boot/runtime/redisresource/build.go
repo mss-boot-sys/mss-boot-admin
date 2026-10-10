@@ -8,8 +8,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
-	runtimeresource "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
+	runtimeresource "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 const (

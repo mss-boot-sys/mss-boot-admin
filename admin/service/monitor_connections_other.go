@@ -5,7 +5,7 @@ package service
 import (
 	"context"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
 	psnet "github.com/shirou/gopsutil/v3/net"
 )
 

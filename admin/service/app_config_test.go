@@ -17,9 +17,9 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	cacheconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	cacheconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
 )
 
 type appConfigTestTenant struct {

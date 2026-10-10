@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 // ProjectionStatus states how one specification surface is handled by the

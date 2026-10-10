@@ -120,7 +120,7 @@ export function ApplicationFooter({ initialState }: { initialState?: InitialStat
           </Typography.Link>
         ) : null}
         <Typography.Link
-          href="https://github.com/mss-boot-io/mss-boot-admin"
+          href="https://github.com/mss-boot-sys/mss-boot-admin"
           target="_blank"
           rel="noreferrer"
         >

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
 	"github.com/redis/go-redis/v9"
 )
 

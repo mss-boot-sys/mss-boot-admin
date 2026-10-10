@@ -6,14 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 TOOLS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS_DIR))
 import verify_admin_web_package as PACKAGE  # noqa: E402
 
-
 COMMIT = "a" * 40
-REPOSITORY = "mss-boot-io/mss-boot-admin"
+REPOSITORY = "mss-boot-sys/mss-boot-admin"
 
 
 def admin_distribution_contract():
@@ -48,7 +46,7 @@ def write_tarball(
         "bugs": {"url": f"https://github.com/{REPOSITORY}/issues"},
         "publishConfig": {
             "access": "public",
-            "registry": "https://registry.npmjs.org",
+            "registry": "https://npm.pkg.github.com",
         },
         "packageManager": "pnpm@10.34.5",
         "mssAdminDistribution": admin_distribution_contract(),
@@ -117,12 +115,10 @@ class AdminWebPackageTest(unittest.TestCase):
         self.assertEqual(evidence["package"]["name"], PACKAGE.PACKAGE_NAME)
         self.assertEqual(evidence["package"]["version"], "1.3.0")
         self.assertEqual(evidence["package"]["license"], "MIT")
-        self.assertEqual(
-            evidence["package"]["repository"]["directory"], "web/antd-v6"
-        )
+        self.assertEqual(evidence["package"]["repository"]["directory"], "web/antd-v6")
         self.assertEqual(
             evidence["package"]["publishConfig"]["registry"],
-            "https://registry.npmjs.org",
+            "https://npm.pkg.github.com",
         )
         self.assertEqual(evidence["source"]["commit"], COMMIT)
         self.assertEqual(
@@ -157,13 +153,31 @@ class AdminWebPackageTest(unittest.TestCase):
     def test_rejects_missing_or_incorrect_public_metadata(self):
         cases = (
             ({"license": "Apache-2.0"}, True, "repository MIT license"),
-            ({"repository": {"type": "git", "url": "https://example.invalid"}}, True, "repository metadata"),
+            (
+                {"repository": {"type": "git", "url": "https://example.invalid"}},
+                True,
+                "repository metadata",
+            ),
             ({"homepage": "https://example.invalid"}, True, "public MSS documentation"),
-            ({"bugs": {"url": "https://example.invalid/issues"}}, True, "source issue tracker"),
+            (
+                {"bugs": {"url": "https://example.invalid/issues"}},
+                True,
+                "source issue tracker",
+            ),
             (
                 {"publishConfig": {"registry": "https://npm.pkg.github.com"}},
                 True,
-                "public npm registry",
+                "GitHub Packages registry",
+            ),
+            (
+                {
+                    "publishConfig": {
+                        "registry": "https://registry.npmjs.org",
+                        "access": "public",
+                    }
+                },
+                True,
+                "GitHub Packages registry",
             ),
             ({}, False, "include its MIT LICENSE"),
         )

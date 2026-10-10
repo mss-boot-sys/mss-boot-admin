@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func TestGenerateThinHostSelectsOnlyApplicationTemplates(t *testing.T) {
@@ -53,13 +53,13 @@ func TestGenerateThinHostSelectsOnlyApplicationTemplates(t *testing.T) {
 		t.Fatalf("thin write plan = %#v", written)
 	}
 	assertContains(t, filepath.Join(destination, "go.mod"), "module github.com/acme/orders-admin")
-	assertContains(t, filepath.Join(destination, "go.mod"), "github.com/mss-boot-io/mss-boot-admin/admin v1.3.0")
-	assertContains(t, filepath.Join(destination, "go.mod"), "github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.0")
-	assertContains(t, filepath.Join(destination, "cmd", "server", "main.go"), `adminapp "github.com/mss-boot-io/mss-boot-admin/admin/app"`)
+	assertContains(t, filepath.Join(destination, "go.mod"), "github.com/mss-boot-sys/mss-boot-admin/admin v1.3.0")
+	assertContains(t, filepath.Join(destination, "go.mod"), "github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.3.0")
+	assertContains(t, filepath.Join(destination, "cmd", "server", "main.go"), `adminapp "github.com/mss-boot-sys/mss-boot-admin/admin/app"`)
 	assertContains(t, filepath.Join(destination, "cmd", "server", "main.go"), `"github.com/acme/orders-admin/internal/modules"`)
 	assertContains(t, filepath.Join(destination, "internal", "modules", "registry.go"), `"github.com/acme/orders-admin/internal/modules/custom"`)
 	assertContains(t, filepath.Join(destination, "internal", "modules", "registry.go"), "append(all.Modules(), custom.Modules()...)")
-	assertContains(t, filepath.Join(destination, "internal", "modules", "all", "generated.go"), `"github.com/mss-boot-io/mss-boot-admin/admin/business"`)
+	assertContains(t, filepath.Join(destination, "internal", "modules", "all", "generated.go"), `"github.com/mss-boot-sys/mss-boot-admin/admin/business"`)
 	assertContains(t, filepath.Join(destination, "internal", "modules", "custom", "modules.go"), "return []business.Module{}")
 	assertContains(t, filepath.Join(destination, "web", "config", "business-routes.ts"), "...customBusinessRoutes")
 	assertContains(t, filepath.Join(destination, "web", "src", "route-registrations.ts"), "duplicate business UI route path")
@@ -71,7 +71,7 @@ func TestGenerateThinHostSelectsOnlyApplicationTemplates(t *testing.T) {
 	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "kind: thin-host")
 	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "foundationVersion: 0.1.0")
 	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "version: v1.3.0")
-	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "module: github.com/mss-boot-io/mss-boot-admin/admin")
+	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "module: github.com/mss-boot-sys/mss-boot-admin/admin")
 	for _, forbidden := range []string{"admin", "mss-boot", "web/antd-v6", "docs/package.json", ".mss/release-policy.yaml"} {
 		if _, err := os.Stat(filepath.Join(destination, filepath.FromSlash(forbidden))); !errors.Is(err, os.ErrNotExist) {
 			t.Errorf("thin host contains forbidden Foundation source %s: %v", forbidden, err)
@@ -299,16 +299,16 @@ metadata:
 spec:
   sourceMode: git-tracked
   templateRoot: templates/application
-  sourceModule: github.com/mss-boot-io/mss-boot-admin
+  sourceModule: github.com/mss-boot-sys/mss-boot-admin
   sourceProjectName: mss-boot-admin
   distribution:
     name: mss-boot-admin
     version: v1.3.0
     backend:
-      module: github.com/mss-boot-io/mss-boot-admin/admin
+      module: github.com/mss-boot-sys/mss-boot-admin/admin
       version: v1.3.0
     frontend:
-      package: "@mss-boot-io/admin-web"
+      package: "@mss-boot-sys/admin-web"
       version: 1.3.0
   defaultOutputDirectory: .mss/output
   manifestPath: .mss/blueprint-manifest.json
@@ -324,7 +324,7 @@ go 1.26.0
 
 require (
 	__MSS_DISTRIBUTION_BACKEND_MODULE__ __MSS_DISTRIBUTION_BACKEND_VERSION__
-	github.com/mss-boot-io/mss-boot-admin/mss-boot __MSS_DISTRIBUTION_BACKEND_VERSION__
+	github.com/mss-boot-sys/mss-boot-admin/mss-boot __MSS_DISTRIBUTION_BACKEND_VERSION__
 )
 `)
 	writeFixtureFile(t, root, "templates/application/cmd/server/main.go.tmpl", `package main

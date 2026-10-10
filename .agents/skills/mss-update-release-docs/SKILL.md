@@ -1,123 +1,77 @@
 ---
 name: mss-update-release-docs
-description: Reconcile MSS source documentation, machine-readable guidance, and public Docs-site state to one exact stable, current, candidate, or historical release baseline. Trigger for post-release documentation, stable-version changes, README and changelog version sweeps, release-note reconciliation, install or image example updates, stale “latest” claims, and a deployed Docs site that still shows old release facts. Do not use this skill by itself to create or move tags or publish artifacts; route authorized publication through the MSS release workflow.
+description: Align current MSS documentation, machine guidance and the public Docs site with a release version. Use for version, repository, package, install, migration or deployed-site updates. Publication itself uses mss-release.
 ---
 
 # Update MSS release documentation
 
-Make every current-facing claim traceable to compiling code, a machine-readable contract, an exact merged commit, or a public artifact. Preserve historical truth and published checksums while doing so.
+Read the applicable `AGENTS.md`, `.mss/project.yaml`, `.mss/lock.yaml`,
+`.mss/release-policy.yaml`, the current release Feature, package manifests,
+workflows and changelogs. Follow the user's authorized release scope.
 
-## Establish the release ledger
+## Release baseline
 
-Read the applicable `AGENTS.md`, `.mss/project.yaml`, `.mss/lock.yaml`, `.mss/release-policy.yaml`, `.mss/release-qualification.json`, selected Feature contracts, release workflows, package manifests, and existing changelogs before editing.
+v1.3.9 is the first release from `mss-boot-sys/mss-boot-admin`. Versions v1.3.8
+and earlier belong to the former `mss-boot-io` organization. Do not require old
+repository access, historical workflow recovery, or recreating old tags before
+publishing the new repository. Preserve old records, source commits, package
+names, checksums and artifact URLs as history.
 
-Record a compact ledger:
+Record the target version, exact merged-main source commit when known, component
+tags, release URLs, package identity, image digests and deployed Docs identity.
+A version in source is not proof of publication. Use stage-neutral release
+instructions while preparing and verify actual assets after publication.
 
-- repository and component;
-- public version and whether it is stable, candidate, partial, previous, or planned;
-- exact merged-main commit;
-- root, Framework, Admin, frontend, Docs, image, and package tag names as applicable;
-- public Release, registry, image digest, and evidence references;
-- public Docs URL plus its `/release.json` version and full commit;
-- previous stable and rollback baseline;
-- capability maturity that has independent evidence.
+## Current documentation
 
-Verify unstable facts remotely. A version string in one document is not publication evidence. When sources conflict, use the repository source-of-truth order and state the conflict before resolving it.
+Inventory README files, component guides, `docs/docs/`, `.mss/`, templates and
+applicable Skills. Classify every match as current guidance, historical evidence
+or generated output before changing it.
 
-## Inventory the documentation surface
+- Current Go modules use `github.com/mss-boot-sys/mss-boot-admin` and its `/admin`
+  and `/mss-boot` modules. Current images use `ghcr.io/mss-boot-sys/`.
+- The sole Admin Web package is `@mss-boot-sys/admin-web`, published only to
+  GitHub Packages at `npm.pkg.github.com`. Document scoped registry setup and
+  `read:packages` authentication via an environment variable. Never save tokens
+  in source, logs, images or generated files. Third-party npm dependencies keep
+  their existing registries.
+- Keep English and Chinese versions equivalent. Explain Go namespace, npm
+  scope, dependency, database and compatibility changes with concrete migration
+  and rollback steps. Do not assume an unavailable old registry can supply
+  rollback artifacts.
+- Change generated documentation at its specification or generator source and
+  regenerate. Do not modify lockfiles or package metadata merely to satisfy a
+  prose check.
+- Separate release scope from capability maturity. Actual integration tests,
+  not the release version, establish support claims.
 
-Use `git ls-files` and `rg` to find:
+## Validation and publication
 
-- the target version and recent version strings;
-- `latest`, `stable`, `current`, `recommended`, `candidate`, and rollback language;
-- install commands, Go module versions, npm versions, image tags, and release URLs;
-- duplicated English and Chinese guidance;
-- machine-readable descriptions under `.mss/` that agents use as documentation.
+Run `python3 tools/docs/check_current_docs.py`, its focused tests, and the
+repository Docs build (`make docs-build`). Inspect the local homepage and changed
+nested routes in the built-in browser, including refresh, narrow layout, console
+errors and failed requests. Keep screenshots for material presentation changes.
 
-Classify every match before changing it:
+All source changes go through a PR to `main`. The release operator freezes an
+exact clean merged-main commit, completes full validation locally, then publishes
+component tags through `mss-release`. Workflows validate source identity and build
+and publish artifacts. Do not add hosted candidate previews, npmjs Trusted
+Publisher setup or a separate stable-promotion/reconciliation round.
 
-| Class | Treatment |
-| --- | --- |
-| Current guidance | Reconcile to the verified current baseline. |
-| Historical release record | Preserve the historical version and add context only when it prevents confusion. |
-| Archived prompt or handoff | Leave unchanged unless the current contract explicitly references it. |
-| Generated output | Change its source contract or generator, not the generated region. |
-| Published module or package tree | Preserve bytes unless a new version will be released through the normal PR path. |
+Docs retains `https://docs.mss-boot-io.top`. Source alignment alone does not deploy
+it. When the user requests Docs publication, publish `docs/vX.Y.Z`, wait for the
+existing deployment workflow, then check public `/release.json` for the expected
+version and full commit. Refresh the production homepage and a nested release
+route in the built-in browser and verify visible content, console and requests.
+Docs deployment is a required completion item for a coordinated request that
+includes it; a website failure does not authorize moving immutable core tags.
 
-Do not perform a blanket version replacement. Keep a small fact-to-file matrix when the sweep spans several surfaces.
+Root, Framework, Admin, frontend, package and image identities remain immutable.
+Only the website-only Docs tag and its Release may be deleted together and then
+recreated from a qualified merged-main descendant of the matching Root commit,
+when the existing authorization covers that repair. Never force-update the tag.
 
-## Write the release story consistently
-
-- Call a release stable only when the exact public train has been reconciled. Describe partial releases and release candidates as immutable history.
-- Describe the previous stable as previous or rollback baseline; do not leave it labeled current.
-- Keep component tag namespaces exact. Do not imply that root, Framework, Admin, frontend, Docs, npm, and images share one ref when they do not.
-- Keep install, upgrade, rollback, compatibility, migration, and security guidance aligned with the verified artifact.
-- Keep English and Chinese current-facing guidance semantically equivalent.
-- Separate release stability from capability maturity. Do not promote a beta capability merely because the product version became stable.
-- Record credentialless publishing or Trusted Publisher facts without exposing tokens, account secrets, private endpoints, or sensitive logs.
-- Prefer exact commands and durable public links over conversational summaries.
-
-Treat the Docs site as an asynchronous website publication, not as a component
-release or adoption authority. A `docs/v*` tag identifies only the website
-revision it deploys. Docs source, credentials, workflow status, GitHub Release,
-or public-site state must never gate Framework, Admin, frontend, Root, images,
-official npm, GitHub Latest, `currentStableVersion`, or adopter availability. A
-Docs failure is `source-updated / deployment-pending`; continue or preserve the
-Distribution release and repair the website independently.
-
-## Protect immutable boundaries
-
-A tagged Go module checksum covers every file in that module tree, including documentation and changelogs. Never edit a previously published nested module tree and continue to claim the old tag or checksum is reproducible. Preserve the file or prepare a new patch version through a separate PR and release.
-
-Do not change `go.mod`, `go.sum`, `go.work`, `go.work.sum`, pnpm lockfiles, or package metadata merely to make documentation validation pass. Core release tags, packages, images, checksums, and module identities remain immutable. The website-only `docs/vX.Y.Z` tag and its GitHub Release are the sole exception: after explicit authorization, the release operator may delete both and recreate the same tag from a qualified merged-main descendant of the corresponding Root commit. Direct force-update is forbidden. A source-documentation PR merged into `main` does not silently update the public Docs deployment; that still requires the repository's explicit Docs release path.
-
-## Close the source-to-site gap
-
-When the repository has a public Docs domain, source reconciliation is not the same as publication:
-
-1. Before editing, record the visible home page and a nested release route in the available browser, and read the public `/release.json` version and full commit.
-2. After the source PR merges, compare that identity with the exact merged `main` commit. If the site still exposes an older commit or stale visible claims, report the state as `source-updated / deployment-pending`, never complete.
-3. If the user authorized a public-site update, use `mss-release` for the mutation. Publish only from the exact merged-main commit after its Docs build and browser evidence pass.
-4. For a correction to the current stable documentation, inspect the exact existing Docs Release and tag, delete the Release, delete the tag, prove both are absent, then recreate the same annotated `docs/${VERSION}` tag at the qualified merged-main commit. Do not create a new `+docs.N` identity.
-5. Wait for the tag-triggered workflow, protected production environment, portable archive checksums, replacement GitHub Release, and public `/release.json`. A successful main-branch Docs build without the tag deployment is preliminary evidence only.
-6. Reopen the production home page and a nested release route, refresh both, verify visible stable-version language, inspect console errors and failed network requests, and save final screenshots.
-
-If publication was not authorized or the tag or environment policy blocks the exact merged commit, stop before deleting anything and provide the exact stable Docs tag, merged commit, workflow, and policy blocker. Do not request or invent a manual environment approval for the automatic tag path.
-
-## Validate proportionally
-
-Start with the cheapest relevant checks and use commands declared by `.mss/commands.yaml`:
-
-```shell
-git diff --check
-go run ./cmd/mss spec validate .mss/features/<changed-feature>.yaml
-make docs-install docs-build
-go run ./cmd/mss verify --changed
-```
-
-Run only the commands that match the changed surface, but always:
-
-1. rebuild the documentation site when site content or navigation changed;
-2. validate every changed Feature, AdminModule, or other machine-readable contract;
-3. rescan current-facing files for stale stable/latest claims;
-4. confirm historical and archived exclusions are intentional;
-5. inspect the final diff for module metadata, lockfile, generated-output, and immutable-tree drift;
-6. recheck remote release facts if validation lasted long enough for them to change.
-
-For changes that affect landing pages, navigation, release indexes, or visible version selectors, run the local Docs site and inspect the changed routes in the available browser. Refresh a nested route, check visible content, browser-console errors, and failed network requests, and preserve screenshots when the layout or release presentation materially changed. A successful static build alone does not prove those browser-facing contracts.
-
-If a workflow changed while repairing documentation CI, add a regression test that fails on the old behavior and rerun the workflow-governance suite. Do not classify a transient network or workstation-tool failure as a documentation defect until the checked-in workflow reproduces it.
-
-## Deliver through the governed path
-
-Submit source, contract, workflow, and documentation changes through a PR to `main`. Bind review evidence to the exact PR Head, wait for required checks, and invalidate approval evidence when the Head changes. Never publish from the topic branch.
-
-Report:
-
-- the verified stable/current ledger;
-- current-facing files changed and historical files intentionally preserved;
-- immutable boundaries and metadata kept unchanged;
-- commands actually run and their results;
-- skipped checks with concrete reasons;
-- merged commit and any separate Docs release still required.
-- source state and public-site state separately, including the deployed Docs tag, `/release.json`, workflow run, Release, browser routes, and screenshot paths.
+Report current documents changed, historical evidence retained, validation
+actually run, PR/merged source, and website deployment identity separately. If
+publication is pending, name the concrete missing prerequisite or failed step;
+do not call the source-only update complete.

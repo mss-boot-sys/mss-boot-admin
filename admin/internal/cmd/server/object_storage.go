@@ -14,8 +14,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 func initializeApplicationDelivery(ctx context.Context, applicationConfig *config.Config, router gin.IRouter) error {

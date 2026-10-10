@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func TestGenerateUsesThinHostProjectLayoutWithoutCopiedTemplates(t *testing.T) {
@@ -44,10 +44,10 @@ func TestGenerateUsesThinHostProjectLayoutWithoutCopiedTemplates(t *testing.T) {
 	}
 
 	assertGeneratedContains(t, root, "internal/modules/all/generated.go", `module0 "github.com/acme/orders-admin/internal/modules/supplier"`)
-	assertGeneratedContains(t, root, "internal/modules/supplier/module_generated.go", `"github.com/mss-boot-io/mss-boot-admin/admin/business"`)
+	assertGeneratedContains(t, root, "internal/modules/supplier/module_generated.go", `"github.com/mss-boot-sys/mss-boot-admin/admin/business"`)
 	assertGeneratedContains(t, root, "internal/modules/supplier/AGENTS.md", `mss --root . verify --module supplier`)
-	assertGeneratedContains(t, root, "web/src/generated/modules/supplier/SupplierPage.tsx", `from '@mss-boot-io/admin-web/runtime'`)
-	assertGeneratedContains(t, root, "web/src/generated/modules/supplier/contract.ts", `from '@mss-boot-io/admin-web/runtime'`)
+	assertGeneratedContains(t, root, "web/src/generated/modules/supplier/SupplierPage.tsx", `from '@mss-boot-sys/admin-web/runtime'`)
+	assertGeneratedContains(t, root, "web/src/generated/modules/supplier/contract.ts", `from '@mss-boot-sys/admin-web/runtime'`)
 	assertGeneratedContains(t, root, "docs/modules/supplier.md", `](../../.mss/modules/example-supplier.yaml)`)
 
 	second, err := Generate(module, Options{Root: root, Check: true, Project: &document})
@@ -100,8 +100,8 @@ func thinHostProjectDocument() project.ProjectDocument {
 			Distribution: project.DistributionSpec{
 				Name:     "mss-boot-admin",
 				Version:  "v1.3.0",
-				Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-io/mss-boot-admin/admin", Version: "v1.3.0"},
-				Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-io/admin-web", Version: "1.3.0"},
+				Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-sys/mss-boot-admin/admin", Version: "v1.3.0"},
+				Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-sys/admin-web", Version: "1.3.0"},
 			},
 			RepositoryLayout: map[string]string{
 				"kind":           "thin-host",
@@ -115,7 +115,7 @@ func thinHostProjectDocument() project.ProjectDocument {
 			},
 			Backend: project.BackendSpec{
 				Module:          "github.com/acme/orders-admin",
-				FrameworkModule: "github.com/mss-boot-io/mss-boot-admin/mss-boot",
+				FrameworkModule: "github.com/mss-boot-sys/mss-boot-admin/mss-boot",
 			},
 		},
 	}

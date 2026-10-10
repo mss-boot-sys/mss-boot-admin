@@ -10,22 +10,12 @@ keywords: [admin release checklist smoke regression]
 
 ## 使用方式
 
-:::warning
-v1.3.5 与 v1.3.6 都已永久停止为不可变部分发布；本清单不能授权补发其缺失制品。
-v1.3.7 已完成 Distribution 公共对账并成为当前稳定版，但本清单不能把后续源码提交冒充为
-v1.3.7 制品。安装与升级从[快速开始](/getting-started)进入。
-Docs 是异步、非阻断的网站发布；`docs/v*` 只标识网站部署，其缺失或失败不影响组件、npm、
-GitHub Latest、current stable 或采用状态。
-:::
+本清单用于 v1.3.9 新仓库首发与业务 Thin Host 部署。发布变更先通过 PR 合入 `main`，
+再从精确且 tracked-clean 的提交执行一次本地完整验证。正式标签流水线仅校验来源、构建
+并发布对应制品，不重复宽泛质量矩阵，不依赖托管候选预览或稳定晋升轮次。
 
-本清单区分后续完整版本或业务 Thin Host 的代码门禁与生产部署巡检。Foundation 发布方先
-在 PR Head 上完成 `mss verify --changed`、影响计划选中的聚焦检查与受影响页面的内置浏览器验收，
-并通过精简后的 PR 必需检查；合并后，只在精确且 tracked-clean 的 merged-main commit 上执行一次
-`mss verify --all --release-evidence --expect-commit <full-sha>` 并固定自绑定完整报告。唯一 Root preview 只生成和核验
-将被发布的归档、包、SBOM、校验和、portable delivery、Thin Host 组成与多架构镜像，再依次发布组件 Tag；
-Root Tag 触发 Root Release 与后端镜像，单独受审的 stable promotion 从该精确 Root Tag 发布
-官方 npm 并随后推进 GitHub Latest。Docs 从独立文档 Tag 候补发布且不加入上述依赖图。正式
-Distribution Tag 不重复昂贵验证，也不接受 promotion、readiness run ID 或人工环境审批。
+npm 包只发布 GitHub Packages；Docs 源码与站点必须同时对齐。源码、PR 成功或单一产物
+不能单独证明完整发行，所有结论都应附实际验证结果。
 
 ## 一、发布前检查
 
@@ -38,7 +28,7 @@ Distribution Tag 不重复昂贵验证，也不接受 promotion、readiness run 
 - [ ] PR、审查记录或仓库外发布台账记录完整 commit、`trackedCleanBefore: true`、`trackedCleanAfter: true`、精确命令、verify report 哈希或摘要及退出结果；本地报告单独存在不授权发布
 - [ ] Codex 内置浏览器在同一精确 commit 完成桌面、窄屏、深链、刷新、控制台和失败网络请求验收
 - [ ] 轻量 `pr-ci` 文档、路由和工作流治理检查通过；影响范围内的测试与安全检查在本地完成。`main` 和定时任务不自动运行重型矩阵；托管诊断仅按需手动触发
-- [ ] 合并后的 Root preview 仅核验同一 frozen commit 的精确发布制品，且六平台二进制、portable delivery、候选 Thin Host、SBOM、校验和和双架构 OCI 均完整
+- [ ] 本地核验同一 frozen commit 的六平台二进制、portable delivery、Thin Host、SBOM、校验和和双架构 OCI 构建
 - [ ] Admin Tag 流水线在 Framework 已公开后，以 GOWORK=off 和公共 Go Proxy 解析精确 Framework 并通过 app/business 组合测试
 - [ ] 后端和 Admin Web 依赖都精确为同一个已完成公共对账的协调版本，锁文件无漂移
 - [ ] 面向 Distribution 使用者的源文档如有更新，版本与采用状态不误导；公开 Docs 网站部署状态单独记录，不作为本节通过条件
@@ -73,13 +63,13 @@ Distribution Tag 不重复昂贵验证，也不接受 promotion、readiness run 
 | 用户任务未执行 | `task.enable`、cron 表达式、任务状态、TaskRun |
 | 内置监控/会话清理未执行 | task server 启动日志和系统作业错误；不要以 Task/TaskRun 无记录判定失败 |
 
-## 三-A、Docs 网站异步候补（不阻断发布）
+## 三-A、Docs 网站发布（本次交付必须完成）
 
 - [ ] 仅在准备发布网站时检查 `docs/v*` 身份；该 Tag 只表示网站发布，不是 Distribution Tag
 - [ ] Docs Tag 指向已存在 Root Release commit 或其受审 merged-main 后代；更新时先删同名 Release，再删 Tag，确认均不存在后同名重建，禁止 force-update
 - [ ] Docs 源来自受审 merged-main，受保护部署、替换 Release、归档校验和和 `release.json` 身份一致
 - [ ] 在内置浏览器刷新首页与嵌套路由，检查可见版本、控制台和失败网络请求
-- [ ] 若任一项失败，记录“网站部署待办”并只修复 Docs；不得阻止或回退 Framework、Admin、Admin Web、Root、镜像、npm、GitHub Latest、`currentStableVersion` 或采用路径
+- [ ] 若任一项失败，记录“网站部署待办”并修复 Docs；保留已发布核心制品，网站核验完成后才交付本次完整任务
 
 ## 四、回滚前确认
 
@@ -94,5 +84,5 @@ Distribution Tag 不重复昂贵验证，也不接受 promotion、readiness run 
 - [集成测试指南](/admin/integration-test-guide)
 - [v1.3.5 不可变部分发布记录](/releases/v1-3-5)
 - [v1.3.6 不可变部分发布记录](/releases/v1-3-6)
-- [v1.3.7 稳定版说明](/releases/v1-3-7)
-- [v1.3.7 快速开始](/getting-started)
+- [v1.3.9 发行版说明](/releases/v1-3-9)
+- [v1.3.9 快速开始](/getting-started)
