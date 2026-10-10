@@ -1,6 +1,6 @@
 ---
 title: 发布
-order: 1
+order: 0
 nav:
   title: 发布
   order: 6

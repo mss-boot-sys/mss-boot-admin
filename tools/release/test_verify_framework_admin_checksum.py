@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import sys
 import os
 import stat
 import subprocess
@@ -238,25 +240,120 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
                             source_commit=source_commit,
                         )
 
+    def _init_first_release_cli_fixture(self, root: Path, *, published=False) -> None:
+        self._init_checksum_repository(root)
+        for relative in (
+            "admin/go.mod",
+            "admin/go.sum",
+            "templates/application/go.sum",
+            "go.work",
+        ):
+            path = root / relative
+            path.write_text(path.read_text().replace("v1.3.3", "v1.3.9"))
+        policy = (REPOSITORY_ROOT / ".mss/release-policy.yaml").read_text()
+        if published:
+            policy = policy.replace(
+                "currentStableCommit: pending", "currentStableCommit: " + "a" * 40
+            )
+        path = root / ".mss/release-policy.yaml"
+        path.parent.mkdir(parents=True)
+        path.write_text(policy)
+        self._git(root, "add", ".")
+        self._git(root, "commit", "-qm", "prepare first direct release")
+
+    def _run_checksum_cli(self, root, *arguments):
+        return subprocess.run(
+            [
+                sys.executable,
+                str(MODULE_PATH),
+                "--root",
+                str(root),
+                "--version",
+                "v1.3.9",
+                "--go",
+                os.environ.get("MSS_TEST_GO", "go"),
+                *arguments,
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+    def test_first_direct_pending_release_cli_refreshes_real_candidate_metadata(self):
+        with tempfile.TemporaryDirectory(prefix="mss-first-release-cli-") as directory:
+            root = Path(directory)
+            self._init_first_release_cli_fixture(root)
+            result = self._run_checksum_cli(root, "--write")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            evidence = json.loads(result.stdout)
+            self.assertTrue(evidence["success"])
+            self.assertEqual(
+                set(evidence["updatedFiles"]),
+                {
+                    "admin/go.sum",
+                    "templates/application/go.sum",
+                    "tools/release/test_verify_framework_admin_checksum.py",
+                },
+            )
+            self._git(root, "add", *evidence["updatedFiles"])
+            self._git(root, "commit", "-qm", "freeze candidate checksums")
+            verified = self._run_checksum_cli(root)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            self.assertTrue(json.loads(verified.stdout)["success"])
+
     def test_current_stable_write_modes_fail_before_refresh(self):
-        for source_mode in ("candidate", "current-stable"):
-            with self.subTest(source_mode=source_mode), mock.patch.object(
-                CHECKSUM,
-                "refresh_repository_metadata",
-            ) as refresh, mock.patch("builtins.print"):
-                exit_code = CHECKSUM.main(
-                    [
-                        "--root",
-                        str(REPOSITORY_ROOT),
-                        "--version",
-                        "v1.3.9",
-                        "--source-mode",
-                        source_mode,
-                        "--write",
-                    ]
+        with tempfile.TemporaryDirectory(
+            prefix="mss-published-checksum-cli-"
+        ) as directory:
+            root = Path(directory)
+            self._init_first_release_cli_fixture(root, published=True)
+            for source_mode in ("candidate", "current-stable"):
+                result = self._run_checksum_cli(
+                    root, "--source-mode", source_mode, "--write"
                 )
-                self.assertEqual(exit_code, 1)
-                refresh.assert_not_called()
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(self._git(root, "status", "--porcelain").stdout, "")
+
+    def test_first_release_cli_rejects_every_existing_local_core_tag(self):
+        with tempfile.TemporaryDirectory(
+            prefix="mss-tagged-checksum-cli-"
+        ) as directory:
+            root = Path(directory)
+            self._init_first_release_cli_fixture(root)
+            for prefix in ("", "mss-boot/", "admin/", "web/antd-v6/"):
+                tag = prefix + "v1.3.9"
+                self._git(root, "tag", tag)
+                result = self._run_checksum_cli(root, "--write")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("immutable once core tag", result.stderr)
+                self.assertEqual(self._git(root, "status", "--porcelain").stdout, "")
+                self._git(root, "tag", "-d", tag)
+
+    def test_first_release_cli_rejects_remote_only_tag_and_unknown_remote_state(self):
+        with tempfile.TemporaryDirectory(
+            prefix="mss-remote-checksum-cli-"
+        ) as directory:
+            root = Path(directory) / "source"
+            root.mkdir()
+            self._init_first_release_cli_fixture(root)
+            origin = Path(directory) / "origin.git"
+            self._git(root, "init", "--bare", str(origin))
+            self._git(root, "remote", "add", "origin", str(origin))
+            self._git(root, "push", "origin", "HEAD:refs/tags/mss-boot/v1.3.9")
+            result = self._run_checksum_cli(root, "--write")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("remote core tag exists", result.stderr)
+            self.assertEqual(self._git(root, "status", "--porcelain").stdout, "")
+            self._git(
+                root,
+                "remote",
+                "set-url",
+                "origin",
+                str(Path(directory) / "missing.git"),
+            )
+            result = self._run_checksum_cli(root, "--write")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("cannot verify remote core tag absence", result.stderr)
+            self.assertEqual(self._git(root, "status", "--porcelain").stdout, "")
 
     def test_nested_module_inherits_repository_root_license(self):
         with tempfile.TemporaryDirectory(

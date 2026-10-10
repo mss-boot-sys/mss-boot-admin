@@ -5,6 +5,8 @@ export default defineConfig({
     name: 'mss-boot Admin',
     rtl: false,
     logo: '/favicon.ico',
+    editLink: 'https://github.com/mss-boot-sys/mss-boot-admin/edit/main/docs/{filename}',
+    sourceLink: 'https://github.com/mss-boot-sys/mss-boot-admin/blob/main/docs/{fileName}#L{line}',
     nav: [
       {
         title: '快速开始',
