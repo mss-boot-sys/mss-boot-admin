@@ -138,7 +138,7 @@ func validateMembers(db *gorm.DB, in ClientInput) error {
 	return nil
 }
 func clientFromInput(in ClientInput) models.OIDCClient {
-	return models.OIDCClient{Name: in.Name, Enabled: in.Enabled, RedirectURIs: in.RedirectURIs, Scopes: in.Scopes, Claims: in.Claims, UserIDs: in.UserIDs, RoleIDs: in.RoleIDs}
+	return models.OIDCClient{Name: in.Name, Enabled: in.Enabled, RedirectURIs: in.RedirectURIs, Scopes: in.Scopes, Claims: append([]string{}, in.Claims...), UserIDs: append([]string{}, in.UserIDs...), RoleIDs: append([]string{}, in.RoleIDs...)}
 }
 func actor(c *gin.Context) string {
 	if v := middleware.GetVerify(c); v != nil {

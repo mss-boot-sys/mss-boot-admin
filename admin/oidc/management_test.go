@@ -53,11 +53,16 @@ m = r.sub == p.sub && r.tp == p.tp && keyMatch(r.obj, p.obj) && regexMatch(r.act
 		_, err = enforcer.AddPolicy(f.user.RoleID, "API", "/admin/api"+route.Path, route.Method)
 		require.NoError(t, err)
 	}
-	input := ClientInput{Name: "Second cluster", Enabled: true, RedirectURIs: []string{"https://second.example.test:8006"}, Scopes: []string{"openid"}, Claims: []string{}, UserIDs: []string{f.user.ID}, RoleIDs: []string{}}
+	// Optional claim and role lists may be omitted by an API caller; responses
+	// must still preserve the array contract used by management and consent UI.
+	input := ClientInput{Name: "Second cluster", Enabled: true, RedirectURIs: []string{"https://second.example.test:8006"}, Scopes: []string{"openid"}, UserIDs: []string{f.user.ID}}
 	body, _ := json.Marshal(input)
 	created := f.call(http.MethodPost, "/admin/api/sso/clients", string(body), headers, f.cookies)
 	require.Equal(t, 201, created.Code)
 	data := bodyJSON(t, created)["data"].(map[string]any)
+	createdClient := data["client"].(map[string]any)
+	require.Equal(t, []any{}, createdClient["claims"])
+	require.Equal(t, []any{}, createdClient["roleIDs"])
 	secret := data["secret"].(string)
 	require.NotEmpty(t, secret)
 	id := data["client"].(map[string]any)["id"].(string)
