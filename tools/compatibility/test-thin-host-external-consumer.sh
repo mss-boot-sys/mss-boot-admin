@@ -165,7 +165,14 @@ fi
 if [[ "${report_is_persistent}" = "1" ]]; then
   printf '%s\n' "external Thin Host persistent evidence directory: ${report_dir}"
 fi
-source_repository="${GITHUB_REPOSITORY:-mss-boot-io/mss-boot-admin}"
+source_repository="${GITHUB_REPOSITORY:-$(python3 - "${foundation_root}/.mss/project.yaml" <<'PY'
+import sys
+import yaml
+
+with open(sys.argv[1], encoding='utf-8') as source:
+    print(yaml.safe_load(source)['metadata']['repository'])
+PY
+)}"
 distribution_version="$(
   python3 - "${foundation_root}" <<'PY'
 import sys
