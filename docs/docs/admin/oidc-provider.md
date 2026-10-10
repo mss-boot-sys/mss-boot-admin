@@ -89,10 +89,14 @@ PVE keeps login state on the initiating node. A reverse proxy/load balancer must
 | `prompt=consent` | Explicit allow/deny page with browser/session/CSRF checks |
 | `auth_time` | Actual durable session login time, preserved in the authorization code and ID token |
 | Nonce | Stored with the request/code and echoed in the signed ID token; PVE must compare its expected nonce |
-| Request objects, `request_uri`, claims parameter, `id_token_hint`, ACR requirements | Not supported; explicitly rejected, never advertised as supported |
+| Ordinary `acr_values` | Accepted as voluntary preferences, including unknown and space-separated multiple values; preferences are ignored and do not trigger MFA or authentication-class selection |
+| `acr` / `amr` claims | Omitted; requested values are not verified authentication facts and are never copied into ID tokens |
+| Request objects, `request_uri`, claims parameter (including essential ACR claims), `id_token_hint` | Not supported; explicitly rejected, never advertised as supported |
 | Dynamic registration, implicit/hybrid grants, logout/session-management endpoints | Not implemented or advertised |
 
 See [OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html) and [Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) for protocol definitions. This is a bounded implementation, not an OpenID certification claim. Client authorization is administratively preapproved by the application allowlist and claim policy; normal authorization therefore does not prompt repeatedly. `prompt=consent` always presents interaction. `select_account` presents fresh canonical authentication rather than maintaining a separate account chooser.
+
+Per [Core 15.1](https://openid.net/specs/openid-connect-core-1_0.html#OP_mandatory) and [5.5.1.1](https://openid.net/specs/openid-connect-core-1_0.html#acrSemantics), an ordinary `acr_values` preference alone does not reject an otherwise valid login. For example, `acr_values=urn:example:mfa%20urn:mss:password` may complete code flow, but the ID token asserts neither class and no MFA guarantee. A request using `claims` with `acr.essential=true` still receives `invalid_request`; it cannot silently satisfy a required authentication strength. Existing parameter size/uniqueness, session, grant, prompt/max-age, redirect, nonce and PKCE checks still apply. This compatibility fix is unreleased and does not establish live PVE acceptance.
 
 UserInfo reloads the enabled account/role, unrevoked durable session, enabled client revision and current application grant. Revoking the Admin session, disabling the account/client or removing access prevents further Provider access. An already signed ID token remains cryptographically valid until its expiry. PVE has its own tickets, CSRF tokens and session renewal: **Provider logout or disablement does not immediately terminate all existing PVE sessions**. Use PVE's own session/access controls for urgent RP-side revocation. The Provider does not advertise an end-session endpoint.
 
