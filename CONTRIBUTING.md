@@ -37,7 +37,7 @@ go run ./cmd/mss doctor
 go run ./cmd/mss setup
 ```
 
-冻结工具链为 Go 1.26.9 和 Node.js 24。Admin Web 使用 pnpm 10.34.5；Docs
+冻结工具链为 Go 1.27.2 和 Node.js 24。Admin Web 使用 pnpm 10.34.5；Docs
 使用 `docs/package.json` 固定的 pnpm 9.15.9。仓库内开发使用 `go.work` 协调
 根工具、Framework 和 Admin；发布模块和外部消费者仍必须在 `GOWORK=off`
 下独立成立。不得向任何发布模块提交本地 `replace`。

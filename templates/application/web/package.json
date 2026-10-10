@@ -14,29 +14,29 @@
   },
   "dependencies": {
     "__MSS_DISTRIBUTION_FRONTEND_PACKAGE__": "__MSS_DISTRIBUTION_FRONTEND_VERSION__",
-    "@ant-design/icons": "6.3.2",
-    "@tanstack/react-query": "5.101.4",
-    "@umijs/max": "4.7.7",
-    "antd": "6.6.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "@ant-design/icons": "6.3.4",
+    "@tanstack/react-query": "5.104.1",
+    "@umijs/max": "4.7.23",
+    "antd": "6.6.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.1",
-    "@types/node": "26.2.0",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.4",
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "typescript": "7.0.2",
-    "vite": "8.2.2",
-    "vitest": "4.1.11"
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
   },
   "pnpm": {
     "overrides": {
-      "react": "19.2.8",
-      "react-dom": "19.2.8",
-      "antd": "6.6.1",
-      "@ant-design/pro-components": "3.1.14-6",
-      "@tanstack/react-query": "5.101.4",
+      "react": "19.3.0",
+      "react-dom": "19.3.0",
+      "antd": "6.6.5",
+      "@ant-design/pro-components": "3.1.15-7",
+      "@tanstack/react-query": "5.104.1",
       "axios": "0.34.0",
       "fast-uri": "3.1.7",
       "js-yaml@3": "3.15.2",

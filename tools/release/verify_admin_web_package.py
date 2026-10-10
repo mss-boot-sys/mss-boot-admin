@@ -20,12 +20,12 @@ SCHEMA = "mss.io/admin-web-package-evidence/v1"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 ADMIN_WEB_PACKAGE_MANAGER = "pnpm@10.34.5"
 ADMIN_WEB_RUNTIME_OVERRIDES = {
-    "@ant-design/pro-components": "3.1.14-6",
-    "@tanstack/react-query": "5.101.4",
-    "antd": "6.6.1",
+    "@ant-design/pro-components": "3.1.15-7",
+    "@tanstack/react-query": "5.104.1",
+    "antd": "6.6.5",
     "axios": "0.34.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
 }
 ADMIN_WEB_RUNTIME_DEPENDENCIES = [
     "@ant-design/icons",
@@ -58,7 +58,6 @@ ADMIN_WEB_BUILD_ONLY_DEPENDENCIES = {
     "immer": ["8.0.4"],
     "node-fetch": ["1.7.3"],
     "path-to-regexp": ["1.7.0"],
-    "vite": ["4.5.2"],
 }
 ADMIN_WEB_DEPENDENCY_CLASSES = {
     "runtime": ADMIN_WEB_RUNTIME_DEPENDENCIES,

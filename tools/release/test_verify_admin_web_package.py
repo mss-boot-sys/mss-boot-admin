@@ -221,7 +221,7 @@ class AdminWebPackageTest(unittest.TestCase):
                 "buildOnlyDependencies": {
                     name: versions
                     for name, versions in PACKAGE.ADMIN_WEB_BUILD_ONLY_DEPENDENCIES.items()
-                    if name != "vite"
+                    if name != "braces"
                 },
             },
         )

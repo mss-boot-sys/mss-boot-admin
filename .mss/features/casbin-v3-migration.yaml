@@ -1,0 +1,88 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: casbin-v3-migration
+  displayName: Migrate Framework and Admin authorization to Casbin v3
+  owner: foundation-maintainers
+spec:
+  problem: GORM adapter v3.41.0 uses Casbin v3 model types while Framework and Admin still import Casbin v2, preventing both workspace and standalone Framework builds.
+  goals:
+    - Use one Casbin v3 engine across active Framework and Admin authorization code and tests.
+    - Preserve persisted policy behavior, default denial, revocation, watcher notification and synchronized reloads.
+    - Qualify the coordinated source pair and an external Admin consumer before publication.
+  nonGoals:
+    - Preserve source compatibility with Casbin v2 callers or introduce a v2 compatibility bridge.
+    - Change public Distribution versions, historical checksums or the frozen published Thin Host dependency baseline.
+    - Change permission grants, database schema, application authentication or frontend behavior.
+  actors:
+    - id: maintainer
+      displayName: Framework and Admin maintainer
+  modules:
+    - name: authorization
+      kind: infrastructure
+      operation: extend
+  requirements:
+    - id: single-engine
+      title: Casbin v3 across active authorization backends
+      description: Upgrade all active imports and dependency metadata to compatible Casbin v3 adapters.
+      priority: must
+      actor: maintainer
+      module: authorization
+      rules:
+        - Framework and Admin directly pin Casbin v3.11.0 and use GORM adapter v3.41.0.
+        - MongoDB authorization uses apache/casbin-mongodb-adapter/v4 at the immutable Casbin-v3-compatible commit 67c101979371cff80af2ce7f3094a6c5b0f2dc29; its older tagged versions still depend on Casbin v2.
+        - MongoDB policy adapter options use Mongo driver v2; the existing mgm application-data API retains its separate driver v1 types.
+        - No active Go source imports Casbin v2, and the qualified source dependency graph excludes Casbin v2.
+    - id: policy-behavior
+      title: Preserve authorization decisions and durability
+      description: The upgrade must continue to deny missing grants and persist grant additions and removals across enforcer reconstruction.
+      priority: must
+      actor: maintainer
+      module: authorization
+      rules:
+        - Existing policy tables and model configuration require no destructive migration.
+        - Root and authenticated-self boundaries, non-root denial, policy revisions and fail-closed behavior remain covered by existing Admin tests.
+        - Synchronized Enforce and LoadPolicy remain race-free and watcher notifications continue after policy reload.
+  constraints:
+    - id: breaking-api
+      type: compatibility
+      statement: The user explicitly accepts a breaking source migration; exported enforcers, watcher parameters and custom adapters now use Casbin v3 types.
+    - id: publication-boundary
+      type: operations
+      statement: The repaired Admin requires the paired unpublished Framework source for validation. Published v1.3.7 dependencies and Thin Host locks stay immutable until a separately qualified coordinated release updates them.
+  acceptance:
+    - id: framework-policy
+      requirement: policy-behavior
+      statement: Framework policy persistence, revocation, watcher and concurrent reload tests pass with Casbin v3 and the new GORM adapter.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: cd mss-boot && GOWORK=off go test -race ./pkg/config/gormdb
+    - id: admin-authorization
+      requirement: policy-behavior
+      statement: Admin authorization, OIDC management, middleware and permission migrations pass against the paired Framework source.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: cd admin && go test ./config ./middleware ./oidc ./service ./apis ./router ./cmd/migrate/migration/system
+    - id: external-consumer
+      requirement: single-engine
+      statement: A repository-external consumer builds and tests the coordinated source with GOWORK disabled and confined temporary replacements.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: bash tools/compatibility/test-admin-external-consumer.sh
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+      - make test-all build
+      - make tidy-admin-prepublication-check
+      - cd mss-boot && GOWORK=off go vet ./...
+  rollout:
+    strategy: direct
+    migration: Merge the source migration through a PR. Publish Framework and Admin together only through the existing coordinated release workflow; no policy data migration is needed.
+    rollback: Revert the source migration and adapter upgrade together through a follow-up PR, keeping policy data intact.

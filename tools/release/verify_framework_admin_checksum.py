@@ -317,7 +317,7 @@ def _download_candidate_sums(
     with tempfile.TemporaryDirectory(prefix="mss-framework-sum-go-") as directory:
         work = Path(directory)
         (work / "go.mod").write_text(
-            "module example.com/mss-framework-checksum-probe\n\ngo 1.26.9\n",
+            "module example.com/mss-framework-checksum-probe\n\ngo 1.27.2\n",
             encoding="utf-8",
         )
         environment = os.environ.copy()

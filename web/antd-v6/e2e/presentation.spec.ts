@@ -178,21 +178,29 @@ async function expectConfiguredPage(
   titles: ReadonlyMap<string, string>,
   pageKeys: readonly string[],
 ) {
-  await page.goto(route);
-  for (const pageKey of pageKeys) {
-    const title = titles.get(pageKey);
-    if (!title) throw new Error(`missing configured title for ${pageKey}`);
-    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
-  }
-  await expectNoDocumentOverflow(page);
+  const expectPublishedPage = async (navigate: () => Promise<unknown>) => {
+    // Document load can precede route compilation and authenticated profile
+    // requests in the dev server. Check that boundary before asserting render.
+    const profiles = pageKeys.map(async (pageKey) => {
+      const response = await page.waitForResponse(
+        (candidate) =>
+          candidate.request().method() === 'GET' &&
+          new URL(candidate.url()).pathname ===
+            `/admin/api/presentation/effective/${encodeURIComponent(pageKey)}`,
+      );
+      expect(response.status(), `effective profile ${pageKey}`).toBe(200);
+    });
+    await Promise.all([navigate(), ...profiles]);
+    for (const pageKey of pageKeys) {
+      const title = titles.get(pageKey);
+      if (!title) throw new Error(`missing configured title for ${pageKey}`);
+      await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+    }
+    await expectNoDocumentOverflow(page);
+  };
 
-  await page.reload();
-  for (const pageKey of pageKeys) {
-    const title = titles.get(pageKey);
-    if (!title) throw new Error(`missing configured title for ${pageKey}`);
-    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
-  }
-  await expectNoDocumentOverflow(page);
+  await expectPublishedPage(() => page.goto(route));
+  await expectPublishedPage(() => page.reload());
 }
 
 test('@presentation all built-in management pages consume published runtime profiles after reload', async ({

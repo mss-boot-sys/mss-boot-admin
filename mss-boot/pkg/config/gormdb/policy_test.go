@@ -56,7 +56,7 @@ func openSynchronizedEnforcerTestHandle(t *testing.T) *Handle {
 	if err != nil {
 		t.Fatalf("create policy test handle: %v", err)
 	}
-	handle.Enforcer.EnableLog(false)
+	handle.Enforcer.(*synchronizedEnforcer).SetLogger(nil)
 	t.Cleanup(func() { _ = handle.Close() })
 	return handle
 }
@@ -65,6 +65,49 @@ func TestNewEnforcerUsesSynchronizedEnforcer(t *testing.T) {
 	handle := openSynchronizedEnforcerTestHandle(t)
 	if _, ok := handle.Enforcer.(*synchronizedEnforcer); !ok {
 		t.Fatalf("enforcer type = %T, want synchronizedEnforcer", handle.Enforcer)
+	}
+}
+
+func TestEnforcerPersistsGrantsAndRevocationsAcrossRecreation(t *testing.T) {
+	handle := openSynchronizedEnforcerTestHandle(t)
+	allowed, err := handle.Enforcer.Enforce("reader", "/resource", "GET")
+	if err != nil || allowed {
+		t.Fatalf("ungranted request = %v, %v; want denial", allowed, err)
+	}
+	if added, err := handle.Enforcer.AddPolicy("reader", "/resource", "GET"); err != nil || !added {
+		t.Fatalf("persist grant = %v, %v", added, err)
+	}
+
+	// Recreate the engine through the production GORM adapter, so these
+	// decisions depend on persisted policies rather than the first engine's cache.
+	reloaded, err := newEnforcer(handle.DB, synchronizedEnforcerTestModel)
+	if err != nil {
+		t.Fatalf("recreate enforcer: %v", err)
+	}
+	reloaded.(*synchronizedEnforcer).SetLogger(nil)
+	for _, tc := range []struct {
+		subject, method string
+		allowed         bool
+	}{
+		{"reader", "GET", true},
+		{"reader", "DELETE", false},
+		{"stranger", "GET", false},
+	} {
+		allowed, err := reloaded.Enforce(tc.subject, "/resource", tc.method)
+		if err != nil || allowed != tc.allowed {
+			t.Fatalf("persisted %s/%s = %v, %v; want %v", tc.subject, tc.method, allowed, err, tc.allowed)
+		}
+	}
+	if removed, err := reloaded.RemovePolicy("reader", "/resource", "GET"); err != nil || !removed {
+		t.Fatalf("persist revocation = %v, %v", removed, err)
+	}
+	afterRevocation, err := newEnforcer(handle.DB, synchronizedEnforcerTestModel)
+	if err != nil {
+		t.Fatalf("recreate enforcer after revocation: %v", err)
+	}
+	afterRevocation.(*synchronizedEnforcer).SetLogger(nil)
+	if allowed, err := afterRevocation.Enforce("reader", "/resource", "GET"); err != nil || allowed {
+		t.Fatalf("revoked request = %v, %v; want denial", allowed, err)
 	}
 }
 

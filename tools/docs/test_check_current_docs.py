@@ -758,7 +758,7 @@ class CurrentDocsContractTest(unittest.TestCase):
             dockerfile.parent.mkdir(parents=True)
             digest = "a" * 64
             dockerfile.write_text(
-                f"FROM --platform=$BUILDPLATFORM golang:1.26.9-alpine@sha256:{digest} AS backend\n"
+                f"FROM --platform=$BUILDPLATFORM golang:1.27.2-alpine@sha256:{digest} AS backend\n"
                 f"FROM --platform=$BUILDPLATFORM node:24.19.0-bookworm-slim@sha256:{digest} AS frontend\n"
                 f"FROM alpine:3.24.1@sha256:{digest}\n",
                 encoding="utf-8",

@@ -72,9 +72,9 @@ Legacy mirror, issue triage and weekly digest integrations remain retired.
 
 ## Dependency baseline
 
-Active Go modules, builder images and generated hosts use Go **1.26.9**.
-The Admin and Framework use `golang.org/x/net` **0.60.0**, with its required
-compatible Go submodules. See the [Go security release history](https://go.dev/doc/devel/release#go1.26.9).
+Active Go modules, builder images and generated hosts use Go **1.27.2**.
+The Admin and Framework use `golang.org/x/net` **0.61.0**, with its required
+compatible Go submodules. See the [Go security release history](https://go.dev/doc/devel/release#go1.27.2).
 Builder image digests remain pinned. Axios stays on its compatible 0.x line at
 **0.34.0**; patched build dependencies are recorded in the frozen lockfiles.
 

@@ -54,7 +54,7 @@ spec:
     module: ci-governance
     rules:
     - No workflow references unavailable legacy organization workflows; retire legacy mirror and reporting integrations without a configured destination in the new repository.
-    - Use Go 1.26.9 and patched compatible dependencies across active modules, image builders and generated hosts.
+    - Use Go 1.27.2 and patched compatible dependencies across active modules, image builders and generated hosts.
     - Audit all records when one GHSA spans multiple version ranges; conflicting or identical duplicate records still fail closed.
     - Runtime high and critical vulnerabilities remain blocking. Any unpatched build-only advisory must have exact resolution and bundle-exclusion evidence and a bounded documented acceptance.
   constraints:

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 	"gorm.io/gorm"
 
 	"github.com/mss-boot-io/mss-boot-admin/admin/center"

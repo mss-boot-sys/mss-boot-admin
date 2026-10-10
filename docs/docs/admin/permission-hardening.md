@@ -81,6 +81,27 @@ Casbin 使用并发安全的同步执行器，避免策略重载与请求鉴权�
 
 生产环境必须启用浏览器会话。V6 浏览器只使用 HttpOnly 会话 Cookie、CSRF 校验与服务端 session；不含 `sid` 的历史浏览器 JWT、历史 `jwt` Cookie 和 URL 查询令牌均不再接受。标准 `Authorization: Bearer` 仅保留给文档化的 API 自动化与个人访问令牌，不是浏览器降级通道。用户/角色禁用、改密和会话撤销都以服务端当前状态立即生效。
 
+## 源码升级：Casbin v3（未发布）
+
+当前开发源码将 Framework 与 Admin 的授权引擎统一升级到 **Casbin 3.11.0**，
+解决 GORM adapter 3.41.0 与旧 v2 `model.Model` 不兼容导致的编译失败。
+这项变更不属于上文的已发布 v1.3.7 基线。
+
+这是直接的 Go 源码破坏性升级：使用 `gormdb.Enforcer`、`gormdb.Handle.Enforcer`、
+`mongodb.Enforcer` 或自定义 adapter/watcher 的调用方，需要将
+`github.com/casbin/casbin/v2` 及其子包导入改为 `github.com/casbin/casbin/v3`。
+不提供 v2 类型桥接层；权限模型、策略表和已有授权数据无需迁移。
+
+MongoDB 策略适配器使用 `github.com/apache/casbin-mongodb-adapter/v4` 的固定版本
+`4.3.1-0.20260805154135-67c101979371`（Go 模块版本加 `v` 前缀），对应上游提交
+`67c101979371cff80af2ce7f3094a6c5b0f2dc29`；旧的 4.3.0 标签仍使用 Casbin v2。
+策略适配器的连接参数使用 Mongo driver v2，业务数据的 mgm API 继续使用独立的 driver v1 客户端。
+
+源码验证需同时使用修改后的 Framework 和 Admin：运行 `make test-all build`，以及
+`make compatibility-admin` 验证关闭 workspace 的外部消费者。
+安装型 Thin Host 的依赖锁仍对应已发布的 v1.3.7；新的协调发行完成后，再通过发行升级流程更新它们。
+如需回滚，通过后续 PR 一并回滚引擎与适配器变更，保留策略数据。
+
 ## 前端投影
 
 前端仅把 `currentUser.role.root === true` 或权限表中显式的 `true` 视为允许；`false`、缺失键和未加载状态一律拒绝。静态直达路由、动态菜单、欢迎页快捷入口、页面动作和应用设置写入共用该判断规则。

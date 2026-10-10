@@ -10,7 +10,7 @@ trap 'rm -rf -- "$work_dir"' EXIT HUP INT TERM
 cat >"${work_dir}/go.mod" <<EOF
 module example.com/mss-admin-external-consumer
 
-go 1.26.9
+go 1.27.2
 
 require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0
 

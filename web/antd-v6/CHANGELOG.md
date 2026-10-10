@@ -6,6 +6,14 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+- Refresh the development dependency graph to React 19.3.0, Ant Design 6.6.5,
+  ProComponents 3.1.15-7 beta, React Query 5.104.1, Umi Max 4.7.23, Vite 8.3.4
+  and Playwright 1.64.0. Align Vitest 5.0.3 and all package/Thin Host dependency
+  contracts with the actual manifest and lockfile; retain Node 24 and pnpm 10.34.5.
+- Recalibrate the complete JavaScript gzip budget from 905 to 940 KiB after
+  measuring the updated reference application, external business host and cold
+  production routes. Keep the entry and individual chunk limits unchanged;
+  record the measurements in the dependency bundle ADR.
 - Add typed, compile-time Thin Host contributions for the shared avatar panel,
   header, and footer, preserving official account actions and layout controls.
 - Isolate loading and render failures per contribution, filter visibility before

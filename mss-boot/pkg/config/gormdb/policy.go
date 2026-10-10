@@ -4,8 +4,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/persist"
+	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/persist"
 )
 
 // synchronizedEnforcer keeps Casbin policy reads and reloads behind Casbin's
