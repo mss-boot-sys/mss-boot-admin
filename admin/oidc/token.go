@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"io"
 	"net/url"
 	"strings"
@@ -14,6 +15,8 @@ import (
 	"github.com/mss-boot-io/mss-boot-admin/admin/models"
 	"gorm.io/gorm"
 )
+
+var errCodeConsumptionConflict = errors.New("OIDC code consumption conflict")
 
 func (p *Provider) token(c *gin.Context) {
 	// Token credentials and grants belong in the POST body and a single
@@ -57,11 +60,7 @@ func (p *Provider) token(c *gin.Context) {
 		return
 	}
 	if code.ConsumedAt != nil {
-		// A proven replay by the same authenticated client revokes tokens issued
-		// from this grant, as required by OAuth's code-reuse guidance.
-		_ = db.Model(&models.OIDCAccessToken{}).Where("code_hash = ?", code.Hash).Update("revoked", true).Error
-		_ = p.audit(db, c, "token.replay", client.ID, code.UserID, false)
-		protocolError(c, 400, "invalid_grant")
+		p.rejectCodeReplay(c, db, &code)
 		return
 	}
 	verifier := v.Get("code_verifier")
@@ -86,7 +85,7 @@ func (p *Provider) token(c *gin.Context) {
 			return consumed.Error
 		}
 		if consumed.RowsAffected != 1 {
-			return errDenied
+			return errCodeConsumptionConflict
 		}
 		current, err := p.client(tx, client.ID)
 		if err != nil || current.Revision != code.ClientRevision {
@@ -121,12 +120,41 @@ func (p *Provider) token(c *gin.Context) {
 		}
 		return p.audit(tx, c, "token", client.ID, code.UserID, true)
 	})
+	if errors.Is(err, errCodeConsumptionConflict) {
+		// Concurrent exchanges can both read an unconsumed code. Inspect the
+		// committed state only after the losing transaction has rolled back;
+		// revocation inside that transaction would otherwise be rolled back too.
+		var current models.OIDCCode
+		if readErr := db.Select("consumed_at").First(&current, "hash = ?", code.Hash).Error; readErr != nil {
+			protocolError(c, 503, "temporarily_unavailable")
+			return
+		}
+		if current.ConsumedAt != nil {
+			p.rejectCodeReplay(c, db, &code)
+			return
+		}
+	}
 	if err != nil {
 		protocolError(c, 400, "invalid_grant")
 		return
 	}
 	c.JSON(200, gin.H{"access_token": access, "token_type": "Bearer", "expires_in": int(tokenLifetime.Seconds()), "id_token": idToken, "scope": code.Scope})
 }
+
+func (p *Provider) rejectCodeReplay(c *gin.Context, db *gorm.DB, code *models.OIDCCode) {
+	// Revoke only this authenticated client's proven replayed grant. Keep the
+	// revocation durable even when writing the subsequent audit record fails.
+	if err := db.Model(&models.OIDCAccessToken{}).Where("code_hash = ?", code.Hash).Update("revoked", true).Error; err != nil {
+		protocolError(c, 503, "temporarily_unavailable")
+		return
+	}
+	if err := p.audit(db, c, "token.replay", code.ClientID, code.UserID, false); err != nil {
+		protocolError(c, 503, "temporarily_unavailable")
+		return
+	}
+	protocolError(c, 400, "invalid_grant")
+}
+
 func (p *Provider) userinfo(c *gin.Context) {
 	if len(c.Request.Header.Values("Authorization")) > 1 {
 		protocolError(c, 400, "invalid_request")
