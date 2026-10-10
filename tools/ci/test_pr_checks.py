@@ -56,6 +56,8 @@ class PRChecksTest(unittest.TestCase):
         self.assertFalse(checks.migration_only_change('admin/api.go', None, after))
         self.assertFalse(checks.migration_only_change('admin/api.go', before, None))
         self.assertFalse(checks.migration_only_change('data', b'\0' + before, b'\0' + after))
+        revision = b'const templateRevision = "1.3.7-core-presentation-v2.1"\n'
+        self.assertTrue(checks.migration_only_change('generator.go', before + revision, after + revision))
 
     def test_distribution_versions_do_not_discount_third_party_dependency_updates(self):
         before = b'require github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.7\nrequire example.com/dep v1.3.7\n'

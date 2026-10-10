@@ -21,6 +21,10 @@ def migration_only_change(path, before, after):
         return False
     expected = before.replace(b"mss-boot-io/mss-boot-admin", b"mss-boot-sys/mss-boot-admin")
     expected = expected.replace(b"@mss-boot-io/admin-web", b"@mss-boot-sys/admin-web")
+    if before != after and expected == after:
+        # Independent template revisions and historical fixture versions need
+        # not change just because imports move to the new repository.
+        return True
     if path.endswith((".mod", ".sum", ".mod.tmpl")) or path == "go.work":
         # Third-party dependency updates remain substantive even if their
         # version happens to equal the former Distribution version.
