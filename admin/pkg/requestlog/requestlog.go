@@ -129,7 +129,7 @@ func redactRawQuery(rawQuery string) string {
 			rawKey = part[:equals]
 		}
 		key, err := url.QueryUnescape(rawKey)
-		if err == nil && strings.EqualFold(key, "token") {
+		if err == nil && isCredentialQueryKey(key) {
 			parts[index] = rawKey + "=" + redactedQueryValue
 		}
 	}
@@ -145,7 +145,7 @@ func tokenQueryRepresentations(rawQuery string) []string {
 		}
 		rawKey, rawValue := part[:equals], part[equals+1:]
 		key, err := url.QueryUnescape(rawKey)
-		if err != nil || !strings.EqualFold(key, "token") || rawValue == "" {
+		if err != nil || !isCredentialQueryKey(key) || rawValue == "" {
 			continue
 		}
 		seen[rawValue] = struct{}{}
@@ -188,4 +188,13 @@ func isBrokenConnection(recovered any) bool {
 	return ok && (errors.Is(err, syscall.EPIPE) ||
 		errors.Is(err, syscall.ECONNRESET) ||
 		errors.Is(err, http.ErrAbortHandler))
+}
+
+func isCredentialQueryKey(key string) bool {
+	switch strings.ToLower(key) {
+	case "token", "code", "access_token", "id_token", "id_token_hint", "request_uri", "client_secret", "code_verifier", "code_challenge", "nonce", "state", "request", "redirect":
+		return true
+	default:
+		return false
+	}
 }

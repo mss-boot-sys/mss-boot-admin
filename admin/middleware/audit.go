@@ -189,7 +189,7 @@ func shouldCaptureAuditRequestBody(request *http.Request) bool {
 	if request == nil || request.Body == nil || request.Method == http.MethodGet || request.Method == http.MethodOptions {
 		return false
 	}
-	if isPresentationAuditPath(request.URL.Path) {
+	if strings.HasPrefix(request.URL.Path, "/admin/api/oidc/") || strings.HasPrefix(request.URL.Path, "/admin/api/sso/") || isPresentationAuditPath(request.URL.Path) {
 		return false
 	}
 	// Never buffer multipart uploads in the audit middleware. Upload handlers

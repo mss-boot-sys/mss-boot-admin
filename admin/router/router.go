@@ -16,9 +16,11 @@ import (
 	"github.com/mss-boot-io/mss-boot-admin/admin/apis"
 	"github.com/mss-boot-io/mss-boot-admin/admin/config"
 	"github.com/mss-boot-io/mss-boot-admin/admin/middleware"
+	"github.com/mss-boot-io/mss-boot-admin/admin/oidc"
 	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/browsersecurity"
 	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
 	"github.com/mss-boot-io/mss-boot-admin/admin/service"
+	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
 	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -79,6 +81,20 @@ func InitRouteGroupsWithDependencies(r *gin.RouterGroup, dependencies Dependenci
 	}
 	v1 := newProtectedAPI(r)
 	mountCoreRoutes(v1, dependencies.PresentationProfiles)
+	if config.Cfg.OIDC.Enabled {
+		if r.BasePath() != "/admin" {
+			return RouteGroups{}, errors.New("OIDC requires the canonical /admin route group")
+		}
+		if err := config.Cfg.OIDC.Validate(config.Cfg.Auth, config.Cfg.Application.Origin); err != nil {
+			return RouteGroups{}, err
+		}
+		provider, err := oidc.New(config.Cfg.OIDC, gormdb.DB)
+		if err != nil {
+			return RouteGroups{}, err
+		}
+		provider.MountProtocol(r.Group("/api"))
+		provider.MountManagement(v1)
+	}
 	return RouteGroups{ProtectedAPI: v1}, nil
 }
 

@@ -12,6 +12,7 @@ export interface RouteRegistration {
 }
 
 const registrations: readonly RouteRegistration[] = [
+  { path: '/sso', serverPaths: ['/sso'], menuName: 'sso', permission: '/sso' },
   {
     path: '/workplace',
     serverPaths: ['/welcome'],

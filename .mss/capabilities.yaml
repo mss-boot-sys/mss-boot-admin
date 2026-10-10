@@ -76,6 +76,27 @@ spec:
         HttpOnly session cookies, signed CSRF, scheduled refresh, and WebSocket tickets;
         never serialize provider access or refresh tokens to browser code or storage.
 
+    - id: identity.oidc-provider
+      displayName: Native OIDC Provider
+      status: beta
+      owners: [backend, frontend]
+      backendPaths:
+        - admin/oidc
+        - admin/models/oidc.go
+        - admin/config/oidc.go
+        - admin/middleware/oidc_session.go
+      frontendPaths:
+        - web/antd-v6/src/modules/sso
+        - web/antd-v6/src/pages/User/OIDC
+      guidance: >-
+        Opt-in core authentication, disabled by default. Use confidential clients,
+        exact HTTPS redirect URIs, S256 and client_secret_basic. Reuse canonical
+        browser sessions under /admin/api/oidc; grant application access by user
+        or managed role ID independently of Admin RBAC. RS256 keys are persisted
+        encrypted under a separate environment wrapping key. No refresh tokens,
+        dynamic registration, groups claim, tenant isolation or global RP logout.
+        Protocol and browser fixture evidence does not establish live PVE compatibility.
+
     - id: identity.personal-access-token
       displayName: Personal Access Token
       status: stable

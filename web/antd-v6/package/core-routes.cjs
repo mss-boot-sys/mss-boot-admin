@@ -27,6 +27,11 @@ const coreRoutes = [
         component: './User/OAuthCallback',
       },
       {
+        path: '/user/oidc',
+        name: 'oidc-consent',
+        component: './User/OIDC',
+      },
+      {
         path: '/user/*',
         component: './Exception/404',
       },
@@ -276,6 +281,13 @@ const coreRoutes = [
     component: './Option/Edit',
     access: 'canAccessRoute',
     permission: '/option/edit',
+  },
+  {
+    path: '/sso',
+    name: 'sso',
+    component: './SSO',
+    access: 'canAccessRoute',
+    permission: '/sso',
   },
   {
     path: '/presentation-config',
