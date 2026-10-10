@@ -4,7 +4,7 @@ title: Native OIDC Provider and Proxmox VE
 
 # Native OIDC Provider and Proxmox VE
 
-This document describes the opt-in implementation on `codex/native-oidc-provider`, developed in `mss-boot-sys/mss-boot-admin`. The assessment baseline is the published `v1.3.8` (`0e84ee6`). The new repository's starting `main` is `65eb485`; it does not yet contain the former repository's later release/packaging reconciliation. This feature is not a claim that v1.3.8 already ships a Provider.
+This page describes the `codex/native-oidc-provider` development branch in `mss-boot-sys/mss-boot-admin`, based on main commit `65eb485` and its v1.3.7 distribution contract. The OIDC feature is not part of that published baseline.
 
 Admin remains the account and policy authority. No separate identity service is required. Core authentication reuses its password verification, browser cookies, durable sessions, disabled-account checks and audit. `admin/oidc` owns the OIDC protocol; it uses the existing `golang-jwt/jwt/v4` library and Go crypto for RS256 and AES-GCM. It does not hand PVE an Admin JWT.
 
