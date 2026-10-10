@@ -8,6 +8,10 @@ tag namespaces.
 
 ### Changed
 
+- Migrate Framework and Admin authorization to Casbin v3.10.0 with compatible
+  GORM and MongoDB policy adapters. This is a breaking Go API change for callers
+  that use Casbin types; policy storage and authorization rules are unchanged.
+  See the unreleased migration guidance in `docs/docs/admin/permission-hardening.md`.
 - Define Docs as an asynchronous website-only publication. A `docs/v*` tag now
   identifies the currently deployed site source and may be deleted then
   recreated at a later qualified merged-main descendant. Controlled creation

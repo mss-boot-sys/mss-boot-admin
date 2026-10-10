@@ -5,6 +5,7 @@ go 1.26.9
 require (
 	github.com/IBM/sarama v1.61.1
 	github.com/alicebob/miniredis/v2 v2.39.0
+	github.com/apache/casbin-mongodb-adapter/v4 v4.3.1-0.20260805154135-67c101979371
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4
 	github.com/aws/aws-sdk-go-v2 v1.47.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.4
@@ -15,9 +16,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1
 	github.com/aws/smithy-go v1.28.1
 	github.com/bsm/redislock v0.10.0
-	github.com/casbin/casbin/v2 v2.135.0
+	github.com/casbin/casbin/v3 v3.10.0
 	github.com/casbin/gorm-adapter/v3 v3.41.0
-	github.com/casbin/mongodb-adapter/v3 v3.7.0
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gin-contrib/pprof v1.5.6
@@ -46,6 +46,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/xdg-go/scram v1.2.0
 	go.mongodb.org/mongo-driver v1.17.10
+	go.mongodb.org/mongo-driver/v2 v2.8.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.72.0
 	go.opentelemetry.io/otel/trace v1.47.0
 	golang.org/x/crypto v0.57.0
@@ -91,7 +92,6 @@ require (
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.2 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
-	github.com/casbin/casbin/v3 v3.8.1 // indirect
 	github.com/casbin/govaluate v1.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
@@ -204,7 +204,6 @@ require (
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
-	go.mongodb.org/mongo-driver/v2 v2.8.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect

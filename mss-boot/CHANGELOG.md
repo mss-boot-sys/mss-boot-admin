@@ -6,7 +6,25 @@ and the project uses semantic versioning for nested-module releases.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+### Changed
+
+- Migrate exported SQL and MongoDB enforcers and watcher interfaces to Casbin
+  v3.10.0. Callers and custom adapters must use `github.com/casbin/casbin/v3`
+  types; no v2 compatibility layer is provided.
+- Use GORM adapter v3.41.0 and the MongoDB adapter's immutable Casbin-v3 commit
+  `67c101979371cff80af2ce7f3094a6c5b0f2dc29` through
+  `github.com/apache/casbin-mongodb-adapter/v4`. Its last tagged v4.3.0 still
+  depends on Casbin v2. The policy adapter uses Mongo driver v2 options while
+  application collections retain mgm's driver v1 API.
+
+### Compatibility
+
+- No policy table or model migration is required. Grant persistence, revocation,
+  watcher notification and concurrent policy reload remain covered by tests.
+- Upgrade Framework and Admin source together. Publish the new coordinated
+  Distribution before updating installed Thin Hosts; historical release pins
+  and checksums are unchanged. A rollback reverts the engine and adapter updates
+  together without deleting policy data.
 
 ## [mss-boot/v1.3.7] - 2026-08-31
 

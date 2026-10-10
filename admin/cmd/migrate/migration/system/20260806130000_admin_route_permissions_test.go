@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 	"github.com/mss-boot-io/mss-boot-admin/admin/models"
 	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
 	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"

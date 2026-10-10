@@ -123,7 +123,12 @@ spec:
       frontendPaths:
         - web/antd-v6/src/access.ts
         - web/antd-v6/src/modules/administration
-      guidance: Enforce permissions on the backend; frontend checks are advisory only.
+      guidance: >-
+        Enforce permissions on the backend; frontend checks are advisory only.
+        Unreleased source uses Casbin v3 across Admin, SQL and MongoDB enforcers;
+        custom adapters and watcher consumers must use v3 types. See
+        .mss/features/casbin-v3-migration.yaml. Published v1.3.7 Thin Host locks
+        continue to describe their immutable released dependency graph.
 
     - id: organization.directory
       displayName: User, Department, Post, and Role Directory

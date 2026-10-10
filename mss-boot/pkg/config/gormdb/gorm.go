@@ -8,9 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
-	"github.com/casbin/casbin/v2/persist"
+	"github.com/casbin/casbin/v3"
+	casbinlog "github.com/casbin/casbin/v3/log"
+	"github.com/casbin/casbin/v3/model"
+	"github.com/casbin/casbin/v3/persist"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -305,6 +306,6 @@ func newEnforcer(db *gorm.DB, casbinModel string) (casbin.IEnforcer, error) {
 	}
 	enforcer.EnableAutoSave(true)
 	enforcer.EnableAutoBuildRoleLinks(true)
-	enforcer.EnableLog(true)
+	enforcer.SetLogger(casbinlog.NewDefaultLogger())
 	return enforcer, nil
 }

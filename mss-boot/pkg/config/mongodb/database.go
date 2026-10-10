@@ -12,18 +12,15 @@ import (
 	"log"
 	"time"
 
-	//nolint "github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2"
-	//nolint "github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
-	//nolint "github.com/casbin/casbin/v2/persist"
-	"github.com/casbin/casbin/v2/persist"
-	//nolint "github.com/casbin/mongodb-adapter/v3"
-	mongodbadapter "github.com/casbin/mongodb-adapter/v3"
+	mongodbadapter "github.com/apache/casbin-mongodb-adapter/v4"
+	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/model"
+	"github.com/casbin/casbin/v3/persist"
 	mgm "github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	policyoptions "go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // DB mongo db
@@ -88,7 +85,11 @@ func (e *Database) Init() {
 	if e.CasbinModel != "" {
 		// set casbin adapter
 		var a persist.Adapter
-		a, err = mongodbadapter.NewAdapterWithClientOption(clientOptions, e.Name, e.Timeout)
+		// The Casbin v3 adapter owns a driver-v2 client. mgm and application
+		// collections above retain their independent driver-v1 client.
+		policyClientOptions := policyoptions.Client().ApplyURI(e.URL).
+			SetServerAPIOptions(policyoptions.ServerAPI(policyoptions.ServerAPIVersion1))
+		a, err = mongodbadapter.NewAdapterWithClientOption(policyClientOptions, e.Name, e.Timeout)
 		if err != nil {
 			log.Fatalf("mongodbadapter.NewAdapterWithClientOption err: %s", err.Error())
 		}
