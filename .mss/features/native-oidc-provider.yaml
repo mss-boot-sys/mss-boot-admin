@@ -38,6 +38,8 @@ spec:
         - Authorization codes expire after 60 seconds and are atomically consumed with client, redirect URI, scope, nonce, user, session and S256 bindings.
         - Nonce is echoed in the signed ID token; the RP validates its expected nonce. Nonce is not a token request parameter.
         - prompt none never interacts; login and max_age force fresh authentication; consent is interactive; select_account requires a fresh account choice through canonical login.
+        - Ordinary acr_values are voluntary preferences; unknown or multiple values do not reject otherwise valid requests. They do not trigger MFA or establish an authentication class, and ID tokens omit acr and amr without verified facts.
+        - The claims parameter, including essential ACR requests, and id_token_hint remain unsupported and rejected; accepting voluntary preferences does not advertise authentication classes or claims-parameter support.
         - RS256 private keys are persisted encrypted with a separate operator supplied AES-256 key; retired public keys overlap token validity.
         - Subject identifiers are random immutable identities, unrelated to renameable usernames or email addresses.
         - Access tokens are opaque random credentials stored only as digests and recheck account, client, application grant and durable session on UserInfo.
@@ -65,6 +67,14 @@ spec:
       type: operations
       statement: Real PVE 8.3 and 9.0 acceptance is a separate operator run and cannot be substituted with mocked protocol tests.
   acceptance:
+    - id: voluntary-acr
+      requirement: oidc-protocol
+      statement: GET and form POST requests accept ordinary ACR preferences through code exchange without asserting unverified acr or amr; essential claims, unsupported hints, invalid parameters, missing or stale sessions and removed grants remain denied.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: cd admin && go test ./oidc -run '^TestAuthorizationACRPreferences' -count=1
     - id: protocol-security
       requirement: oidc-protocol
       statement: Complete authorization, token and UserInfo flows reject expired or replayed codes, wrong clients, redirects and PKCE, disabled principals and revoked sessions.

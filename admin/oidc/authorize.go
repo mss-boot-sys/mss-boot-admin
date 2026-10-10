@@ -94,7 +94,11 @@ func (p *Provider) authorize(c *gin.Context) {
 			return
 		}
 	}
-	for _, key := range []string{"claims", "id_token_hint", "acr_values"} {
+	// acr_values expresses voluntary preferences (OIDC Core 15.1 and 5.5.1.1).
+	// No authentication classes are verified here, so ignore those preferences
+	// and omit acr from ID tokens. Essential ACR requests use claims, which
+	// remains unsupported and rejected along with id_token_hint.
+	for _, key := range []string{"claims", "id_token_hint"} {
 		if values.Get(key) != "" {
 			fail("invalid_request")
 			return
