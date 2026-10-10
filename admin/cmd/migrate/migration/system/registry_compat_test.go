@@ -140,6 +140,9 @@ func TestV100MigrationRowsDoNotRerun(t *testing.T) {
 		t.Fatalf("seed post-v1.0 presentation permission collision guard migration row: %v", err)
 	}
 
+	if err := db.Create(&migrationmodels.Migration{Version: "20261010100000"}).Error; err != nil {
+		t.Fatal(err)
+	}
 	migration.Migrate.SetDb(db)
 	migration.Migrate.SetModel(&migrationmodels.Migration{})
 	if err := migration.Migrate.MigrateContext(context.Background()); err != nil {
@@ -149,7 +152,7 @@ func TestV100MigrationRowsDoNotRerun(t *testing.T) {
 	if err := db.Model(&migrationmodels.Migration{}).Count(&rows).Error; err != nil {
 		t.Fatalf("count migration rows: %v", err)
 	}
-	wantRows := int64(len(v100Rows) + 13)
+	wantRows := int64(len(v100Rows) + 14)
 	if rows != wantRows {
 		t.Fatalf("migration rows = %d, want unchanged %d", rows, wantRows)
 	}

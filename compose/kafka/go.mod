@@ -1,6 +1,6 @@
 module github.com/mss-boot-io/mss-boot-admin/compose/kafka
 
-go 1.26.6
+go 1.26.9
 
 require github.com/segmentio/kafka-go v0.4.51
 

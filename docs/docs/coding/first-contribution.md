@@ -48,3 +48,5 @@ corepack pnpm@9.15.9 --dir docs build
 
 通过 PR 合入 `main`。不要直接推送 `main`、改写已推送历史或从未合并提交发布。交付
 说明列出实际命令、结果、未执行项、兼容与安全影响。
+
+PR 检查按变更范围执行，详细规则见 [PR 流水线与安全基线](./pull-request-checks.md)。

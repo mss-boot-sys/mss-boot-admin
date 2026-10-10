@@ -165,7 +165,14 @@ fi
 if [[ "${report_is_persistent}" = "1" ]]; then
   printf '%s\n' "external Thin Host persistent evidence directory: ${report_dir}"
 fi
-source_repository="${GITHUB_REPOSITORY:-mss-boot-io/mss-boot-admin}"
+source_repository="${GITHUB_REPOSITORY:-$(python3 - "${foundation_root}/.mss/project.yaml" <<'PY'
+import sys
+import yaml
+
+with open(sys.argv[1], encoding='utf-8') as source:
+    print(yaml.safe_load(source)['metadata']['repository'])
+PY
+)}"
 distribution_version="$(
   python3 - "${foundation_root}" <<'PY'
 import sys
@@ -438,13 +445,13 @@ jq -e \
      "test": "mss-admin-web test",
      "build": "mss-admin-web build"
    } and
-   .pnpm.overrides == {
+   (.pnpm.overrides | {react, "react-dom": .["react-dom"], antd, "@ant-design/pro-components": .["@ant-design/pro-components"], "@tanstack/react-query": .["@tanstack/react-query"], axios}) == {
      "react": "19.2.8",
      "react-dom": "19.2.8",
      "antd": "6.6.1",
      "@ant-design/pro-components": "3.1.14-6",
      "@tanstack/react-query": "5.101.4",
-     "axios": "0.33.0"
+     "axios": "0.34.0"
    } and
    (.pnpm | has("patchedDependencies") | not)' \
   "${host_root}/web/package.json" >/dev/null

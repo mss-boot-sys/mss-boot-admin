@@ -1,0 +1,39 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+
+jobs:
+  checks:
+    name: pr-ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # Required reviewer is configured in repository settings, not in YAML.
+    environment: pr-ci-approval
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Plan local verification and require documentation
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 tools/ci/pr_checks.py --base "$BASE_SHA" --head "$HEAD_SHA"
+      - name: Validate lightweight PR policy
+        run: |
+          python3 -m pip install PyYAML==6.0.3
+          python3 -m unittest discover -s tools/ci -p 'test_*.py'
+          python3 -m unittest tools.release.test_workflow_governance
+          node --test tools/security/check-pnpm-audit.test.mjs

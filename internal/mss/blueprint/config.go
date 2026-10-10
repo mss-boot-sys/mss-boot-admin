@@ -50,6 +50,7 @@ type Spec struct {
 	SourceMode             string                   `yaml:"sourceMode" json:"sourceMode"`
 	TemplateRoot           string                   `yaml:"templateRoot,omitempty" json:"templateRoot,omitempty"`
 	SourceModule           string                   `yaml:"sourceModule" json:"sourceModule"`
+	SourceRepository       string                   `yaml:"sourceRepository,omitempty" json:"sourceRepository,omitempty"`
 	SourceProjectName      string                   `yaml:"sourceProjectName" json:"sourceProjectName"`
 	DefaultOutputDirectory string                   `yaml:"defaultOutputDirectory" json:"defaultOutputDirectory"`
 	ManifestPath           string                   `yaml:"manifestPath" json:"manifestPath"`
@@ -135,6 +136,7 @@ func (d *Document) Normalize() {
 	d.Spec.SourceMode = strings.TrimSpace(d.Spec.SourceMode)
 	d.Spec.TemplateRoot = normalizedPath(d.Spec.TemplateRoot)
 	d.Spec.SourceModule = strings.TrimSpace(d.Spec.SourceModule)
+	d.Spec.SourceRepository = strings.TrimSpace(d.Spec.SourceRepository)
 	d.Spec.SourceProjectName = strings.TrimSpace(d.Spec.SourceProjectName)
 	if d.Spec.DefaultOutputDirectory == "" {
 		d.Spec.DefaultOutputDirectory = ".mss/output"
@@ -206,6 +208,9 @@ func (d *Document) validate(statFile func(string) (fs.FileInfo, error)) error {
 	}
 	if !validModule(d.Spec.SourceModule) {
 		problems = append(problems, "spec.sourceModule is invalid")
+	}
+	if d.Spec.SourceRepository != "" && !repositoryPattern.MatchString(d.Spec.SourceRepository) {
+		problems = append(problems, "spec.sourceRepository must use owner/name form")
 	}
 	if !blueprintNamePattern.MatchString(d.Spec.SourceProjectName) {
 		problems = append(problems, "spec.sourceProjectName must be lower-case kebab-case")

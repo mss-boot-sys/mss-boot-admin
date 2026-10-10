@@ -1,6 +1,6 @@
 module github.com/mss-boot-io/mss-boot-admin/admin
 
-go 1.26.6
+go 1.26.9
 
 require (
 	github.com/alicebob/miniredis/v2 v2.39.0
@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.49.0
 	github.com/casbin/casbin/v2 v2.135.0
+	github.com/casbin/gorm-adapter/v3 v3.38.0
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
 	github.com/gin-contrib/cors v1.7.8
 	github.com/gin-gonic/gin v1.12.0
@@ -30,7 +31,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.1
-	golang.org/x/net v0.59.0
+	golang.org/x/net v0.60.0
 	golang.org/x/oauth2 v0.37.0
 	golang.org/x/text v0.42.0
 	google.golang.org/grpc v1.83.2
@@ -78,7 +79,6 @@ require (
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.2 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
-	github.com/casbin/gorm-adapter/v3 v3.38.0 // indirect
 	github.com/casbin/govaluate v1.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect

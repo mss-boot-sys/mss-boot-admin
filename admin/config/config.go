@@ -36,6 +36,7 @@ type queryCacheAdapter interface {
 }
 
 type Config struct {
+	OIDC         OIDC                     `yaml:"oidc" json:"oidc"`
 	Auth         Auth                     `yaml:"auth" json:"auth"`
 	CORS         CORS                     `yaml:"cors" json:"cors"`
 	GRPC         frameworkconfig.GRPC     `yaml:"grpc" json:"grpc"`
@@ -123,6 +124,9 @@ func (e *Config) InitContext(ctx context.Context, opts ...source.Option) (err er
 		e.CORS.AllowOrigins,
 		e.CORS.AllowHeaders,
 	); err != nil {
+		return err
+	}
+	if err := e.OIDC.Validate(e.Auth, e.Application.Origin); err != nil {
 		return err
 	}
 	if e.Pyroscope.Enabled && len(e.Application.Labels) > 0 {

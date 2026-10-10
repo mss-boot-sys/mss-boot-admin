@@ -367,3 +367,54 @@ func TestManifestJSONRoundTrip(t *testing.T) {
 		t.Fatalf("mode did not round-trip: %#o", decoded.Files["go.mod"].Mode)
 	}
 }
+
+func TestExplicitSourceRepositoryPreservesModuleIdentity(t *testing.T) {
+	root := writeBlueprintFixture(t)
+	blueprintPath := filepath.Join(root, ".mss", "blueprints", "management-system.yaml")
+	data, err := os.ReadFile(blueprintPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	updated := strings.Replace(string(data), "  sourceModule:", "  sourceRepository: mss-boot-sys/mss-boot-admin\n  sourceModule:", 1)
+	if err := os.WriteFile(blueprintPath, []byte(updated), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "add", "-A")
+	runGit(t, root, "commit", "-m", "fixture: move repository without changing imports")
+	options := Options{FoundationRoot: root, Blueprint: "management-system", Destination: filepath.Join(root, ".mss", "output", "consumer"), Application: Application{Name: "consumer", Module: "example.com/consumer", Repository: "example/consumer"}}
+	if _, err := Generate(context.Background(), options); err == nil || !strings.Contains(err.Error(), "contradicts blueprint source repository") {
+		t.Fatalf("mismatched source identity must fail closed: %v", err)
+	}
+	projectPath := filepath.Join(root, ".mss", "project.yaml")
+	data, err = os.ReadFile(projectPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = bytes.Replace(data, []byte("repository: mss-boot-io/mss-boot-admin"), []byte("repository: mss-boot-sys/mss-boot-admin"), 1)
+	if err := os.WriteFile(projectPath, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "add", "-A")
+	runGit(t, root, "commit", "-m", "fixture: align project provenance")
+	plan, err := Generate(context.Background(), options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.Identities.Foundation.Repository != "mss-boot-sys/mss-boot-admin" {
+		t.Fatalf("snapshot uses the old repository: %#v", plan.Identities.Foundation)
+	}
+	document, err := Load(root, "management-system")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if document.Spec.SourceModule != "github.com/mss-boot-io/mss-boot-admin" {
+		t.Fatalf("module identity changed: %s", document.Spec.SourceModule)
+	}
+	invalid := strings.Replace(updated, "sourceRepository: mss-boot-sys/mss-boot-admin", "sourceRepository: https://example.com/invalid", 1)
+	if err := os.WriteFile(blueprintPath, []byte(invalid), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(root, "management-system"); err == nil || !strings.Contains(err.Error(), "spec.sourceRepository") {
+		t.Fatalf("invalid repository accepted: %v", err)
+	}
+}

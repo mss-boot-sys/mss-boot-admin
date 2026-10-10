@@ -1,24 +1,6 @@
 name: Admin Distribution Compatibility
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'admin/**'
-      - 'mss-boot/**'
-      - 'web/antd-v6/**'
-      - 'cmd/mss/**'
-      - 'internal/mss/**'
-      - 'templates/**'
-      - '.mss/**'
-      - 'tools/compatibility/**'
-      - 'tools/release/**'
-      - '.github/workflows/**'
-      - 'go.mod'
-      - 'go.sum'
-      - 'go.work'
-      - 'go.work.sum'
   workflow_dispatch:
 
 permissions:

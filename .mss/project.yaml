@@ -3,7 +3,7 @@ kind: Project
 metadata:
   name: mss-boot-admin
   displayName: mss-boot Complete Admin Distribution
-  repository: mss-boot-io/mss-boot-admin
+  repository: mss-boot-sys/mss-boot-admin
 spec:
   mission: >-
     Complete, agent-native management-system foundation with a reusable Go framework,
@@ -34,7 +34,7 @@ spec:
     reports: .mss/reports
   backend:
     language: go
-    goVersion: "1.26.6"
+    goVersion: "1.26.9"
     module: github.com/mss-boot-io/mss-boot-admin/admin
     frameworkModule: github.com/mss-boot-io/mss-boot-admin/mss-boot
     httpFramework: gin

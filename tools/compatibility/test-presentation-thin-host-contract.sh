@@ -319,7 +319,7 @@ consumer = Path(sys.argv[2])
         [
             "module example.com/mss-presentation-core-consumer",
             "",
-            "go 1.26.6",
+            "go 1.26.9",
             "",
             "require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0",
             "",

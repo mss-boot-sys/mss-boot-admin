@@ -75,8 +75,18 @@ describe('Admin web package contract', () => {
     });
     expect(packageManifest.mssAdminDistribution).toMatchObject({
       packageManager: packageManifest.packageManager,
-      runtimeOverrides: packageManifest.pnpm.overrides,
+      runtimeOverrides: {
+        react: '19.2.8',
+        'react-dom': '19.2.8',
+        antd: '6.6.1',
+        '@ant-design/pro-components': '3.1.14-6',
+        '@tanstack/react-query': '5.101.4',
+        axios: '0.34.0',
+      },
     });
+    expect(packageManifest.pnpm.overrides).toMatchObject(
+      packageManifest.mssAdminDistribution?.runtimeOverrides ?? {},
+    );
     expect(Object.keys(packageManifest.mssAdminDistribution ?? {}).sort()).toEqual(
       ['buildOnlyDependencies', 'dependencyClasses', 'packageManager', 'runtimeOverrides'].sort(),
     );
@@ -262,6 +272,7 @@ console.log(JSON.stringify({
         antDesignRuntime: 'all',
         antdRuntime: 'all',
         applicationShell: 'all',
+        productLocales: 'all',
         proComponents: 'all',
         queryRuntime: 'all',
         rcRuntime: 'all',

@@ -35,7 +35,7 @@ func TestRedactRawQueryPreservesNonSensitiveParameters(t *testing.T) {
 		{
 			name: "similar key is retained",
 			raw:  "access_token=visible&tokenized=visible-too",
-			want: "access_token=visible&tokenized=visible-too",
+			want: "access_token=[REDACTED]&tokenized=visible-too",
 		},
 	}
 	for _, test := range tests {
@@ -119,6 +119,18 @@ func assertNoSecret(t *testing.T, output string, secrets ...string) {
 	for _, secret := range secrets {
 		if strings.Contains(output, secret) {
 			t.Fatalf("log leaked %q: %s", secret, output)
+		}
+	}
+}
+
+func TestOIDCCredentialsAreRedactedInAccessAndRecoveryTargets(t *testing.T) {
+	for _, key := range []string{"code", "access_token", "id_token", "client_secret", "code_verifier", "code_challenge", "nonce", "state", "request", "redirect"} {
+		raw := key + "=transient-sensitive-value"
+		if strings.Contains(redactRawQuery(raw), "transient-sensitive-value") {
+			t.Errorf("%s was not redacted", key)
+		}
+		if len(tokenQueryRepresentations(raw)) != 1 {
+			t.Errorf("%s was not included in error redaction", key)
 		}
 	}
 }

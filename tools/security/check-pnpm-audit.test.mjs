@@ -73,6 +73,32 @@ test('accepts valid acceptance and audit documents', () => {
   assert.equal(validateAuditReport(validReport()).length, 1);
 });
 
+test('preserves every affected release line for a shared GHSA', () => {
+  const report = validReport();
+  report.advisories[1].patched_versions = '>=3.15.2';
+  report.advisories[2] = {
+    ...report.advisories[1],
+    patched_versions: '>=4.3.2',
+    findings: [{ version: '4.3.1', paths: ['root>react>image-size'] }],
+  };
+  report.metadata.vulnerabilities.high = 2;
+  const records = validateAuditReport(report);
+  assert.equal(records.length, 2);
+  assert.equal(records[1].patched_versions, '>=4.3.2');
+  assert.equal(classifyAuditAdvisory(records[1],
+    validateDistributionDependencyContract(validDistributionPackage())), 'runtime');
+  report.metadata.vulnerabilities.high = 1;
+  assert.throws(() => validateAuditReport(report), /high count mismatch/);
+});
+
+test('rejects contradictory records sharing an advisory identity', () => {
+  for (const change of [{ severity: 'low' }, { module_name: 'another-package' }]) {
+    const report = validReport();
+    report.advisories[2] = { ...report.advisories[1], patched_versions: '>=4.3.2', ...change };
+    assert.throws(() => validateAuditReport(report), /conflicting advisory/);
+  }
+});
+
 test('requests complete advisory details from pnpm audit', () => {
   assert.deepEqual(buildAuditArguments(false), ['audit', '--json']);
   assert.deepEqual(buildAuditArguments(true), ['audit', '--json', '--prod']);
@@ -269,7 +295,7 @@ test('accepts pnpm unique-advisory and finding-path metadata semantics', () => {
   report.metadata.vulnerabilities.high = 3;
   assert.throws(
     () => validateAuditReport(report),
-    /metadata=3, uniqueAdvisories=1, findingPaths=2/,
+    /metadata=3, advisoryRecords=1, findingPaths=2/,
   );
 });
 

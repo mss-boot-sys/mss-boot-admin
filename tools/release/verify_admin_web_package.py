@@ -23,7 +23,7 @@ ADMIN_WEB_RUNTIME_OVERRIDES = {
     "@ant-design/pro-components": "3.1.14-6",
     "@tanstack/react-query": "5.101.4",
     "antd": "6.6.1",
-    "axios": "0.33.0",
+    "axios": "0.34.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
 }
@@ -54,7 +54,7 @@ ADMIN_WEB_TOOLING_DEPENDENCIES = [
     "vitest",
 ]
 ADMIN_WEB_BUILD_ONLY_DEPENDENCIES = {
-    "image-size": ["0.5.5"],
+    "braces": ["3.0.3"],
     "immer": ["8.0.4"],
     "node-fetch": ["1.7.3"],
     "path-to-regexp": ["1.7.0"],

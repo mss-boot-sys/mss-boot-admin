@@ -3,21 +3,8 @@ run-name: ${{ inputs.release_preview == true && format('Root Image candidate {0}
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*.*.*'
-    paths:
-      - 'admin/**'
-      - 'mss-boot/**'
-      - 'go.mod'
-      - 'go.sum'
-      - 'go.work'
-      - 'go.work.sum'
-      - 'templates/**'
-      - 'Dockerfile'
-      - '.dockerignore'
-      - '.github/workflows/container.yml'
   workflow_call:
     inputs:
       version:

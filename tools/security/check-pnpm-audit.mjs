@@ -364,6 +364,7 @@ export const validateAuditReport = (report) => {
   );
   const seenAdvisories = new Set();
   const advisories = Object.values(report.advisories);
+  const advisoryIdentities = new Map();
   for (const [index, advisory] of advisories.entries()) {
     const label = `pnpm audit advisory at index ${index}`;
     requirePlainObject(advisory, label);
@@ -390,10 +391,23 @@ export const validateAuditReport = (report) => {
       }
       findingPathCount += finding.paths.length;
     }
-    if (seenAdvisories.has(advisory.github_advisory_id)) {
+    // npm emits separate records for affected release lines of the same GHSA.
+    // Keep every record so its versions, paths and acceptance are checked.
+    const identity = JSON.stringify([advisory.module_name, advisory.severity]);
+    const previous = advisoryIdentities.get(advisory.github_advisory_id);
+    if (previous !== undefined && previous !== identity) {
+      throw new Error(`pnpm audit report contains conflicting advisory: ${advisory.github_advisory_id}.`);
+    }
+    advisoryIdentities.set(advisory.github_advisory_id, identity);
+    const recordKey = JSON.stringify([
+      advisory.github_advisory_id,
+      advisory.vulnerable_versions ?? '',
+      advisory.patched_versions,
+    ]);
+    if (seenAdvisories.has(recordKey)) {
       throw new Error(`pnpm audit report contains duplicate advisory: ${advisory.github_advisory_id}.`);
     }
-    seenAdvisories.add(advisory.github_advisory_id);
+    seenAdvisories.add(recordKey);
     advisoryCounts[advisory.severity] += 1;
     findingPathCounts[advisory.severity] += findingPathCount;
   }
@@ -403,7 +417,7 @@ export const validateAuditReport = (report) => {
     requireNonNegativeInteger(reported, `pnpm audit metadata.vulnerabilities.${severity}`);
     if (reported !== advisoryCounts[severity] && reported !== findingPathCounts[severity]) {
       throw new Error(
-        `pnpm audit ${severity} count mismatch: metadata=${reported}, uniqueAdvisories=${advisoryCounts[severity]}, findingPaths=${findingPathCounts[severity]}.`,
+        `pnpm audit ${severity} count mismatch: metadata=${reported}, advisoryRecords=${advisoryCounts[severity]}, findingPaths=${findingPathCounts[severity]}.`,
       );
     }
   }

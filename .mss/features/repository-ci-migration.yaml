@@ -1,0 +1,102 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: repository-ci-migration
+  displayName: Repository migration and scoped pull request checks
+  owner: foundation-maintainers
+spec:
+  problem: The migrated repository has disabled Actions, missing main protection, unavailable legacy reusable workflows, duplicate PR setup and failing security baselines.
+  goals:
+  - Restore executable workflows in mss-boot-sys/mss-boot-admin.
+  - Use one lightweight PR job and keep broad verification local; hosted compute is reserved for release artifacts and explicitly requested diagnostics.
+  - Repair Go and npm security failures without suppressing runtime vulnerabilities.
+  nonGoals:
+  - Publish releases, change Go import paths or npm package identity, or configure production PVE.
+  - Repeat release, cross-platform, database, delivery and external-consumer matrices on every PR.
+  actors:
+  - id: contributor
+    displayName: Repository contributor
+  modules:
+  - name: ci-governance
+    kind: infrastructure
+    operation: extend
+  requirements:
+  - id: scoped-pr-checks
+    title: One lightweight PR result
+    description: Plan local verification from the PR merge-base diff and run only inexpensive documentation, routing and workflow-policy checks in Actions.
+    priority: must
+    actor: contributor
+    module: ci-governance
+    rules:
+    - All PRs targeting main start one pr-ci job without path filters or job conditions; every lightweight check must succeed.
+    - The local verification plan includes Admin integration for Framework changes and unions mixed component selections.
+    - Go tests, vulnerability scans, frontend lint and builds, docs builds and browser checks run locally; they are not PR jobs.
+    - Documentation contract and workflow policy validation use repository scripts and require no legacy organization workflow.
+    - Tag workflows retain source, version, dependency and artifact checks needed for publication; they reuse the single candidate build and never repeat broad quality suites. No new release orchestration is introduced.
+    - Main pushes, schedules and branch-protection events start no workflows. Heavy diagnostic workflows require an explicit manual dispatch.
+  - id: pr-approval
+    title: Repository owner approval before PR execution
+    description: Every PR run waits for mss-boot-sys to approve the pr-ci-approval environment before the planner checks out or executes PR code.
+    priority: must
+    actor: contributor
+    module: ci-governance
+    rules:
+    - The repository environment requires mss-boot-sys as reviewer, permits that owner to approve their own runs, and disables administrator bypass.
+    - New commits create new runs requiring approval and cancel older runs. The gate must never approve itself.
+    - The single pr-ci job requires owner approval before checkout; rejected, cancelled or failed checks cannot be reported as a completed successful job.
+    - All external contributors also require GitHub fork workflow approval so a fork cannot remove the environment guard before its first execution.
+    - Actions enablement and approval remain operator-controlled; no workflow run is approved during this repair.
+  - id: migration-security
+    title: Migrated repository and patched baselines
+    description: Prepare the lightweight PR gate and repair reproducible dependency failures without changing repository permissions or approving runs.
+    priority: must
+    actor: contributor
+    module: ci-governance
+    rules:
+    - No workflow references unavailable legacy organization workflows; retire legacy mirror and reporting integrations without a configured destination in the new repository.
+    - Use Go 1.26.9 and patched compatible dependencies across active modules, image builders and generated hosts.
+    - Audit all records when one GHSA spans multiple version ranges; conflicting or identical duplicate records still fail closed.
+    - Runtime high and critical vulnerabilities remain blocking. Any unpatched build-only advisory must have exact resolution and bundle-exclusion evidence and a bounded documented acceptance.
+  constraints:
+  - id: release-boundary
+    type: security
+    statement: No main push or publication is authorized; release tags and packages remain immutable and require merged-main qualification.
+  - id: existing-work
+    type: compatibility
+    statement: Preserve the existing user go.work.sum changes and public Go/npm identities.
+  acceptance:
+  - id: pr-routing
+    requirement: scoped-pr-checks
+    statement: Docs-only, web-only, Admin, Framework, mixed, renamed and shared changes select the correct local plan; the hosted job has no component matrices, service containers or publication commands.
+    level: unit
+    required: true
+    evidence:
+    - type: command
+      value: python3 -m unittest discover -s tools/ci -p test_*.py
+  - id: hosted-pr
+    requirement: migration-security
+    statement: The exact pushed PR commit has a completed passing PR workflow; main requires pr-ci from GitHub Actions.
+    level: integration
+    required: true
+    evidence:
+    - type: manual
+      value: Record the exact PR commit and local validation now. Hosted validation and main protection setup follow only after the operator enables Actions.
+  - id: approval-gate
+    requirement: pr-approval
+    statement: Local governance tests enforce approval dependencies, and repository settings read-back records the required owner, bypass restriction and external contributor approval policy. A hosted approve/reject check follows operator enablement.
+    level: integration
+    required: true
+    evidence:
+    - type: command
+      value: python3 -m unittest tools.release.test_workflow_governance
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+    - node --test tools/security/check-pnpm-audit.test.mjs
+    - python3 -m unittest tools.release.test_workflow_governance
+    - make test-all build
+  rollout:
+    strategy: direct
+    migration: Push the topic branch through PR with local evidence. Validate the lightweight pr-ci job and configure it on main separately. Main and schedules perform no automatic work; tag publication and optional manual diagnostics keep their existing entrypoints.
+    rollback: Use a follow-up PR to repair or revert routing; keep required checks and PR protection enabled.

@@ -873,7 +873,7 @@ class ReleasePolicyTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
         docs = yaml.load(docs_content, Loader=yaml.BaseLoader)
         self.assertNotIn("pull_request", docs["on"])
-        self.assertIn("tools/release/**", docs["on"]["push"]["paths"])
+        self.assertEqual(docs["on"]["push"], {"tags": ["docs/v*.*.*"]})
 
     def test_docs_release_is_component_scoped_and_merged_main_only(self):
         content = (
