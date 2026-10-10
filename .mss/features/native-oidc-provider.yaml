@@ -1,0 +1,97 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: native-oidc-provider
+  displayName: Native OIDC Provider and SSO application administration
+  owner: admin-platform
+spec:
+  problem: Admin owns trusted identities but cannot currently authenticate standards-based OIDC relying parties such as Proxmox VE without an independent identity service.
+  goals:
+    - Reuse canonical account verification and durable browser sessions for confidential OIDC clients.
+    - Deliver code flow with S256, client_secret_basic, RS256, discovery, JWKS and UserInfo.
+    - Separate application access grants from Admin permissions and expose audited SSO administration.
+  nonGoals:
+    - Deploy, publish, change DNS, configure production PVE realms or change PVE ACLs.
+    - Dynamic registration, implicit flow, refresh tokens, federation, multi-tenancy or global RP logout.
+  actors:
+    - id: account-user
+      displayName: Existing enabled account with explicit application access
+    - id: operator
+      displayName: Authorized SSO application administrator
+  modules:
+    - name: core-authentication
+      kind: infrastructure
+      operation: extend
+    - name: sso-management
+      kind: infrastructure
+      operation: create
+  requirements:
+    - id: oidc-protocol
+      title: Bounded interoperable OIDC provider
+      description: Confidential clients use exact HTTPS callbacks and independent credentials with replay prevention.
+      priority: must
+      actor: account-user
+      module: core-authentication
+      rules:
+        - Issuer is an exact HTTPS origin followed by /admin/api/oidc, within the canonical session cookie path; secure SameSite Lax cookies are required.
+        - Authorize and continuation accept browser sessions only; PATs and Admin JWTs are never RP tokens.
+        - Authorization codes expire after 60 seconds and are atomically consumed with client, redirect URI, scope, nonce, user, session and S256 bindings.
+        - Nonce is echoed in the signed ID token; the RP validates its expected nonce. Nonce is not a token request parameter.
+        - prompt none never interacts; login and max_age force fresh authentication; consent is interactive; select_account requires a fresh account choice through canonical login.
+        - RS256 private keys are persisted encrypted with a separate operator supplied AES-256 key; retired public keys overlap token validity.
+        - Subject identifiers are random immutable identities, unrelated to renameable usernames or email addresses.
+        - Access tokens are opaque random credentials stored only as digests and recheck account, client, application grant and durable session on UserInfo.
+    - id: sso-administration
+      title: Least privilege SSO management
+      description: Manage pre-registered clients and grants through protected core APIs and the existing frontend.
+      priority: must
+      actor: operator
+      module: sso-management
+      permission: sso:write
+      rules:
+        - sso:read, sso:write, sso:secret-rotate, sso:key-rotate and sso:audit are independently assignable and ordinary roles receive no automatic grants.
+        - Application allowlists contain explicit user IDs or existing role IDs used as administrative groups; user-editable profile group is never authoritative.
+        - Scopes openid, profile and email and allowed claim release are bounded per client; unverified email is never claimed verified.
+        - Secrets are generated once, hashed at rest, absent from list responses, and removed from UI memory when the dialog closes.
+        - Mutations and successful authorization/token grants carry value-free audit records; failure diagnostics never contain protocol credentials.
+  constraints:
+    - id: auth-compatibility
+      type: compatibility
+      statement: Existing login, CSRF, session revocation, core composition and Go module paths remain intact; provider is disabled by default.
+    - id: no-external-effects
+      type: operations
+      statement: Real PVE 8.3 and 9.0 acceptance is a separate operator run and cannot be substituted with mocked protocol tests.
+  acceptance:
+    - id: protocol-security
+      requirement: oidc-protocol
+      statement: Complete authorization, token and UserInfo flows reject expired or replayed codes, wrong clients, redirects and PKCE, disabled principals and revoked sessions.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: cd admin && go test ./oidc ./middleware ./router ./cmd/migrate/migration/system
+    - id: management-ui
+      requirement: sso-administration
+      statement: Management UI supports create, edit, disable, secret rotation and audit with loading, empty, denied and error states in both locales.
+      level: e2e
+      required: true
+      evidence:
+        - type: command
+          value: make web-v6-lint web-v6-test web-v6-build
+    - id: real-pve
+      statement: Verify separate authorized clients reuse login on PVE 8.3 and 9.0, exact origin callbacks and node-local state affinity in an explicitly provided test environment.
+      level: manual
+      required: false
+      evidence:
+        - type: manual
+          value: No live PVE instance is authorized for this change; record actual versions and results separately before deployment.
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+      - make test-all build
+      - make docs-build
+  rollout:
+    strategy: feature-flag
+    migration: Add independent OIDC tables and default-deny SSO permission/menu records; preserve existing account and session data.
+    rollback: Disable oidc.enabled; preserve tables, issuer, subject identities and encrypted key history for re-enablement. Existing PVE sessions require PVE-side revocation.
