@@ -6,9 +6,9 @@ require (
 	github.com/alicebob/miniredis/v2 v2.39.0
 	github.com/appleboy/gin-jwt/v2 v2.10.3
 	github.com/aws/aws-sdk-go-v2 v1.47.1
-	github.com/aws/aws-sdk-go-v2/config v1.33.4
+	github.com/aws/aws-sdk-go-v2/config v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.103.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.113.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.50.2
 	github.com/casbin/casbin/v2 v2.135.0
 	github.com/casbin/gorm-adapter/v3 v3.41.0
@@ -21,7 +21,7 @@ require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
 	github.com/grafana/pyroscope-go v1.4.3
 	github.com/larksuite/oapi-sdk-go/v3 v3.12.0
-	github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.7
+	github.com/mss-boot-io/mss-boot-admin/mss-boot v1.3.8
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/redis/go-redis/v9 v9.23.0
 	github.com/robfig/cron/v3 v3.0.1
@@ -39,9 +39,9 @@ require (
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.2
 	gorm.io/plugin/dbresolver v1.6.2
-	k8s.io/api v0.37.0
-	k8s.io/apimachinery v0.37.0
-	k8s.io/client-go v0.37.0
+	k8s.io/api v0.37.1
+	k8s.io/apimachinery v0.37.1
+	k8s.io/client-go v0.37.1
 )
 
 require (
@@ -57,21 +57,21 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.4 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.7 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.7.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appconfigdata v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.10.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.38.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.50.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.10.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.38.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.51.2 // indirect
 	github.com/aws/smithy-go v1.28.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
