@@ -12,13 +12,13 @@ spec:
   foundationVersion: 0.1.0
   distribution:
     name: mss-boot-admin
-    version: v1.3.7
+    version: v1.3.9
     backend:
-      module: github.com/mss-boot-io/mss-boot-admin/admin
-      version: v1.3.7
+      module: github.com/mss-boot-sys/mss-boot-admin/admin
+      version: v1.3.9
     frontend:
-      package: "@mss-boot-io/admin-web"
-      version: 1.3.7
+      package: "@mss-boot-sys/admin-web"
+      version: 1.3.9
   repositoryLayout:
     kind: foundation
     backend: admin
@@ -35,8 +35,8 @@ spec:
   backend:
     language: go
     goVersion: "1.27.2"
-    module: github.com/mss-boot-io/mss-boot-admin/admin
-    frameworkModule: github.com/mss-boot-io/mss-boot-admin/mss-boot
+    module: github.com/mss-boot-sys/mss-boot-admin/admin
+    frameworkModule: github.com/mss-boot-sys/mss-boot-admin/mss-boot
     httpFramework: gin
     orm: gorm
     cli: cobra

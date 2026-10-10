@@ -12,10 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
-	migrationmodels "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration/models"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
+	migrationmodels "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration/models"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
 	"gorm.io/gorm"
 )
 

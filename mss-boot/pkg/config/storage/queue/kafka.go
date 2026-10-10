@@ -16,7 +16,7 @@ import (
 
 	"github.com/IBM/sarama"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
 )
 
 const (

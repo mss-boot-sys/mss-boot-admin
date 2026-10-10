@@ -1,741 +1,210 @@
-name: Frontend v6 Release
-
-on:
+name: Frontend V6 Release
+'on':
   push:
     tags:
-      - 'web/antd-v6/v*.*.*'
-
+    - web/antd-v6/v*.*.*
 permissions:
-  actions: read
   contents: read
-
+  pull-requests: read
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
 env:
+  GOTOOLCHAIN: local
+  CI: 'true'
+  HUSKY: '0'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/mss-boot-admin-antd-v6
-
-defaults:
-  run:
-    working-directory: web/antd-v6
-
 jobs:
   release:
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 45
     environment: release-v6-auto
     permissions:
-      actions: read
-      attestations: write
       contents: write
-      id-token: write
-      packages: write
       pull-requests: read
+      packages: write
     steps:
-      - name: Require authorized release operator
-        working-directory: ${{ github.workspace }}
-        env:
-          RELEASE_ACTOR_LOGIN: lwnmengjing
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" || "${GITHUB_TRIGGERING_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" ]]; then
-            echo "release operations must be initiated and triggered by ${RELEASE_ACTOR_LOGIN}" >&2
-            exit 1
-          fi
+    - name: Require authorized release operator
+      env:
+        RELEASE_ACTOR_LOGIN: mss-boot-sys
+      run: |
+        set -euo pipefail
+        test "${GITHUB_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+        test "${GITHUB_TRIGGERING_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+    - name: Checkout release source
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Verify merged-main source and release version
+      id: identity
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/verify_publication.py --component frontend
+    - name: Setup pnpm
+      uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+      with:
+        version: 10.34.5
+    - name: Setup Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      with:
+        node-version: 24
+        cache: pnpm
+        cache-dependency-path: web/antd-v6/pnpm-lock.yaml
+    - name: Install frozen V6 dependencies
+      run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+      working-directory: web/antd-v6
+    - name: Build same-origin primary V6 frontend
+      run: pnpm run build:release
+      working-directory: web/antd-v6
+    - name: Embed and verify primary V6 release identity
+      env:
+        RELEASE_VERSION: ${{ steps.identity.outputs.version }}
+        RELEASE_COMMIT: ${{ github.sha }}
+      run: |
+        jq -n \
+          --arg application 'mss-boot-admin-antd-v6' \
+          --arg version "${RELEASE_VERSION}" \
+          --arg commit "${RELEASE_COMMIT}" \
+          '{application: $application, version: $version, commit: $commit}' > dist/release.json
+        jq -e \
+          --arg version "${RELEASE_VERSION}" \
+          --arg commit "${RELEASE_COMMIT}" \
+          '.application == "mss-boot-admin-antd-v6" and .version == $version and .commit == $commit' \
+          dist/release.json >/dev/null
+      working-directory: web/antd-v6
+    - name: Package and verify portable primary V6 artifact
+      env:
+        RELEASE_VERSION: ${{ steps.identity.outputs.version }}
+        RELEASE_COMMIT: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        python3 ../../tools/release/check_portable_paths.py dist
+        {
+          echo 'application=mss-boot-admin-antd-v6'
+          echo "version=${RELEASE_VERSION}"
+          echo "commit=${RELEASE_COMMIT}"
+        } > FRONTEND-V6-BUILD-INFO
+        source_epoch="$(git show -s --format=%ct "${RELEASE_COMMIT}")"
+        tar \
+          --sort=name \
+          --mtime="@${source_epoch}" \
+          --owner=0 \
+          --group=0 \
+          --numeric-owner \
+          --create \
+          --gzip \
+          --file dist-v6.tar.gz \
+          dist
+        sha256sum dist-v6.tar.gz FRONTEND-V6-BUILD-INFO > SHA256SUMS.frontend-v6
+        sha256sum --check SHA256SUMS.frontend-v6
+        python3 ../../tools/release/check_portable_paths.py \
+          dist-v6.tar.gz \
+          FRONTEND-V6-BUILD-INFO \
+          SHA256SUMS.frontend-v6
+      working-directory: web/antd-v6
+    - name: Pack exact Admin Web package and release evidence
+      env:
+        RELEASE_VERSION: ${{ steps.identity.outputs.version }}
+        RELEASE_COMMIT: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        candidate_root="$(mktemp -d)"
+        trap 'rm -rf "${candidate_root}"' EXIT
+        package_dir="${GITHUB_WORKSPACE}/web/antd-v6/admin-web-release-package"
+        mkdir -p "${candidate_root}/source" "${package_dir}"
+        git -C ../.. -c core.autocrlf=false archive \
+          --format=tar \
+          "${RELEASE_COMMIT}:web/antd-v6" \
+          | tar -xf - -C "${candidate_root}/source"
+        python3 - \
+          "${candidate_root}/source/package.json" \
+          "${RELEASE_VERSION#v}" \
+          "${RELEASE_COMMIT}" <<'PY'
+        import json
+        from pathlib import Path
+        import sys
 
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
+        path = Path(sys.argv[1]).resolve()
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        if manifest.get("name") != "@mss-boot-sys/admin-web" or manifest.get("private") is True:
+            raise SystemExit("Admin Web candidate source has an unexpected identity")
+        manifest["version"] = sys.argv[2]
+        manifest["gitHead"] = sys.argv[3]
+        path.write_text(
+            json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        PY
+        (
+          cd "${candidate_root}/source"
+          pnpm pack --pack-destination "${package_dir}" >/dev/null
+        )
+        mapfile -t candidate_tarballs < <(
+          find "${package_dir}" -maxdepth 1 -type f -name '*.tgz' -print
+        )
+        [[ ${#candidate_tarballs[@]} -eq 1 ]]
+        tarball="${candidate_tarballs[0]}"
 
-      - name: Resolve immutable v6 release identity
-        id: version
-        run: |
-          set -euo pipefail
-          version="${GITHUB_REF_NAME#web/antd-v6/}"
-          test "${version}" != "${GITHUB_REF_NAME}"
-          resolved_commit="$(git rev-parse "${GITHUB_REF_NAME}^{commit}")"
-          test "${resolved_commit}" = "${GITHUB_SHA}"
-          prerelease=false
-          npm_dist_tag="$(printf '%s' "release-${version#v}" | tr '[:upper:].' '[:lower:]-')"
-          if [[ "${version}" == *-* ]]; then
-            prerelease=true
-          fi
-          {
-            echo "version=${version}"
-            echo "prerelease=${prerelease}"
-            echo "npm_dist_tag=${npm_dist_tag}"
-          } >> "${GITHUB_OUTPUT}"
-
-      - name: Verify merged-main release source
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 ../../tools/release/verify_release_source.py \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${GITHUB_SHA}" \
-            --tag "${GITHUB_REF_NAME}" \
-            --policy ../../.mss/release-policy.yaml
-
-      - name: Enforce reviewed v6 release target
-        env:
-          FRONTEND_V6_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          python3 ../../tools/release/check_release_policy.py \
-            --policy ../../.mss/release-policy.yaml \
-            --component frontend \
-            --version "${FRONTEND_V6_VERSION}" \
-            --tag "${GITHUB_REF_NAME}"
-
-      - name: Require successful exact preview
-        id: preview
-        working-directory: ${{ github.workspace }}
-        env:
-          FRONTEND_V6_VERSION: ${{ steps.version.outputs.version }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          preview_run_id="$(bash tools/release/resolve_successful_preview.sh \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${GITHUB_SHA}" \
-            --version "${FRONTEND_V6_VERSION}" \
-            --actor lwnmengjing)"
-          echo "run-id=${preview_run_id}" >> "${GITHUB_OUTPUT}"
-
-      - name: Require the already-published matching Admin release
-        env:
-          FRONTEND_V6_VERSION: ${{ steps.version.outputs.version }}
-          FRONTEND_V6_PRERELEASE: ${{ steps.version.outputs.prerelease }}
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          admin_tag="admin/${FRONTEND_V6_VERSION}"
-          admin_commit="$(git rev-parse "${admin_tag}^{commit}")"
-          if [[ "${admin_commit}" != "${GITHUB_SHA}" ]]; then
-            echo "Admin tag ${admin_tag} resolves to ${admin_commit}, not ${GITHUB_SHA}" >&2
-            exit 1
-          fi
-          admin_release="$(
-            gh release view "${admin_tag}" \
-              --json tagName,isDraft,isPrerelease
-          )"
-          jq -e \
-            --arg tag "${admin_tag}" \
-            --argjson prerelease "${FRONTEND_V6_PRERELEASE}" \
-            '.tagName == $tag and .isDraft == false and .isPrerelease == $prerelease' \
-            <<< "${admin_release}" >/dev/null
-
-      - name: Download exact Frontend package from the successful preview
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: frontend-v6-dist
-          path: ${{ runner.temp }}/frontend-v6-preview
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ steps.preview.outputs.run-id }}
-
-      - name: Verify and stage the exact Frontend preview package
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          preview_dir="${RUNNER_TEMP}/frontend-v6-preview"
-          preview_package_dir="${preview_dir}/admin-web-release-package"
-          package_dir="${RUNNER_TEMP}/admin-web-release-package"
-          image_archive="${preview_dir}/frontend-v6-image.oci.tar"
-          image_info="${preview_dir}/FRONTEND-V6-IMAGE-INFO"
-
-          test -f "${preview_dir}/dist-v6.tar.gz"
-          test -f "${preview_dir}/FRONTEND-V6-BUILD-INFO"
-          test -f "${preview_dir}/SHA256SUMS.frontend-v6"
-          test -d "${preview_package_dir}"
-          test -s "${image_archive}"
-          test -f "${image_info}"
-          test -f "${preview_dir}/SHA256SUMS.frontend-v6-image"
-          (
-            cd "${preview_dir}"
-            sha256sum --check SHA256SUMS.frontend-v6
-            sha256sum --check SHA256SUMS.frontend-v6-image
-          )
-          (
-            cd "${preview_package_dir}"
-            sha256sum --check SHA256SUMS.admin-web
-          )
-
-          grep -Fx "application=mss-boot-admin-antd-v6" \
-            "${preview_dir}/FRONTEND-V6-BUILD-INFO" >/dev/null
-          grep -Fx "version=${RELEASE_VERSION}" \
-            "${preview_dir}/FRONTEND-V6-BUILD-INFO" >/dev/null
-          grep -Fx "commit=${GITHUB_SHA}" \
-            "${preview_dir}/FRONTEND-V6-BUILD-INFO" >/dev/null
-          test "$(wc -l < "${preview_dir}/FRONTEND-V6-BUILD-INFO")" -eq 3
-          tar -xOf "${preview_dir}/dist-v6.tar.gz" dist/release.json \
-            | jq -e \
-            --arg version "${RELEASE_VERSION}" \
-            --arg commit "${GITHUB_SHA}" \
-            '.application == "mss-boot-admin-antd-v6" and .version == $version and .commit == $commit' \
-            >/dev/null
-
-          mapfile -t tarballs < <(
-            find "${preview_package_dir}" -maxdepth 1 -type f -name '*.tgz' -print
-          )
-          test "${#tarballs[@]}" -eq 1
-          tarball="${tarballs[0]}"
-          tar -xOf "${tarball}" package/package.json \
-            | jq -e \
-                --arg version "${RELEASE_VERSION#v}" \
-                --arg commit "${GITHUB_SHA}" \
-                '.name == "@mss-boot-io/admin-web" and
-                 .version == $version and .gitHead == $commit' \
-            >/dev/null
-          python3 - \
-            "${tarball}" \
-            "${preview_package_dir}/admin-web-package.json" \
-            "${RELEASE_VERSION#v}" \
-            "${GITHUB_SHA}" <<'PY'
-          import base64
-          import hashlib
-          import os
-          import json
-          from pathlib import Path
-          import sys
-
-          tarball = Path(sys.argv[1])
-          evidence = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-          content = tarball.read_bytes()
-          artifact = evidence.get("artifact", {})
-          package = evidence.get("package", {})
-          source = evidence.get("source", {})
-          expected_integrity = "sha512-" + base64.b64encode(
-              hashlib.sha512(content).digest()
-          ).decode("ascii")
-          if not (
-              package.get("name") == "@mss-boot-io/admin-web"
-              and package.get("version") == sys.argv[3]
-              and package.get("gitHead") == sys.argv[4]
-              and source.get("repository") == os.environ["GITHUB_REPOSITORY"]
-              and source.get("commit") == sys.argv[4]
-              and artifact.get("filename") == tarball.name
-              and artifact.get("size") == len(content)
-              and artifact.get("sha256") == hashlib.sha256(content).hexdigest()
-              and artifact.get("integrity") == expected_integrity
-          ):
-              raise SystemExit("Admin Web preview identity or integrity mismatch")
-          PY
-
-          grep -Fx "application=mss-boot-admin-antd-v6" "${image_info}" >/dev/null
-          grep -Fx "version=${RELEASE_VERSION}" "${image_info}" >/dev/null
-          grep -Fx "commit=${GITHUB_SHA}" "${image_info}" >/dev/null
-          test "$(wc -l < "${image_info}")" -eq 4
-          expected_image_digest="$(sed -n 's/^digest=//p' "${image_info}")"
-          [[ "${expected_image_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          layout_index="${RUNNER_TEMP}/frontend-v6-preview.index.json"
-          image_manifest="${RUNNER_TEMP}/frontend-v6-preview.manifest.json"
-          tar -xOf "${image_archive}" index.json > "${layout_index}"
-          actual_image_digest="$(
-            jq -er '
-              if (.manifests | length) == 1 then
-                .manifests[0].digest
-              else
-                error("OCI layout must expose exactly one top-level image")
-              end
-            ' "${layout_index}"
-          )"
-          image_manifest_hash="${actual_image_digest#sha256:}"
-          [[ "${image_manifest_hash}" =~ ^[0-9a-f]{64}$ ]]
-          tar -xOf \
-            "${image_archive}" \
-            "blobs/sha256/${image_manifest_hash}" \
-            > "${image_manifest}"
-          test "sha256:$(sha256sum "${image_manifest}" | awk '{print $1}')" = "${actual_image_digest}"
-          test "${actual_image_digest}" = "${expected_image_digest}"
-
-          cp -a "${preview_dir}/dist-v6.tar.gz" .
-          cp -a "${preview_dir}/FRONTEND-V6-BUILD-INFO" .
-          cp -a "${preview_dir}/SHA256SUMS.frontend-v6" .
-          mkdir -p "${package_dir}"
-          cp -a "${preview_package_dir}/." "${package_dir}/"
-
-      - name: Configure GitHub Packages authentication
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          npm_config_file="${RUNNER_TEMP}/github-packages.npmrc"
-          umask 077
-          printf '%s\n' \
-            '@mss-boot-io:registry=https://npm.pkg.github.com' \
-            "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" \
-            'always-auth=true' \
-            > "${npm_config_file}"
-          echo "NPM_CONFIG_USERCONFIG=${npm_config_file}" >> "${GITHUB_ENV}"
-
-      - name: Require GitHub Packages authority and reconcile version identity
-        id: npm-version
-        env:
-          ADMIN_WEB_VERSION: ${{ steps.version.outputs.version }}
-          NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${NODE_AUTH_TOKEN}" ]]; then
-            echo 'GITHUB_TOKEN package authority is required; refusing to downgrade publication to a local-only success.' >&2
-            exit 1
-          fi
-          unprefixed_version="${ADMIN_WEB_VERSION#v}"
-          error_file="${RUNNER_TEMP}/github-packages-view-error.log"
-          if published_integrity="$(
-            npm view "@mss-boot-io/admin-web@${unprefixed_version}" \
-              dist.integrity --json \
-              --registry=https://npm.pkg.github.com \
-              2> "${error_file}" | jq -er '.'
-          )"; then
-            expected_integrity="$(
-              jq -er '.artifact.integrity' \
-                "${RUNNER_TEMP}/admin-web-release-package/admin-web-package.json"
-            )"
-            if [[ "${published_integrity}" != "${expected_integrity}" ]]; then
-              echo "the existing npm version has different immutable content" >&2
-              exit 1
-            fi
-            echo 'publish=false' >> "${GITHUB_OUTPUT}"
-            rm -f "${error_file}"
-            exit 0
-          fi
-          if ! grep -q 'E404' "${error_file}"; then
-            echo 'GitHub Packages availability check failed without an authoritative not-found response' >&2
-            sed -E 's#(//registry[^:]*:)(_authToken=)?[^[:space:]]+#\1[REDACTED]#g' "${error_file}" >&2
-            exit 1
-          fi
-          echo 'publish=true' >> "${GITHUB_OUTPUT}"
-          rm -f "${error_file}"
-
-      - name: Require the GitHub Packages mirror to be public
-        working-directory: ${{ github.workspace }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api \
-            "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/npm/admin-web" \
-            | jq -e \
-                --arg repository "${GITHUB_REPOSITORY}" \
-                '.name == "admin-web" and .package_type == "npm" and
-                 .visibility == "public" and
-                 .repository.full_name == $repository' \
-            >/dev/null
-
-      - name: Attest Admin Web package provenance
-        if: steps.npm-version.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: ${{ runner.temp }}/admin-web-release-package/*.tgz
-
-      - name: Log into registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish the exact preview V6 OCI image
-        id: image
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          command -v skopeo >/dev/null
-          archive="${RUNNER_TEMP}/frontend-v6-preview/frontend-v6-image.oci.tar"
-          image_info="${RUNNER_TEMP}/frontend-v6-preview/FRONTEND-V6-IMAGE-INFO"
-          test -s "${archive}"
-          test -f "${image_info}"
-          digest="$(sed -n 's/^digest=//p' "${image_info}")"
-          [[ "${digest}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          auth_file="${DOCKER_CONFIG:-${HOME}/.docker}/config.json"
-          test -s "${auth_file}"
-          image_repository="${REGISTRY}/${IMAGE_NAME}"
-          version_ref="${image_repository}:${VERSION}"
-          commit_ref="${image_repository}:${GITHUB_SHA}"
-
-          inspect_digest() {
-            local reference="$1"
-            local manifest_file="$2"
-            local error_file="$3"
-            if skopeo inspect \
-              --authfile "${auth_file}" \
-              --raw "docker://${reference}" \
-              > "${manifest_file}" 2> "${error_file}"; then
-              printf 'sha256:%s\n' "$(sha256sum "${manifest_file}" | awk '{print $1}')"
-              return 0
-            fi
-            if grep -Eqi \
-              'manifest unknown|manifest_unknown|name unknown|name_unknown' \
-              "${error_file}"; then
-              return 2
-            fi
-            return 1
-          }
-
-          preflight_reference() {
-            local reference="$1"
-            local safe_name="$2"
-            local manifest_file="${RUNNER_TEMP}/${safe_name}.manifest.json"
-            local error_file="${RUNNER_TEMP}/${safe_name}.inspect.log"
-            local observed_digest_file="${RUNNER_TEMP}/${safe_name}.observed-digest"
-            local state_file="${RUNNER_TEMP}/${safe_name}.preflight-state"
-            local current_digest
-            local inspect_status
-
-            rm -f "${manifest_file}" "${error_file}" \
-              "${observed_digest_file}" "${state_file}"
-            if current_digest="$(
-              inspect_digest "${reference}" "${manifest_file}" "${error_file}"
-            )"; then
-              printf '%s\n' "${current_digest}" > "${observed_digest_file}"
-              if [[ "${current_digest}" == "${digest}" ]]; then
-                printf '%s\n' matching > "${state_file}"
-              else
-                printf '%s\n' conflict > "${state_file}"
-              fi
-            else
-              inspect_status=$?
-              if [[ "${inspect_status}" -eq 2 ]]; then
-                printf '%s\n' missing > "${state_file}"
-              else
-                printf '%s\n' error > "${state_file}"
-              fi
-            fi
-          }
-
-          validate_preflight() {
-            local reference="$1"
-            local safe_name="$2"
-            local state_file="${RUNNER_TEMP}/${safe_name}.preflight-state"
-            local observed_digest_file="${RUNNER_TEMP}/${safe_name}.observed-digest"
-            local error_file="${RUNNER_TEMP}/${safe_name}.inspect.log"
-            local state
-
-            state="$(cat "${state_file}")"
-            case "${state}" in
-              matching|missing)
-                return 0
-                ;;
-              conflict)
-                echo "immutable image ${reference} already has $(cat "${observed_digest_file}"), expected ${digest}" >&2
-                return 1
-                ;;
-              error)
-                echo "registry inspection failed for ${reference}" >&2
-                sed -E 's#(https?://)[^/@[:space:]]+@#\1[REDACTED]@#g' \
-                  "${error_file}" >&2
-                return 1
-                ;;
-              *)
-                echo "invalid image preflight state for ${reference}: ${state}" >&2
-                return 1
-                ;;
-            esac
-          }
-
-          publish_reference_if_missing() {
-            local reference="$1"
-            local safe_name="$2"
-            local state_file="${RUNNER_TEMP}/${safe_name}.preflight-state"
-            local digest_file="${RUNNER_TEMP}/${safe_name}.published-digest"
-            local state
-
-            state="$(cat "${state_file}")"
-            case "${state}" in
-              matching)
-                return 0
-                ;;
-              missing)
-                ;;
-              *)
-                echo "refusing to publish ${reference} after preflight state ${state}" >&2
-                return 1
-                ;;
-            esac
-            rm -f "${digest_file}"
-            skopeo copy \
-              --all \
-              --preserve-digests \
-              --dest-authfile "${auth_file}" \
-              --digestfile "${digest_file}" \
-              "oci-archive:${archive}" \
-              "docker://${reference}"
-            test "$(tr -d '\r\n' < "${digest_file}")" = "${digest}"
-          }
-
-          verify_exact_reference() {
-            local reference="$1"
-            local safe_name="$2"
-            local manifest_file="${RUNNER_TEMP}/${safe_name}.manifest.json"
-            local error_file="${RUNNER_TEMP}/${safe_name}.inspect.log"
-            local current_digest
-            local inspect_status
-
-            current_digest="$(
-              inspect_digest "${reference}" "${manifest_file}" "${error_file}"
-            )" || inspect_status=$?
-            if [[ -n "${inspect_status:-}" ]]; then
-              echo "published image verification failed for ${reference}" >&2
-              sed -E 's#(https?://)[^/@[:space:]]+@#\1[REDACTED]@#g' \
-                "${error_file}" >&2
-              return "${inspect_status}"
-            fi
-            if [[ "${current_digest}" != "${digest}" ]]; then
-              echo "published image ${reference} has ${current_digest}, expected ${digest}" >&2
-              return 1
-            fi
-            rm -f "${error_file}"
-          }
-
-          preflight_reference "${version_ref}" frontend-v6-version
-          preflight_reference "${commit_ref}" frontend-v6-commit
-          preflight_failed=0
-          validate_preflight "${version_ref}" frontend-v6-version || preflight_failed=1
-          validate_preflight "${commit_ref}" frontend-v6-commit || preflight_failed=1
-          if [[ "${preflight_failed}" -ne 0 ]]; then
-            echo 'image publication preflight failed before any registry write' >&2
-            exit 1
-          fi
-
-          publish_reference_if_missing "${version_ref}" frontend-v6-version
-          publish_reference_if_missing "${commit_ref}" frontend-v6-commit
-          verify_exact_reference "${version_ref}" frontend-v6-version
-          verify_exact_reference "${commit_ref}" frontend-v6-commit
-
-          version_manifest="${RUNNER_TEMP}/frontend-v6-version.manifest.json"
-          jq -e '
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "amd64"
-            )] | length) == 1 and
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "arm64"
-            )] | length) == 1
-          ' "${version_manifest}" >/dev/null
-          for architecture in amd64 arm64; do
-            config="$(
-              skopeo \
-                --override-os linux \
-                --override-arch "${architecture}" \
-                inspect \
-                --authfile "${auth_file}" \
-                --config "docker://${version_ref}"
-            )"
-            jq -e \
-              --arg version "${VERSION}" \
-              --arg commit "${GITHUB_SHA}" \
-              '.config.Labels["org.opencontainers.image.title"] == "mss-boot-admin-antd-v6" and
-               .config.Labels["org.opencontainers.image.description"] == "Complete React 19 and Ant Design 6 Admin application for mss-boot business hosts." and
-               .config.Labels["org.opencontainers.image.version"] == $version and
-               .config.Labels["org.opencontainers.image.revision"] == $commit' \
-              <<< "${config}" >/dev/null
-          done
-          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
-
-      - name: Publish immutable Admin Web package to GitHub Packages
-        if: steps.npm-version.outputs.publish == 'true'
-        env:
-          NPM_DIST_TAG: ${{ steps.version.outputs.npm_dist_tag }}
-          NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          case "${NPM_DIST_TAG}" in
-            release-*) ;;
-            *) echo "unsupported npm dist-tag: ${NPM_DIST_TAG}" >&2; exit 1 ;;
-          esac
-          mapfile -t tarballs < <(find "${RUNNER_TEMP}/admin-web-release-package" \
-            -maxdepth 1 -type f -name '*.tgz' -print)
-          test "${#tarballs[@]}" -eq 1
-          npm publish "${tarballs[0]}" \
-            --tag "${NPM_DIST_TAG}" \
-            --registry=https://npm.pkg.github.com
-
-      - name: Verify GitHub Packages identity and repository binding
-        env:
-          ADMIN_WEB_VERSION: ${{ steps.version.outputs.version }}
-          NPM_DIST_TAG: ${{ steps.version.outputs.npm_dist_tag }}
-          GH_TOKEN: ${{ github.token }}
-          NODE_AUTH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          unprefixed_version="${ADMIN_WEB_VERSION#v}"
-          expected_integrity="$(
-            jq -er '.artifact.integrity' \
-              "${RUNNER_TEMP}/admin-web-release-package/admin-web-package.json"
-          )"
-          package_metadata="$(
-            npm view "@mss-boot-io/admin-web@${unprefixed_version}" \
-              version gitHead dist.integrity --json \
-              --registry=https://npm.pkg.github.com
-          )"
-          jq -e \
-            --arg version "${unprefixed_version}" \
-            --arg commit "${GITHUB_SHA}" \
-            --arg integrity "${expected_integrity}" \
-            '.version == $version and .gitHead == $commit and
-             ."dist.integrity" == $integrity' \
-            <<< "${package_metadata}" >/dev/null
-          tagged_version=''
-          for attempt in 1 2 3 4 5 6; do
-            dist_tags="$(
-              npm dist-tag ls '@mss-boot-io/admin-web' \
-                --registry=https://npm.pkg.github.com
-            )"
-            tag_record="$(
-              awk -v expected_tag="${NPM_DIST_TAG}" '
-                $1 == expected_tag ":" {
-                  count += 1
-                  version = $2
-                }
-                END {
-                  printf "%d\t%s\n", count, version
-                }
-              ' <<< "${dist_tags}"
-            )"
-            IFS=$'\t' read -r tag_count tagged_version <<< "${tag_record}"
-            if [[ "${tag_count}" == '1' ]]; then
-              if [[ "${tagged_version}" != "${unprefixed_version}" ]]; then
-                echo "npm dist-tag ${NPM_DIST_TAG} resolves to ${tagged_version}, expected ${unprefixed_version}" >&2
-                exit 1
-              fi
-              break
-            fi
-            if [[ "${tag_count}" != '0' ]]; then
-              echo "npm dist-tag ${NPM_DIST_TAG} returned ${tag_count} records" >&2
-              exit 1
-            fi
-            if [[ "${attempt}" == '6' ]]; then
-              echo "npm dist-tag ${NPM_DIST_TAG} did not resolve after bounded verification" >&2
-              exit 1
-            fi
-            sleep 5
-          done
-          package_record="$(
-            gh api "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/npm/admin-web"
-          )"
-          jq -e \
-            --arg repository "${GITHUB_REPOSITORY}" \
-            '.name == "admin-web" and .package_type == "npm" and
-             .visibility == "public" and
-             (.repository.full_name == $repository)' \
-            <<< "${package_record}" >/dev/null
-
-      - name: Publish immutable v6 GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          VERSION: ${{ steps.version.outputs.version }}
-          PRERELEASE: ${{ steps.version.outputs.prerelease }}
-          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
-        run: |
-          set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          title="mss-boot-admin-antd-v6 ${VERSION}"
-          body="$(mktemp)"
-          existing_assets_dir=''
-          cleanup_release_files() {
-            rm -f "${body}"
-            if [[ -n "${existing_assets_dir}" ]]; then
-              rm -rf "${existing_assets_dir}"
-            fi
-          }
-          trap cleanup_release_files EXIT
-          {
-            echo '## Pull the independent v6 image'
-            echo
-            echo '```shell'
-            echo "docker pull ${REGISTRY}/${IMAGE_NAME}:${VERSION}"
-            echo "docker pull ${REGISTRY}/${IMAGE_NAME}@${IMAGE_DIGEST}"
-            echo '```'
-            echo
-            echo "Image digest: \`${IMAGE_DIGEST}\`"
-            echo "Source commit: \`${GITHUB_SHA}\`"
-            echo 'Rollback selects only a preceding qualified V6 image and matching backend release.'
-          } > "${body}"
-          mapfile -t package_tarballs < <(find "${RUNNER_TEMP}/admin-web-release-package" \
-            -maxdepth 1 -type f -name '*.tgz' -print)
-          test "${#package_tarballs[@]}" -eq 1
-          assets=(
-            dist-v6.tar.gz
-            FRONTEND-V6-BUILD-INFO
-            SHA256SUMS.frontend-v6
-            "${package_tarballs[0]}"
-            "${RUNNER_TEMP}/admin-web-release-package/admin-web-package.json"
-            "${RUNNER_TEMP}/admin-web-release-package/admin-web.spdx.json"
-            "${RUNNER_TEMP}/admin-web-release-package/SHA256SUMS.admin-web"
-          )
-          sha256sum --check SHA256SUMS.frontend-v6
-          (
-            cd "${RUNNER_TEMP}/admin-web-release-package"
-            sha256sum --check SHA256SUMS.admin-web
-          )
-          expected_names="$({
-            for asset in "${assets[@]}"; do basename -- "${asset}"; done
-          } | jq -R . | jq -cs 'sort')"
-          release_error="${RUNNER_TEMP}/github-release-view-error.log"
-          if release_json="$(
-            gh release view "${tag}" \
-              --json tagName,targetCommitish,isDraft,isPrerelease,name,body,assets \
-              2> "${release_error}"
-          )"; then
-            rm -f "${release_error}"
-            jq -e \
-              --arg tag "${tag}" \
-              --arg commit "${GITHUB_SHA}" \
-              --arg title "${title}" \
-              --argjson prerelease "${PRERELEASE}" \
-              '.tagName == $tag and .targetCommitish == $commit and
-               .name == $title and
-               .isPrerelease == $prerelease' \
-              <<< "${release_json}" >/dev/null
-            if [[ "$(jq -r '.isDraft' <<< "${release_json}")" == 'false' ]]; then
-              expected_body="$(< "${body}")"
-              actual_body="$(jq -r '.body' <<< "${release_json}")"
-              test "${actual_body}" = "${expected_body}"
-              actual_names="$(jq -c '[.assets[].name] | sort' <<< "${release_json}")"
-              test "${actual_names}" = "${expected_names}"
-              existing_assets_dir="$(mktemp -d)"
-              gh release download "${tag}" --dir "${existing_assets_dir}"
-              for asset in "${assets[@]}"; do
-                cmp -- \
-                  "${asset}" \
-                  "${existing_assets_dir}/$(basename -- "${asset}")"
-              done
-              exit 0
-            fi
-          else
-            if ! grep -Eqi 'release not found|HTTP 404|Not Found' "${release_error}"; then
-              echo 'GitHub Release inspection failed without an authoritative not-found response' >&2
-              sed -E 's#(https?://)[^/@[:space:]]+@#\1[REDACTED]@#g' "${release_error}" >&2
-              exit 1
-            fi
-            rm -f "${release_error}"
-            release_flags=()
-            if [[ "${PRERELEASE}" == 'true' ]]; then release_flags+=(--prerelease); fi
-            gh release create \
-              "${tag}" \
-              --verify-tag \
-              --target "${GITHUB_SHA}" \
-              --draft \
-              --title "${title}" \
-              --notes-file "${body}" \
-              "${release_flags[@]}"
-          fi
-
-          gh release upload "${tag}" "${assets[@]}" --clobber
-          release_json="$(gh release view "${tag}" --json isDraft,assets)"
-          test "$(jq -r '.isDraft' <<< "${release_json}")" = 'true'
-          actual_names="$(jq -c '[.assets[].name] | sort' <<< "${release_json}")"
-          test "${actual_names}" = "${expected_names}"
-          gh release edit \
-            "${tag}" \
-            --target "${GITHUB_SHA}" \
-            --title "${title}" \
-            --notes-file "${body}" \
-            --draft=false \
-            --prerelease="${PRERELEASE}" \
-            --latest=false
+        pnpm list --prod --json --depth Infinity > "${package_dir}/pnpm-tree.json"
+        created="$(date -u -d "$(git show -s --format=%cI "${RELEASE_COMMIT}")" '+%Y-%m-%dT%H:%M:%SZ')"
+        python3 ../../tools/release/verify_admin_web_package.py \
+          --tarball "${tarball}" \
+          --expected-name '@mss-boot-sys/admin-web' \
+          --expected-version "${RELEASE_VERSION#v}" \
+          --source-repository "${GITHUB_REPOSITORY}" \
+          --source-commit "${RELEASE_COMMIT}" \
+          --output "${package_dir}/admin-web-package.json"
+        python3 ../../tools/release/generate_admin_web_sbom.py \
+          --dependency-tree "${package_dir}/pnpm-tree.json" \
+          --package-evidence "${package_dir}/admin-web-package.json" \
+          --source-repository "${GITHUB_REPOSITORY}" \
+          --source-commit "${RELEASE_COMMIT}" \
+          --created "${created}" \
+          --output "${package_dir}/admin-web.spdx.json"
+        rm -f "${package_dir}/pnpm-tree.json"
+        (
+          cd "${package_dir}"
+          sha256sum -- *.tgz admin-web-package.json admin-web.spdx.json \
+            > SHA256SUMS.admin-web
+          sha256sum --check SHA256SUMS.admin-web
+        )
+        python3 ../../tools/release/check_portable_paths.py \
+          "${tarball}" \
+          "${package_dir}/admin-web-package.json" \
+          "${package_dir}/admin-web.spdx.json" \
+          "${package_dir}/SHA256SUMS.admin-web"
+      working-directory: web/antd-v6
+    - name: Publish immutable GitHub Packages version
+      env:
+        NODE_AUTH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_VERSION: ${{ steps.identity.outputs.version }}
+      run: |
+        python3 tools/release/publish_github_package.py --directory web/antd-v6/admin-web-release-package --version "${RELEASE_VERSION#v}"
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+    - name: Log into registry
+      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+    - name: Publish immutable multi-platform frontend image
+      env:
+        RELEASE_VERSION: ${{ steps.identity.outputs.version }}
+      run: |
+        bash tools/release/publish_image.sh frontend
+    - name: Collect release assets
+      run: |
+        mkdir release-assets
+        cp web/antd-v6/dist-v6.tar.gz web/antd-v6/FRONTEND-V6-BUILD-INFO web/antd-v6/SHA256SUMS.frontend-v6 release-assets/
+        cp web/antd-v6/admin-web-release-package/* release-assets/
+    - name: Publish immutable frontend release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/publish_release_assets.py --directory release-assets

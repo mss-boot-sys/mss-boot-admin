@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func TestReleaseEvidenceOptionsFailClosed(t *testing.T) {

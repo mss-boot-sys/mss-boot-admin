@@ -28,7 +28,7 @@ func TestGeneratedWorkspaceUsesLocalNestedModuleBridge(t *testing.T) {
 		t.Fatalf("write fixture Blueprint: %v", err)
 	}
 
-	writeFixtureFile(t, root, "go.mod", `module github.com/mss-boot-io/mss-boot-admin
+	writeFixtureFile(t, root, "go.mod", `module github.com/mss-boot-sys/mss-boot-admin
 
 go 1.26.0
 `)
@@ -40,29 +40,29 @@ use (
 	./mss-boot
 )
 
-replace github.com/mss-boot-io/mss-boot-admin/mss-boot v1.0.0 => ./mss-boot
+replace github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.0.0 => ./mss-boot
 `)
-	writeFixtureFile(t, root, "admin/go.mod", `module github.com/mss-boot-io/mss-boot-admin/admin
+	writeFixtureFile(t, root, "admin/go.mod", `module github.com/mss-boot-sys/mss-boot-admin/admin
 
 go 1.26.0
 
-require github.com/mss-boot-io/mss-boot-admin/mss-boot v1.0.0
+require github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.0.0
 
-replace github.com/mss-boot-io/mss-boot-admin/mss-boot v1.0.0 => ../mss-boot
+replace github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.0.0 => ../mss-boot
 `)
 	writeFixtureFile(t, root, "admin/main.go", `package main
 
 import (
 	"fmt"
 
-	framework "github.com/mss-boot-io/mss-boot-admin/mss-boot"
+	framework "github.com/mss-boot-sys/mss-boot-admin/mss-boot"
 )
 
 func main() {
 	fmt.Println(framework.Value)
 }
 `)
-	writeFixtureFile(t, root, "mss-boot/go.mod", `module github.com/mss-boot-io/mss-boot-admin/mss-boot
+	writeFixtureFile(t, root, "mss-boot/go.mod", `module github.com/mss-boot-sys/mss-boot-admin/mss-boot
 
 go 1.26.0
 `)

@@ -1,23 +1,23 @@
 ---
-title: Admin 运行合同与 v1.3.7 稳定状态
+title: Admin 运行合同与 v1.3.9 稳定状态
 order: 19
 nav:
   order: 1
   title: admin
-description: v1.3.7 稳定 Thin Host 的安全运行合同与部分列车永久停止状态
-keywords: [v1.3.7 v1.3.5 v1.3.6 admin operations monitoring rollback immutable partial]
+description: v1.3.9 稳定 Thin Host 的安全运行合同与部分列车永久停止状态
+keywords: [v1.3.9 v1.3.5 v1.3.6 admin operations monitoring rollback immutable partial]
 ---
 
-# Admin 运行合同与 v1.3.7 稳定状态
+# Admin 运行合同与 v1.3.9 稳定状态
 
 :::warning
-发布状态：**v1.3.7 是当前稳定版**；v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。
+版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 
 ## 运行入口边界
 
-v1.3.7 项目工具应检查 Distribution、锁文件、Blueprint 与本地依赖，管理且只
+v1.3.9 项目工具应检查 Distribution、锁文件、Blueprint 与本地依赖，管理且只
 管理当前 Thin Host 的开发进程，并按改动范围执行验证。工具存在、进程运行或容器健康
 都不等于业务成功，仍需验证 `/healthz`、`/readyz`、登录、权限拒绝和关键写操作。
 
@@ -51,7 +51,7 @@ SecretRef。配置变更通过受保护的 Admin API、部署配置或可审查�
 
 ## 初始化与迁移合同
 
-v1.3.7 Thin Host 的首次交互式初始化必须通过隐藏输入读取管理员密码；非交互自动化
+v1.3.9 Thin Host 的首次交互式初始化必须通过隐藏输入读取管理员密码；非交互自动化
 只向初始化进程注入一次性 `MSS_ADMIN_INITIAL_PASSWORD`。密码不进入命令行、生成文件、
 日志或长期服务环境，迁移只存一向验证值，且系统没有默认密码。
 
@@ -92,7 +92,7 @@ WebSocket 查询参数。
 ## 发布、升级与回滚合同
 
 升级时必须先验证目标完整发行的 Root 工具、Admin、Framework、Admin Web、官方
-npmjs、Blueprint 与锁全部同源，并备份仓库、配置、数据库和业务数据。仓库还必须保留
+GitHub Packages、Blueprint 与锁全部同源，并备份仓库、配置、数据库和业务数据。仓库还必须保留
 `.mss/blueprint-manifest.json`；手工拼装或丢失 manifest 的仓库迁入目标版本生成的新
 基线，不得伪造三方升级资格。
 

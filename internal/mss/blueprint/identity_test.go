@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 )
 
 func TestBuildDesiredRecordsIndependentFoundationBlueprintGeneratorAndSnapshotIdentities(t *testing.T) {
@@ -343,21 +343,80 @@ func TestDecodeCanonicalFoundationReleasePolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("decode canonical release policy: %v", err)
 	}
-	if policy.Spec.DocsTagMutable == nil || !*policy.Spec.DocsTagMutable || policy.Spec.DocsRevisionPublicationReady != nil || policy.Spec.StablePromotionReady == nil || *policy.Spec.StablePromotionReady || policy.Spec.StablePromotionVersion == nil || *policy.Spec.StablePromotionVersion != "v1.3.7" || policy.Spec.StablePromotionCommit == nil || *policy.Spec.StablePromotionCommit != "disabled" || len(policy.Spec.ImmutableStoppedTrains) != 2 {
-		t.Fatalf("canonical extended release controls = %#v", policy.Spec)
+	if policy.Spec.PublicationMode != "direct" || policy.Spec.DocsTagMutable == nil || !*policy.Spec.DocsTagMutable || policy.Spec.StablePromotionReady != nil || len(policy.Spec.ImmutableStoppedTrains) != 0 {
+		t.Fatalf("canonical direct release controls = %#v", policy.Spec)
 	}
-	if policy.Spec.NextPublicVersion != "v1.3.7" || policy.Spec.PublicationWorkflowsReady == nil || !*policy.Spec.PublicationWorkflowsReady {
-		t.Fatalf("canonical recovery target = %#v, want v1.3.7 with publication enabled", policy.Spec)
+	if policy.Spec.NextPublicVersion != "v1.3.9" || policy.Spec.PublicationWorkflowsReady == nil || !*policy.Spec.PublicationWorkflowsReady {
+		t.Fatalf("canonical release target = %#v, want v1.3.9 with publication enabled", policy.Spec)
 	}
-	if policy.Spec.CurrentStableVersion != "v1.3.7" || policy.Spec.CurrentStableCommit != "77b53d41092741eac62fa6418c0bdbf87413c7cd" {
-		t.Fatalf("canonical current stable = %#v, want exact v1.3.7 release", policy.Spec)
+	if policy.Spec.CurrentStableVersion != "v1.3.9" || (policy.Spec.CurrentStableCommit != "pending" && !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit)) {
+		t.Fatalf("canonical current stable must identify the first v1.3.9 publication: %#v", policy.Spec)
 	}
-	stopped, err := validateFoundationStoppedTrains(policy)
+	if policy.Spec.LegacyRepository != "mss-boot-io/mss-boot-admin" || policy.Spec.LegacyStableVersion != "v1.3.8" {
+		t.Fatalf("legacy publication history missing: %#v", policy.Spec)
+	}
+}
+
+func TestDirectFirstPublicationPolicyFailsClosed(t *testing.T) {
+	const valid = `apiVersion: mss.io/v1alpha1
+kind: ReleasePolicy
+metadata:
+  name: first-new-organization-release
+spec:
+  mode: development-first
+  publicationMode: direct
+  releaseBranch: main
+  requireMergedPullRequestSource: true
+  currentStableVersion: v1.3.9
+  currentStableCommit: pending
+  nextPublicVersion: v1.3.9
+  distributionVersion: v1.3.9
+  distributionComponents: root,framework,admin,frontend
+  releaseTargetState: active
+  publicationWorkflowsReady: true
+  docsTagMutable: true
+  publicPrereleases: false
+  legacyRepository: mss-boot-io/mss-boot-admin
+  legacyStableVersion: v1.3.8
+  rootTagTemplate: "{version}"
+  frameworkTagTemplate: "mss-boot/{version}"
+  adminTagTemplate: "admin/{version}"
+  frontendTagTemplate: "web/antd-v6/{version}"
+  docsTagTemplate: "docs/{version}"
+  npmPackageTemplate: "@mss-boot-sys/admin-web@{npmVersion}"
+`
+	policy, err := decodeFoundationReleasePolicy([]byte(valid))
 	if err != nil {
-		t.Fatalf("validate canonical immutable stopped trains: %v", err)
+		t.Fatal(err)
 	}
-	if stopped["v1.3.5"].Commit != "396f60615cdfa589353b16ef9d3531e249e65432" || stopped["v1.3.6"].Commit != "b1fe47a3a83209574e09d53526b122dd2cbc5277" {
-		t.Fatalf("canonical immutable stopped trains = %#v", stopped)
+	root := writeBlueprintFixture(t)
+	commit, err := foundationCommit(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	version, channel, err := foundationReleaseVersion(context.Background(), root, commit, policy)
+	if err != nil || version != "1.3.9" || channel != "candidate" {
+		t.Fatalf("unpublished first release must remain candidate: %s, %s, %v", version, channel, err)
+	}
+	runGit(t, root, "tag", "v1.3.9")
+	version, channel, err = foundationReleaseVersion(context.Background(), root, commit, policy)
+	if err != nil || version != "1.3.9" || channel != "stable" {
+		t.Fatalf("exact release tag should resolve stable identity: %s, %s, %v", version, channel, err)
+	}
+	for _, test := range []struct{ name, before, after string }{
+		{"unmerged source", "requireMergedPullRequestSource: true", "requireMergedPullRequestSource: false"},
+		{"wrong branch", "releaseBranch: main", "releaseBranch: feature"},
+		{"unknown mode", "publicationMode: direct", "publicationMode: unchecked"},
+		{"wrong history", "legacyStableVersion: v1.3.8", "legacyStableVersion: v1.3.7"},
+		{"future pending release", "v1.3.9", "v1.4.0"},
+		{"malformed commit", "currentStableCommit: pending", "currentStableCommit: unknown"},
+		{"mixed promotion", "publicationMode: direct", "publicationMode: direct\n  stablePromotionReady: false"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := decodeFoundationReleasePolicy([]byte(strings.ReplaceAll(valid, test.before, test.after))); err == nil {
+				t.Fatal("invalid first-publication policy accepted")
+			}
+		})
 	}
 }
 

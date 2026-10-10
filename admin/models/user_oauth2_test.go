@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

@@ -5,7 +5,7 @@ repo_root="$(git rev-parse --show-toplevel)"
 readonly repo_root
 readonly admin_dir="${repo_root}/admin"
 readonly framework_dir="${repo_root}/mss-boot"
-readonly framework_module="github.com/mss-boot-io/mss-boot-admin/mss-boot"
+readonly framework_module="github.com/mss-boot-sys/mss-boot-admin/mss-boot"
 
 framework_version="$(
   awk -v module="${framework_module}" '

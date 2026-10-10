@@ -6,7 +6,7 @@ import {
   canonicalizeCapabilityContract,
   type PageCapabilityDefinition,
   validatePageCapabilityDefinition,
-} from '@mss-boot-io/admin-web/runtime/presentation';
+} from '@mss-boot-sys/admin-web/runtime/presentation';
 import {
   supplierPresentationBusinessAdapterMetadata,
   supplierPresentationViewAdapterMetadata,

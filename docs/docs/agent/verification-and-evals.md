@@ -43,8 +43,7 @@ mss verify --all --release-evidence --expect-commit <full-sha>
 ## 固定完整验证证据
 
 发布台账必须记录完整 commit、报告摘要或哈希和退出结果，并证明验证前后 tracked-clean。
-报告单独存在不构成发布授权；它也不替代合并到 `main`、Tag actor、不可变引用、OIDC、
-provenance 和公共制品对账。完整执行顺序由 `mss-release` Skill 与 v1.3.7 Feature 约束，
+报告单独存在不构成发布授权；它也不替代合并到 `main`、Tag actor、不可变引用、registry 权限与公共制品核验。完整执行顺序由 `mss-release` Skill 与 v1.3.9 Feature 约束，
 避免本站成为另一份会漂移的发布手册。
 
 ## 手动扩展资格验证
@@ -66,12 +65,12 @@ Eval 衡量 Agent 是否遵守规格、边界、生成幂等、迁移、权限�
 
 ## 基础 CRUD 生成测试的可选配置
 
-本节适用于 PR #593 中尚未发布的 Foundation 源码修复。验收范围由
+本节适用于纳入 v1.3.9 的 Foundation 生成器修复。验收范围由
 [`generated-service-test-shapes` Feature](../../../.mss/features/generated-service-test-shapes.yaml)
 定义。模块没有事件、正则校验、字符串长度校验或搜索字段时，生成器应只输出实际使用的
 变量、导入和查询表达式；只有布尔或枚举字段的模块也应能编译并执行后端测试。
 
-当前稳定版 v1.3.7 工具和依赖保持原有行为；采用修复需要等待包含该变更的合格发行版。
+采用 v1.3.9 后，已有模块需从规格重新生成并审查差异。
 
 生成的服务测试分别验证分页、搜索和每个筛选条件。分页检查未筛选数据的总数与页面大小；
 搜索根据可搜索字段中的实际值判断匹配记录，不能假定两条记录一定只命中一条。例如两条

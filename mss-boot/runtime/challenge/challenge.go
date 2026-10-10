@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
 )
 
 var (

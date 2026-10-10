@@ -6,16 +6,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/command"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/generator"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/command"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/generator"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 	"gopkg.in/yaml.v3"
 )
 
@@ -245,10 +247,12 @@ func validateThinHostStructure(ctx *project.Context) command.Result {
 			problems = append(problems, err.Error())
 		} else {
 			expected := "registry=https://registry.npmjs.org/\n" +
+				"@mss-boot-sys:registry=https://npm.pkg.github.com/\n" +
+				"//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}\n" +
 				"save-exact=true"
 			if strings.TrimSpace(string(data)) != expected {
 				problems = append(problems,
-					npmrcPath+" must select the public npm registry with exact dependency pins and no credentials",
+					npmrcPath+" must select GitHub Packages for @mss-boot-sys, npmjs for third-party dependencies, exact pins, and only the NODE_AUTH_TOKEN placeholder",
 				)
 			}
 		}
@@ -565,6 +569,7 @@ func frozenFrontendLockProblems(data []byte, packageName, version string) []stri
 		Packages map[string]struct {
 			Resolution struct {
 				Integrity string `yaml:"integrity"`
+				Tarball   string `yaml:"tarball"`
 			} `yaml:"resolution"`
 		} `yaml:"packages"`
 	}
@@ -585,7 +590,25 @@ func frozenFrontendLockProblems(data []byte, packageName, version string) []stri
 	} else if !validPNPMIntegrity(packageEntry.Resolution.Integrity) {
 		problems = append(problems, "pnpm-lock.yaml must contain a sha512 tarball integrity for "+packageName+"@"+version)
 	}
+	if hasPackage && !validFrozenFrontendTarball(packageEntry.Resolution.Tarball) {
+		problems = append(problems, "pnpm-lock.yaml must freeze the GitHub Packages tarball URL (or explicit loopback fixture) without credentials for "+packageName+"@"+version)
+	}
 	return problems
+}
+
+func validFrozenFrontendTarball(value string) bool {
+	if value == "" || value != strings.TrimSpace(value) || strings.ContainsAny(value, "\r\n\t") {
+		return false
+	}
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" || parsed.Path == "" {
+		return false
+	}
+	if parsed.Scheme == "https" && parsed.Host == "npm.pkg.github.com" {
+		return true
+	}
+	address := net.ParseIP(parsed.Hostname())
+	return parsed.Scheme == "http" && (parsed.Hostname() == "localhost" || (address != nil && address.IsLoopback()))
 }
 
 func validPNPMIntegrity(value string) bool {

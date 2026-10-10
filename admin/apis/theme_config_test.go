@@ -16,15 +16,15 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	cacheconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	cacheconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
 )
 
 func setupThemeConfigAPITest(t *testing.T) *gorm.DB {

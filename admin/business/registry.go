@@ -11,10 +11,10 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	moduleruntime "github.com/mss-boot-io/mss-boot-admin/admin/modules/runtime"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
+	moduleruntime "github.com/mss-boot-sys/mss-boot-admin/admin/modules/runtime"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
 	"gorm.io/gorm"
 )
 

@@ -1,4 +1,4 @@
-module github.com/mss-boot-io/mss-boot-admin
+module github.com/mss-boot-sys/mss-boot-admin
 
 go 1.27.2
 

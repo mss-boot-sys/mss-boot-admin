@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const Repository = "mss-boot-io/mss-boot-admin"
+const Repository = "mss-boot-sys/mss-boot-admin"
 
 const developmentVersion = "0.1.0-dev"
 

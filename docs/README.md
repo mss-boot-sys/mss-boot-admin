@@ -1,14 +1,18 @@
 # mss-boot documentation
 
-This source tree records **v1.3.7** as the current coordinated stable release and
-**v1.3.5** plus **v1.3.6** as permanently stopped immutable partial releases.
-The component, npm, image, Root Release, stable-alias, and current-stable ledgers
-all resolve to the exact v1.3.7 release commit. Docs remains a separate website
-publication: `docs/v*` identifies a deployed site revision, and a missing,
-failed, or delayed deployment never blocks Distribution components, stable
-aliases, current stable, or adopter availability. Start at
-[`docs/getting-started`](./docs/getting-started/index.md) for the human quick
-start; Agent maintainers follow the executable contracts identified below.
+This source tree documents **v1.3.9**, the first coordinated release under
+`mss-boot-sys/mss-boot-admin`. Versions **v1.3.8** and earlier were published under
+`mss-boot-io`; their release pages and evidence remain historical records.
+
+The Distribution uses the new Go module paths and `@mss-boot-sys/admin-web` on
+GitHub Packages only. Release readiness is established locally on the exact
+merged-main commit; tag workflows build and publish artifacts. Docs keeps the
+existing `https://docs.mss-boot-io.top` domain and is published through
+`docs/v1.3.9`. Source changes alone do not prove deployment: verify the public
+`/release.json` and browser-visible pages.
+
+Start at [`docs/getting-started`](./docs/getting-started/index.md) for the human
+quick start; Agent maintainers follow the executable contracts below.
 
 ## Audience and authority map
 
@@ -31,7 +35,7 @@ Within the public site:
 - `docs/admin/`: current Admin configuration, security, and operations;
 - `docs/agent/`: human-readable Agent collaboration and contract navigation;
 - `docs/architecture/`: current architecture summaries;
-- `docs/releases/`: the v1.3.7 stable record, v1.3.6 and v1.3.5 immutable-partial records, and a clearly separated read-only archive.
+- `docs/releases/`: the v1.3.9 release guide, old-organization release records, and a clearly separated read-only archive.
 
 Prompt dumps, one-off plans, test snapshots, and duplicate tutorials are not
 documentation inputs.
@@ -47,6 +51,5 @@ python3 tools/docs/check_current_docs.py
 corepack pnpm@9.15.9 --dir docs build
 ```
 
-The drift check verifies the v1.3.7 stable and v1.3.5/v1.3.6 immutable-partial
-boundaries, operational onboarding contracts, the human/Agent audience split,
+The drift check verifies the v1.3.9 repository, version and registry boundaries, operational onboarding contracts, the human/Agent audience split,
 navigation targets, internal links, archive banners, and ADR status markers.

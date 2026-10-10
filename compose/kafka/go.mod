@@ -1,4 +1,4 @@
-module github.com/mss-boot-io/mss-boot-admin/compose/kafka
+module github.com/mss-boot-sys/mss-boot-admin/compose/kafka
 
 go 1.27.2
 

@@ -49,7 +49,7 @@ spec:
       statement: The user explicitly accepts a breaking source migration; exported enforcers, watcher parameters and custom adapters now use Casbin v3 types.
     - id: publication-boundary
       type: operations
-      statement: The repaired Admin requires the paired unpublished Framework source for validation. Published v1.3.7 dependencies and Thin Host locks stay immutable until a separately qualified coordinated release updates them.
+      statement: The repaired Admin requires the paired unpublished Framework source for validation. Published v1.3.9 dependencies and Thin Host locks stay immutable until a separately qualified coordinated release updates them.
   acceptance:
     - id: framework-policy
       requirement: policy-behavior

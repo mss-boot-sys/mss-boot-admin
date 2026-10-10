@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 const (
@@ -39,10 +39,10 @@ func resolveTargetLayout(document *project.ProjectDocument) (targetLayout, error
 	if document == nil {
 		return targetLayout{
 			Kind:                    layoutFoundation,
-			TargetModule:            "github.com/mss-boot-io/mss-boot-admin/admin",
-			AdminModule:             "github.com/mss-boot-io/mss-boot-admin/admin",
-			FrameworkModule:         "github.com/mss-boot-io/mss-boot-admin/mss-boot",
-			AdminWebPackage:         "@mss-boot-io/admin-web",
+			TargetModule:            "github.com/mss-boot-sys/mss-boot-admin/admin",
+			AdminModule:             "github.com/mss-boot-sys/mss-boot-admin/admin",
+			FrameworkModule:         "github.com/mss-boot-sys/mss-boot-admin/mss-boot",
+			AdminWebPackage:         "@mss-boot-sys/admin-web",
 			BackendDir:              "admin",
 			ModulesDir:              "admin/modules",
 			FrontendDir:             "web/antd-v6",

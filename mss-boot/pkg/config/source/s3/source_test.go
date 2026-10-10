@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/source"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/source"
 )
 
 type s3SourceRoundTripper func(*http.Request) (*http.Response, error)

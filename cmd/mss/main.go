@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/app"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/app"
 )
 
 func main() {

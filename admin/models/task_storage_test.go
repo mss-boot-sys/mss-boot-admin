@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	servertask "github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server/task"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	servertask "github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server/task"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

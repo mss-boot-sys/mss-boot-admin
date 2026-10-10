@@ -9,7 +9,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 )
 
 func TestServeSupportsLegacyInitializeAndStatelessTools(t *testing.T) {

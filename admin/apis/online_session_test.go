@@ -15,10 +15,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/middleware"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg/sessioncache"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/middleware"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/sessioncache"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
 )
 
 func setupOnlineSessionTest(t *testing.T) (*gin.Engine, *gorm.DB, string) {

@@ -133,7 +133,7 @@ jobs:
       - name: Reject Admin imports
         run: |
           if grep -R --line-number --include='*.go' \
-            'github.com/mss-boot-io/mss-boot-admin/admin/' mss-boot; then
+            'github.com/mss-boot-sys/mss-boot-admin/admin/' mss-boot; then
             echo 'mss-boot must remain independent from Admin business packages' >&2
             exit 1
           fi

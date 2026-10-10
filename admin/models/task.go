@@ -10,8 +10,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server/task"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server/task"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	batchv1 "k8s.io/api/batch/v1"
@@ -19,8 +19,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	typedbatchv1 "k8s.io/client-go/kubernetes/typed/batch/v1"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 )
 
 /*

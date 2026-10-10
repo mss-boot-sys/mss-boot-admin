@@ -4,7 +4,7 @@
 
 This file applies to `web/antd-v6/` and inherits the repository contract. This
 directory is both the official Admin application and the sole complete
-`@mss-boot-io/admin-web` package. Both surfaces use this same source tree. It
+`@mss-boot-sys/admin-web` package. Both surfaces use this same source tree. It
 must not read source, build output, dependencies, local storage, service
 workers, or release identity from any retired frontend artifact.
 

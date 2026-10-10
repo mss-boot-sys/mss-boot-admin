@@ -9,14 +9,14 @@ import generate_admin_web_sbom as SBOM  # noqa: E402
 
 
 COMMIT = "b" * 40
-REPOSITORY = "mss-boot-io/mss-boot-admin"
+REPOSITORY = "mss-boot-sys/mss-boot-admin"
 
 
 def package_evidence():
     return {
         "schema": "mss.io/admin-web-package-evidence/v1",
         "package": {
-            "name": "@mss-boot-io/admin-web",
+            "name": "@mss-boot-sys/admin-web",
             "version": "1.3.0",
             "license": "MIT",
             "gitHead": COMMIT,
@@ -38,7 +38,7 @@ def package_evidence():
 
 def dependency_tree():
     return {
-        "name": "@mss-boot-io/admin-web",
+        "name": "@mss-boot-sys/admin-web",
         "version": "0.0.0-development",
         "dependencies": {
             "react": {
@@ -80,7 +80,7 @@ class AdminWebSBOMTest(unittest.TestCase):
         second = self.build()
         self.assertEqual(first, second)
         self.assertEqual(first["spdxVersion"], "SPDX-2.3")
-        self.assertEqual(first["packages"][0]["name"], "@mss-boot-io/admin-web")
+        self.assertEqual(first["packages"][0]["name"], "@mss-boot-sys/admin-web")
         self.assertEqual(first["packages"][0]["versionInfo"], "1.3.0")
         self.assertEqual(first["packages"][0]["licenseDeclared"], "MIT")
         self.assertIn(COMMIT, first["documentComment"])

@@ -7,18 +7,18 @@ metadata:
 spec:
   sourceMode: git-tracked
   templateRoot: templates/application
-  sourceModule: github.com/mss-boot-io/mss-boot-admin
+  sourceModule: github.com/mss-boot-sys/mss-boot-admin
   sourceRepository: mss-boot-sys/mss-boot-admin
   sourceProjectName: mss-boot-admin
   distribution:
     name: mss-boot-admin
-    version: v1.3.7
+    version: v1.3.9
     backend:
-      module: github.com/mss-boot-io/mss-boot-admin/admin
-      version: v1.3.7
+      module: github.com/mss-boot-sys/mss-boot-admin/admin
+      version: v1.3.9
     frontend:
-      package: "@mss-boot-io/admin-web"
-      version: 1.3.7
+      package: "@mss-boot-sys/admin-web"
+      version: 1.3.9
   defaultOutputDirectory: .mss/output
   manifestPath: .mss/blueprint-manifest.json
   lockPath: .mss/lock.yaml

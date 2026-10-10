@@ -20,7 +20,7 @@ spec:
   nonGoals:
     - Domain-specific fields, APIs, data retrieval, or business rules in Foundation.
     - Remote scripts, runtime module registration, core replacement, or authentication overrides.
-    - Release publication or changes to the published v1.3.7 distribution.
+    - Release publication or changes to the published v1.3.9 distribution.
   actors:
     - id: host-author
       displayName: Thin Host author

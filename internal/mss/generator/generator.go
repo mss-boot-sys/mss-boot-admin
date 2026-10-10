@@ -19,10 +19,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
-	foundationtemplates "github.com/mss-boot-io/mss-boot-admin/templates"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
+	foundationtemplates "github.com/mss-boot-sys/mss-boot-admin/templates"
 )
 
 const (

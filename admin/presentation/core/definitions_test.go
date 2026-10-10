@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 )
 
 func TestDefinitionsAreValidHashedAndDefensivelyCopied(t *testing.T) {

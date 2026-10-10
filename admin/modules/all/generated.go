@@ -4,8 +4,8 @@
 package all
 
 import (
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	module0 "github.com/mss-boot-io/mss-boot-admin/admin/modules/supplier"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	module0 "github.com/mss-boot-sys/mss-boot-admin/admin/modules/supplier"
 )
 
 // Modules returns a new slice so callers cannot mutate the generated registry.

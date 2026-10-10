@@ -16,14 +16,14 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	cacheconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
-	gormaction "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions/gorm"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	cacheconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
+	gormaction "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions/gorm"
 	"gorm.io/driver/sqlite"
 )
 

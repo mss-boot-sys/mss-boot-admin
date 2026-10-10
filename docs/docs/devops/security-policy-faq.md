@@ -4,14 +4,14 @@ order: 13
 nav:
   order: 5
   title: 'devops'
-description: How to report suspected vulnerabilities in mss-boot-io without exposing sensitive details in public issues
+description: How to report suspected vulnerabilities in mss-boot-sys without exposing sensitive details in public issues
 keywords: [security, vulnerability, advisory, disclosure, faq]
 ---
 
 # SECURITY Policy FAQ
 
 This page explains how contributors should handle suspected security issues in
-`mss-boot-io` projects. It is written for public open source collaboration:
+`mss-boot-sys` projects. It is written for public open source collaboration:
 enough detail to help maintainers reproduce a problem, without exposing exploit
 steps, credentials, or private deployment information in public issues.
 
@@ -25,7 +25,7 @@ Use the security policy of the affected repository instead:
 
 | Repository            | Security policy                                                                   |
 | --------------------- | --------------------------------------------------------------------------------- |
-| `mss-boot-admin`      | [SECURITY.md](https://github.com/mss-boot-io/mss-boot-admin/security/policy)      |
+| `mss-boot-admin`      | [SECURITY.md](https://github.com/mss-boot-sys/mss-boot-admin/security/policy)      |
 
 The `mss-boot-admin` policy covers the root tools, `mss-boot/`, `admin/`,
 `web/antd-v6/`, `docs/`, and their independently published artifacts. When GitHub private vulnerability reporting is available on the affected

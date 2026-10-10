@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	evalcmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/eval"
+	evalcmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/eval"
 )
 
 func TestEvalRunContributorRegistryFlagIsHiddenAndForwarded(t *testing.T) {

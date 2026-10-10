@@ -5,6 +5,11 @@
 - Amended: 2026-08-30
 - Scope: `mss-boot-admin` monorepo validation and publishing
 
+Release migration note (2026-10-11): v1.3.9 starts `mss-boot-sys` publication.
+The registry, namespace and release-sequence details below are historical where
+they conflict with [the new-organization release decision](./2026-10-11-new-organization-release.md).
+The composition and ownership boundaries remain in force.
+
 ## Context
 
 The monorepo contains four independently testable products:

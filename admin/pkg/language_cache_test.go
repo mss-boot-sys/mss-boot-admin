@@ -9,7 +9,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 
-	cacheconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	cacheconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
 )
 
 func TestLanguageProfileCacheStoresCompleteSnapshot(t *testing.T) {

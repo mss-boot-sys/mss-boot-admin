@@ -147,7 +147,7 @@ jobs:
       - name: Reject actual reverse Admin dependencies
         run: |
           set -euo pipefail
-          admin_prefix='github.com/mss-boot-io/mss-boot-admin/admin'
+          admin_prefix='github.com/mss-boot-sys/mss-boot-admin/admin'
           if GOWORK=off go list -deps ./... | grep -E "^${admin_prefix}(/|$)"; then
             echo 'Agent/Foundation module must not depend on Admin packages' >&2
             exit 1
@@ -200,8 +200,8 @@ jobs:
       - name: Verify workspace module graph
         run: |
           go list -m all > "${RUNNER_TEMP}/workspace-modules.txt"
-          grep -F 'github.com/mss-boot-io/mss-boot-admin/admin' "${RUNNER_TEMP}/workspace-modules.txt"
-          grep -F 'github.com/mss-boot-io/mss-boot-admin/mss-boot' "${RUNNER_TEMP}/workspace-modules.txt"
+          grep -F 'github.com/mss-boot-sys/mss-boot-admin/admin' "${RUNNER_TEMP}/workspace-modules.txt"
+          grep -F 'github.com/mss-boot-sys/mss-boot-admin/mss-boot' "${RUNNER_TEMP}/workspace-modules.txt"
 
   compile:
     name: admin-build

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidatePattern('^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$')]
-    [string]$Version = 'v1.3.7',
+    [string]$Version = 'v1.3.9',
 
     [string]$InstallDir = $(
         if ($env:LOCALAPPDATA) {
@@ -13,7 +13,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Repository = 'mss-boot-io/mss-boot-admin'
+$Repository = 'mss-boot-sys/mss-boot-admin'
 
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
     throw 'InstallDir must not be empty.'

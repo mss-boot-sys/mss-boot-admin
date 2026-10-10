@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kamva/mgm/v3"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions/k8s"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions/k8s"
 )
 
 type controllerTestModel struct {

@@ -13,7 +13,7 @@ Generate and qualify one real external Thin Host without publishing anything.
 
 Options:
   --foundation-root PATH  Foundation checkout (default: current Git root)
-  --tarball PATH          Pre-built @mss-boot-io/admin-web tarball
+  --tarball PATH          Pre-built @mss-boot-sys/admin-web tarball
   --report-dir PATH       Persist sanitized reports in this directory
   --help                  Show this help
 EOF
@@ -222,7 +222,7 @@ tar -xOf "${tarball}" package/package.json \
   | jq -e \
       --arg version "${frontend_distribution_version}" \
       --arg commit "${foundation_commit}" \
-      '.name == "@mss-boot-io/admin-web" and .version == $version and .gitHead == $commit' \
+      '.name == "@mss-boot-sys/admin-web" and .version == $version and .gitHead == $commit' \
       >/dev/null || {
   echo "Admin Web tarball identity does not match the Foundation Distribution" >&2
   exit 1
@@ -242,7 +242,7 @@ from urllib.parse import unquote, urlsplit
 tarball = Path(sys.argv[1]).resolve()
 version = sys.argv[2]
 ready = Path(sys.argv[3]).resolve()
-package_name = '@mss-boot-io/admin-web'
+package_name = '@mss-boot-sys/admin-web'
 integrity = 'sha512-' + base64.b64encode(sha512(tarball.read_bytes()).digest()).decode('ascii')
 metadata_path = f'/{package_name}/{version}'
 tarball_path = f'/{package_name}/-/admin-web-{version}.tgz'
@@ -390,9 +390,11 @@ for required in \
 done
 
 expected_npmrc='registry=https://registry.npmjs.org/
+@mss-boot-sys:registry=https://npm.pkg.github.com/
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 save-exact=true'
 [[ "$(cat -- "${host_root}/web/.npmrc")" = "${expected_npmrc}" ]] || {
-  echo "Thin Host web/.npmrc must use the public npm registry without credentials" >&2
+  echo "Thin Host web/.npmrc must select GitHub Packages with only an environment token placeholder" >&2
   exit 1
 }
 
@@ -428,8 +430,8 @@ done
 
 go_mod_json="$(cd "${host_root}" && GOWORK=off go mod edit -json)"
 jq -e \
-  --arg module 'github.com/mss-boot-io/mss-boot-admin/admin' \
-  --arg framework 'github.com/mss-boot-io/mss-boot-admin/mss-boot' \
+  --arg module 'github.com/mss-boot-sys/mss-boot-admin/admin' \
+  --arg framework 'github.com/mss-boot-sys/mss-boot-admin/mss-boot' \
   --arg version "${distribution_version}" \
   '.Module.Path == "example.com/compatibility-admin" and
    ([.Require[] | select(.Path == $module and .Version == $version)] | length) == 1 and
@@ -438,7 +440,7 @@ jq -e \
 jq -e \
   --arg version "${frontend_distribution_version}" \
   '.packageManager == "pnpm@10.34.5" and
-   .dependencies["@mss-boot-io/admin-web"] == $version and
+   .dependencies["@mss-boot-sys/admin-web"] == $version and
    .scripts == {
      "dev": "mss-admin-web dev",
      "lint": "mss-admin-web lint",
@@ -478,11 +480,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	adminpkg "github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	adminpkg "github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -991,7 +993,7 @@ package custom
 import (
 	"example.com/compatibility-admin/internal/modules/compatibilityprobe"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 )
 
 // Modules returns a fresh slice of explicitly registered custom modules.
@@ -999,14 +1001,14 @@ func Modules() []business.Module {
 	return []business.Module{compatibilityprobe.Module()}
 }
 ''',
-    'web/src/business/workplace.ts': r'''import { defineWorkplaceContributions } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/workplace.ts': r'''import { defineWorkplaceContributions } from '@mss-boot-sys/admin-web/runtime';
 import WorkplaceProbe from './WorkplaceProbe';
 
 export default defineWorkplaceContributions([
   { id: 'compatibility-workplace', permission: '/compatibility-probe', component: WorkplaceProbe },
 ]);
 ''',
-    'web/src/business/WorkplaceProbe.tsx': r'''import type { WorkplaceContext } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/WorkplaceProbe.tsx': r'''import type { WorkplaceContext } from '@mss-boot-sys/admin-web/runtime';
 
 export default function WorkplaceProbe({ currentUser }: WorkplaceContext) {
   return (
@@ -1017,7 +1019,7 @@ export default function WorkplaceProbe({ currentUser }: WorkplaceContext) {
   );
 }
 ''',
-    'web/src/business/avatar.ts': r'''import { defineAvatarContributions } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/avatar.ts': r'''import { defineAvatarContributions } from '@mss-boot-sys/admin-web/runtime';
 import { lazy } from 'react';
 
 const AvatarProbe = lazy(
@@ -1036,7 +1038,7 @@ export default defineAvatarContributions([
   },
 ]);
 ''',
-    'web/src/business/AvatarProbe.tsx': r'''import type { AvatarContext } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/AvatarProbe.tsx': r'''import type { AvatarContext } from '@mss-boot-sys/admin-web/runtime';
 import { Button, Input, Space } from 'antd';
 import { useState } from 'react';
 
@@ -1065,7 +1067,7 @@ export default function AvatarProbe({ currentUser, open, close }: AvatarContext)
   );
 }
 ''',
-    'web/src/business/AvatarPermissionProbe.tsx': r'''import type { AvatarContext } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/AvatarPermissionProbe.tsx': r'''import type { AvatarContext } from '@mss-boot-sys/admin-web/runtime';
 
 // Qualification observes actual lazy module evaluation across dev and production bundlers.
 window.dispatchEvent(
@@ -1080,7 +1082,7 @@ export default function AvatarPermissionProbe({ currentUser }: AvatarContext) {
   );
 }
 ''',
-    'web/src/business/layout.ts': r'''import { defineLayoutContributions } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/layout.ts': r'''import { defineLayoutContributions } from '@mss-boot-sys/admin-web/runtime';
 import { lazy } from 'react';
 
 const HeaderProbe = lazy(() =>
@@ -1108,7 +1110,7 @@ export default defineLayoutContributions([
   },
 ]);
 ''',
-    'web/src/business/LayoutProbe.tsx': r'''import type { LayoutContext } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/LayoutProbe.tsx': r'''import type { LayoutContext } from '@mss-boot-sys/admin-web/runtime';
 
 // Qualification observes actual lazy module evaluation across dev and production bundlers.
 window.dispatchEvent(
@@ -1140,7 +1142,7 @@ export function FooterProbe(context: LayoutContext) {
   return <LayoutProbe {...context} position="footer" />;
 }
 ''',
-    'web/src/business/LayoutPermissionProbe.tsx': r'''import type { LayoutContext } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/LayoutPermissionProbe.tsx': r'''import type { LayoutContext } from '@mss-boot-sys/admin-web/runtime';
 
 // Qualification observes actual lazy module evaluation across dev and production bundlers.
 window.dispatchEvent(
@@ -1179,7 +1181,7 @@ export default messages;
 
 export default messages;
 ''',
-    'web/src/business/routes.config.ts': r'''import type { AdminBusinessRoute } from '@mss-boot-io/admin-web/business';
+    'web/src/business/routes.config.ts': r'''import type { AdminBusinessRoute } from '@mss-boot-sys/admin-web/business';
 
 const businessRoutes: AdminBusinessRoute[] = [
   {
@@ -1192,7 +1194,7 @@ const businessRoutes: AdminBusinessRoute[] = [
 
 export default businessRoutes;
 ''',
-    'web/src/business/route-registrations.ts': r'''import type { RouteRegistration } from '@mss-boot-io/admin-web/runtime';
+    'web/src/business/route-registrations.ts': r'''import type { RouteRegistration } from '@mss-boot-sys/admin-web/runtime';
 
 const routeRegistrations: readonly RouteRegistration[] = [
   {
@@ -1510,8 +1512,8 @@ jq -n \
     seamsByteIdentical: true
   }' > "${handwritten_upgrade_summary}"
 
-admin_module='github.com/mss-boot-io/mss-boot-admin/admin'
-framework_module='github.com/mss-boot-io/mss-boot-admin/mss-boot'
+admin_module='github.com/mss-boot-sys/mss-boot-admin/admin'
+framework_module='github.com/mss-boot-sys/mss-boot-admin/mss-boot'
 (
   cd "${host_root}"
   export GOWORK=off
@@ -1527,7 +1529,7 @@ framework_module='github.com/mss-boot-io/mss-boot-admin/mss-boot'
 package_version="$(tar -xOf "${tarball}" package/package.json | jq -er '.version')"
 python3 "${foundation_root}/tools/release/verify_admin_web_package.py" \
   --tarball "${tarball}" \
-  --expected-name '@mss-boot-io/admin-web' \
+  --expected-name '@mss-boot-sys/admin-web' \
   --expected-version "${package_version}" \
   --source-repository "${source_repository}" \
   --source-commit "${foundation_commit}" \
@@ -1546,7 +1548,7 @@ web_root="${host_root}/web"
     --save-exact \
     --lockfile-only \
     --ignore-scripts \
-    "@mss-boot-io/admin-web@file:../.mss/qualification/admin-web.tgz"
+    "@mss-boot-sys/admin-web@file:../.mss/qualification/admin-web.tgz"
   python3 - <<'PY'
 import json
 from pathlib import Path
@@ -1554,7 +1556,7 @@ from pathlib import Path
 import yaml
 
 expected = 'file:../.mss/qualification/admin-web.tgz'
-package_name = '@mss-boot-io/admin-web'
+package_name = '@mss-boot-sys/admin-web'
 manifest = json.loads(Path('package.json').read_text(encoding='utf-8'))
 if manifest.get('dependencies', {}).get(package_name) != expected:
     raise SystemExit('external host package.json does not bind Admin Web to the qualified tarball')
@@ -1621,7 +1623,7 @@ else:
     raise SystemExit(f'unsupported route collision: {collision}')
 
 target.write_text(
-    "import type { RouteRegistration } from '@mss-boot-io/admin-web/runtime';\n\n"
+    "import type { RouteRegistration } from '@mss-boot-sys/admin-web/runtime';\n\n"
     f'const routeRegistrations: readonly RouteRegistration[] = {registrations};\n\n'
     'export default routeRegistrations;\n',
     encoding='utf-8',
@@ -1670,7 +1672,7 @@ import { dirname, resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 const require = createRequire(import.meta.url);
-const packageRoot = dirname(require.resolve('@mss-boot-io/admin-web/package.json'));
+const packageRoot = dirname(require.resolve('@mss-boot-sys/admin-web/package.json'));
 const projectRoot = process.cwd();
 
 export default defineConfig({
@@ -1746,7 +1748,7 @@ else:
     raise SystemExit(f'unsupported Admin core route collision: {collision}')
 
 target.write_text(
-    "import type { RouteRegistration } from '@mss-boot-io/admin-web/runtime';\n\n"
+    "import type { RouteRegistration } from '@mss-boot-sys/admin-web/runtime';\n\n"
     f'const routeRegistrations: readonly RouteRegistration[] = [{registration}];\n\n'
     'export default routeRegistrations;\n',
     encoding='utf-8',

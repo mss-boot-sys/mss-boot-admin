@@ -16,11 +16,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	bootresponse "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
+	bootresponse "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	adminconfig "github.com/mss-boot-io/mss-boot-admin/admin/config"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	adminconfig "github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 const (

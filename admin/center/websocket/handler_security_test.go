@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 )
 
 func TestIsTrustedOriginUsesExactConfiguredOrigins(t *testing.T) {

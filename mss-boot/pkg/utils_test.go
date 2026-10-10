@@ -12,7 +12,7 @@ import (
 	mgm "github.com/kamva/mgm/v3"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 )
 
 type testTabler struct{}

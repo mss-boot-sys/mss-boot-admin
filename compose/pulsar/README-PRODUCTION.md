@@ -16,7 +16,7 @@
 ### 1. 停止当前服务
 
 ```bash
-cd /home/lwx/go/src/github.com/mss-boot-io/mss-boot-admin/compose/pulsar
+cd /home/lwx/go/src/github.com/mss-boot-sys/mss-boot-admin/compose/pulsar
 docker compose down
 ```
 

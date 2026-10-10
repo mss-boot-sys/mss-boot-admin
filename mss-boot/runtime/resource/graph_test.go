@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 const diagnosticCanary = "runtime-resource-secret-canary-32fdbeef"

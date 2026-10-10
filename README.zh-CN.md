@@ -2,30 +2,29 @@
 
 [English](./README.md)
 
-mss-boot 是面向 Agent 的管理系统基础设施。**v1.3.7 已是当前稳定且可采用的完整
-Admin Distribution。** 所有组件都从已合并到 `main` 的精确提交
-`77b53d41092741eac62fa6418c0bdbf87413c7cd` 完成资格验证和发布；生成的 Thin Host
-锁定这一协调版本，不拼接不同组件版本。
+mss-boot 是面向 Agent 的管理系统基础设施。**v1.3.9 是
+`mss-boot-sys/mss-boot-admin` 的首个完整 Admin Distribution。** v1.3.8 及更早版本
+发布于原 `mss-boot-io` 组织；保留历史记录，不在新仓库补建旧标签或制品。
 
-公开 Docs 网站独立发布，可以晚于组件列车候补。`docs/v*` Tag 只标识网站部署；Docs
-缺失、失败或暂时滞后都不会阻断 Framework、Admin、前端、工具、镜像、npm 或稳定别名
-发布。仓库内的人类文档和 Agent 指令仍与源码契约一起版本化。
+以下命令说明 v1.3.9 发行合同，适用于对应
+[Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.3.9)
+和包可用之后。所有组件绑定同一个经过完整本地验证的 merged `main` 提交；实际发布状态
+以 Release、包和镜像资产为准。
 
-## 稳定发行身份
+## Distribution 身份
 
-| 发布面 | v1.3.7 身份 |
+| 发布面 | v1.3.9 身份 |
 | --- | --- |
-| Root 工具、后端镜像与 GitHub Release | `v1.3.7` |
-| 可复用 Go Framework | `mss-boot/v1.3.7` |
-| 可导入 Admin Go Module | `admin/v1.3.7` |
-| 完整 Admin Web | `web/antd-v6/v1.3.7` / `@mss-boot-io/admin-web@1.3.7` |
-| 文档网站 | 从版本化 `docs/v*` 网站 Tag 独立部署 |
+| Root 工具、后端镜像与 GitHub Release | `v1.3.9` |
+| 可复用 Go Framework | `mss-boot/v1.3.9` |
+| 可导入 Admin Go Module | `admin/v1.3.9` |
+| 完整 Admin Web | `web/antd-v6/v1.3.9` / `@mss-boot-sys/admin-web@1.3.9` |
+| Docs 网站 | `docs/v1.3.9`，继续使用 https://docs.mss-boot-io.top |
 
-v1.3.5 和 v1.3.6 仍是不可变的部分发布列车。它们已有的 Tag、Release 和制品只是审计
-证据，不能替代稳定列车。不得把停止列车组件与源码检出、本地 `replace` 或不存在的包
-身份混用。
+Admin Web 仅发布到 GitHub Packages（`npm.pkg.github.com`），下载需要 GitHub 认证。
+Docs 部署以公开 `/release.json` 中的版本与完整提交以及页面实测为准。
 
-## 安装 v1.3.7 工具
+## 安装 v1.3.9 工具
 
 版本化安装器会校验 Release 摘要并同时安装 `mss` 与 `mss-mcp`；它不会使用 `sudo`，
 也不会修改 Shell Profile。
@@ -34,8 +33,8 @@ Linux 或 macOS：
 
 ```shell
 curl -fL -o install-mss.sh \
-  https://github.com/mss-boot-io/mss-boot-admin/releases/download/v1.3.7/install-mss.sh
-bash ./install-mss.sh --version v1.3.7
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.3.9/install-mss.sh
+bash ./install-mss.sh --version v1.3.9
 export PATH="$HOME/.local/bin:$PATH"
 mss --version
 mss-mcp --version
@@ -45,18 +44,18 @@ Windows PowerShell：
 
 ```powershell
 Invoke-WebRequest `
-  https://github.com/mss-boot-io/mss-boot-admin/releases/download/v1.3.7/install-mss.ps1 `
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.3.9/install-mss.ps1 `
   -OutFile install-mss.ps1
-& .\install-mss.ps1 -Version v1.3.7
+& .\install-mss.ps1 -Version v1.3.9
 $env:Path = "$env:LOCALAPPDATA\Programs\mss\bin;$env:Path"
 mss --version
 mss-mcp --version
 ```
 
-## 使用稳定组件
+## 使用发行组件
 
-Go 与 npm 依赖必须精确锁定协调版本。Admin Module 没有提交本地 `replace`，官方 npmjs
-包无需 Registry Token 即可安装。请在**已有外部 consumer module 的根目录**（即包含
+Go 与 npm 依赖必须精确锁定协调版本。Admin Module 没有提交本地 `replace`。
+前端需先按[包指南](./docs/docs/getting-started/packages.md)配置 GitHub Packages 认证。请在**已有外部 consumer module 的根目录**（即包含
 `go.mod` 的目录）运行 Go 命令；空目录公共解析请使用[外部消费者步骤](./docs/docs/getting-started/packages.md)。
 npm 命令必须另在**已有 frontend package 的根目录**（即包含 `package.json` 的目录，
 Thin Host 中通常为 `web/`）运行。
@@ -64,18 +63,18 @@ Thin Host 中通常为 `web/`）运行。
 Go Module 根目录：
 
 ```shell
-go get github.com/mss-boot-io/mss-boot-admin/mss-boot@v1.3.7
-go get github.com/mss-boot-io/mss-boot-admin/admin@v1.3.7
+go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.3.9
+go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.3.9
 ```
 
 Frontend package 根目录：
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-io/admin-web@1.3.7
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.3.9
 ```
 
-npm `latest` 当前解析到 `1.3.7`，但 Thin Host 仍固定精确版本。官方 npm 发布使用
-GitHub Actions Trusted Publishing，发布契约不保存 npm Token。
+Thin Host 固定精确版本。通过本机秘密存储注入具有 `read:packages` 权限的
+`NODE_AUTH_TOKEN`，不要提交令牌；生成的 `.npmrc` 只保留作用域 registry 与环境变量引用。
 
 ## 创建并启动 Thin Host
 
@@ -97,22 +96,26 @@ mss dev --detach
 
 ## 升级 Thin Host
 
-先备份代码、配置和数据库，安装目标 v1.3.7 工具，并在规划前核对两个二进制版本。
+本次需要将业务自有 Go 导入从 `github.com/mss-boot-io/mss-boot-admin` 迁到
+`github.com/mss-boot-sys/mss-boot-admin`，npm 作用域迁到 `@mss-boot-sys` 并配置 registry
+认证。Go 基线为 1.27.2；引用 Casbin 类型的扩展须适配 Casbin v3 并重新编译验证。
+
+先备份代码、配置和数据库，安装目标 v1.3.9 工具，并在规划前核对两个二进制版本。
 受支持的三方升级必须保留生成的 `.mss/blueprint-manifest.json`：
 
 ```shell
 mss --version
 mss-mcp --version
-mss upgrade admin v1.3.7 --format json
-mss upgrade admin v1.3.7 --apply --yes --format json
+mss upgrade admin v1.3.9 --format json
+mss upgrade admin v1.3.9 --apply --yes --format json
 mss doctor --strict
 mss verify --all
-mss upgrade admin v1.3.7 --format json
+mss upgrade admin v1.3.9 --format json
 ```
 
 第一次和最后一次命令都是只读计划；最终计划不得包含 create、update、delete 或 conflict。
 升级引擎只修改 Blueprint 管理文件，并保留业务自有文件和未知文件。手工拼装或缺少
-manifest 的仓库必须在新目录生成干净的 v1.3.7 基线，再迁入业务规格和自有文件，不能
+manifest 的仓库必须在新目录生成干净的 v1.3.9 基线，再迁入业务规格和自有文件，不能
 伪造 manifest。
 
 ## 架构边界
@@ -140,7 +143,7 @@ manifest 的仓库必须在新目录生成干净的 v1.3.7 基线，再迁入业
 可执行指令源。采用者请从[快速开始](./docs/docs/getting-started/index.md)、
 [包边界](./docs/docs/getting-started/packages.md)、
 [工具契约](./docs/docs/getting-started/tooling.md)与
-[v1.3.7 发布记录](./docs/docs/releases/v1-3-7.md)开始。
+[v1.3.9 发布记录](./docs/docs/releases/v1-3-9.md)开始。
 
 Foundation 贡献者应按 [`CONTRIBUTING.md`](./CONTRIBUTING.md) 与最近的
 `AGENTS.md` 使用源码检出命令和验证流程。

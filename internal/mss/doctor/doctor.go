@@ -15,10 +15,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	devcmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/dev"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/verify"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	devcmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/dev"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/verify"
 )
 
 // Status is the outcome of one environment check.

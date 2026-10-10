@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/internal/redisbridge"
 )
 
 // Keep this type non-zero-sized: Go permits pointers to distinct zero-sized

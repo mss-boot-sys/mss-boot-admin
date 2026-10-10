@@ -1,13 +1,13 @@
 ---
 title: Agent-native Foundation
 order: 1
-description: v1.3.7 稳定版人机协作、机器合同、确定性工具与运行时产品架构
+description: v1.3.9 发行版人机协作、机器合同、确定性工具与运行时产品架构
 ---
 
 # Agent-native Foundation
 
 :::warning
-发布状态：**v1.3.7 是当前稳定版**；v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。
+版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 安装、创建或升级从[快速开始](/getting-started)进入。Docs 网站可异步候补，不阻断组件、
 稳定别名或采用。
 :::
@@ -55,7 +55,7 @@ Foundation 发布或文档发布技能。
 
 ### 执行平面
 
-源码执行平面包含 CLI、MCP 适配、Skills、generator、verifier 和 upgrader。v1.3.7
+源码执行平面包含 CLI、MCP 适配、Skills、generator、verifier 和 upgrader。v1.3.9
 Root Release 以 `mss` 与 `mss-mcp` 作为公共工具；二者复用相同实现和权限边界，写操作
 默认 dry-run、路径受限、拒绝未知覆盖、输出稳定且不发送遥测。v1.3.5 没有发布这些公共
 工具，历史源码能力不能替代 Release 二进制。
@@ -82,9 +82,8 @@ Agent 工具不进入 Admin 运行时。Framework 只提供领域无关基础设
         └── npm: 同版本 Admin Web
 ```
 
-v1.3.7 采用者不需要 Foundation checkout、`go.work` 或本地 `replace`。公共包资格已经
-在外部消费者、`GOWORK=off` 和匿名 npmjs 安装条件下证明；后续版本必须重复同等证据。
-v1.3.5 与 v1.3.6 缺少完整证据链，不能与 v1.3.7 混用。
+v1.3.9 采用者不需要 Foundation checkout、`go.work` 或本地 `replace`。发布验证需要
+覆盖独立外部消费者、`GOWORK=off` 和带只读认证的 GitHub Packages 安装。
 
 ## 变更闭环
 
@@ -110,13 +109,13 @@ v1.3.5 与 v1.3.6 缺少完整证据链，不能与 v1.3.7 混用。
 
 ## 发布
 
-候选版本从同一个精确 merged-main 提交依次发布 Framework、Admin、Admin Web（含版本
-镜像）与 Root（含 Root 镜像）。Root Tag 不发布 npm；完整组件台账通过后，由单独评审的
-一次性策略从精确 Root Tag 手工调度 npm 发布，核验 provenance 后再推进 npm `latest`
-与 GitHub Latest。Docs Tag 只发布网站，可独立异步候补，失败不阻断组件、稳定别名或
-采用。核心不可变身份都不能移动；发布后的组件修复使用下一补丁版本。纯文档修订先通过
-PR 合入 main，再由受控操作者删除同名 Docs Release 和 Tag 后重新创建 `docs/vX.Y.Z`；
-禁止直接 force-update。
+从同一个精确 merged-main 提交完成本地完整验证，然后依次发布 Framework、Admin、
+Admin Web（含 GitHub Packages 包和前端镜像）、Root（含工具和后端镜像）。流水线校验
+来源并构建发布，不要求托管预演或单独稳定晋升。Root Release 标记 GitHub Latest。
+
+Docs 继续使用原域名，由 `docs/v1.3.9` 发布，并核对公开 `/release.json`、首页与嵌套
+路由。核心不可变身份不能移动；发布后组件修复使用下一未占用版本。纯文档修订先通过
+PR 合入 `main`，再按受控 Docs 更新流程部署。
 
 外部 [mss-shop](/getting-started/mss-shop) 是 package-first 路径和单租户业务扩展的
 独立采用证明，不属于 Foundation 发版门禁；它必须固定已完成公共对账的协调版本，不能

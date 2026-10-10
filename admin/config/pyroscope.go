@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/grafana/pyroscope-go"
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
 )
 
 /*

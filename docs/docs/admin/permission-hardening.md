@@ -10,7 +10,7 @@ keywords: [admin authorization rbac casbin etag session migration]
 
 ## 目标
 
-适用基线：当前稳定版 **mss-boot-admin v1.3.7**。
+适用基线：发行版 **mss-boot-admin v1.3.9**。
 
 Admin 权限链路遵循“后端权威、默认拒绝、最小权限、变更可追踪”四项原则。前端菜单、路由和按钮只负责体验投影，不能替代 API 鉴权。
 
@@ -81,11 +81,11 @@ Casbin 使用并发安全的同步执行器，避免策略重载与请求鉴权�
 
 生产环境必须启用浏览器会话。V6 浏览器只使用 HttpOnly 会话 Cookie、CSRF 校验与服务端 session；不含 `sid` 的历史浏览器 JWT、历史 `jwt` Cookie 和 URL 查询令牌均不再接受。标准 `Authorization: Bearer` 仅保留给文档化的 API 自动化与个人访问令牌，不是浏览器降级通道。用户/角色禁用、改密和会话撤销都以服务端当前状态立即生效。
 
-## 源码升级：Casbin v3（未发布）
+## v1.3.9 升级：Casbin v3
 
-当前开发源码将 Framework 与 Admin 的授权引擎统一升级到 **Casbin 3.11.0**，
+v1.3.9 将 Framework 与 Admin 的授权引擎统一升级到 **Casbin 3.11.0**，
 解决 GORM adapter 3.41.0 与旧 v2 `model.Model` 不兼容导致的编译失败。
-这项变更不属于上文的已发布 v1.3.7 基线。
+这项变更属于 v1.3.9 发行基线，升级前应编译业务扩展并验证权限。
 
 这是直接的 Go 源码破坏性升级：使用 `gormdb.Enforcer`、`gormdb.Handle.Enforcer`、
 `mongodb.Enforcer` 或自定义 adapter/watcher 的调用方，需要将
@@ -99,7 +99,7 @@ MongoDB 策略适配器使用 `github.com/apache/casbin-mongodb-adapter/v4` 的�
 
 源码验证需同时使用修改后的 Framework 和 Admin：运行 `make test-all build`，以及
 `make compatibility-admin` 验证关闭 workspace 的外部消费者。
-安装型 Thin Host 的依赖锁仍对应已发布的 v1.3.7；新的协调发行完成后，再通过发行升级流程更新它们。
+安装型 Thin Host 通过发行升级流程将完整依赖锁更新到 v1.3.9。
 如需回滚，通过后续 PR 一并回滚引擎与适配器变更，保留策略数据。
 
 ## 前端投影

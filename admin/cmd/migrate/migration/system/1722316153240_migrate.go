@@ -1,10 +1,10 @@
 package system
 
 import (
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"runtime"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 	"gorm.io/gorm"
 )
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
 	"github.com/redis/go-redis/v9"
 )
 

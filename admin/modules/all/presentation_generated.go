@@ -4,8 +4,8 @@
 package all
 
 import (
-	presentationModule0 "github.com/mss-boot-io/mss-boot-admin/admin/modules/supplier"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	presentationModule0 "github.com/mss-boot-sys/mss-boot-admin/admin/modules/supplier"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 )
 
 // Presentations returns a new ordered slice of generated v2 definitions.

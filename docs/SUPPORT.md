@@ -1,6 +1,6 @@
 # Support
 
-Use [`mss-boot-admin` GitHub issues](https://github.com/mss-boot-io/mss-boot-admin/issues)
+Use [`mss-boot-admin` GitHub issues](https://github.com/mss-boot-sys/mss-boot-admin/issues)
 for documentation defects, missing pages, broken links, and workflow clarification
 requests. Include the affected site path and the source file under `docs/`.
 

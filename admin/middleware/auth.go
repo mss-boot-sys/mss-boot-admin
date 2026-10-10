@@ -15,20 +15,20 @@ import (
 
 	"github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	"github.com/mss-boot-io/mss-boot-admin/admin/service"
-	bootpkg "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	storagecache "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
-	runtimechallenge "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/challenge"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
+	bootpkg "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	storagecache "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
+	runtimechallenge "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/challenge"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/config"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 )
 
 /*

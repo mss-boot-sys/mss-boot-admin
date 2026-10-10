@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage"
-	storagequeue "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/queue"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage"
+	storagequeue "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/queue"
 )
 
 var (

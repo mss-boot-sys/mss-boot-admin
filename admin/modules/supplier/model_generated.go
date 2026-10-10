@@ -2,7 +2,7 @@
 
 package supplier
 
-import "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/response/actions"
+import "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions"
 
 // Supplier is the persistent entity generated for 供应商管理.
 type Supplier struct {

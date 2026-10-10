@@ -3,7 +3,7 @@ package eventbus
 import (
 	"context"
 
-	runtimeresource "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	runtimeresource "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 // Memory is a process-local EventBus. Publish synchronously fans out to every

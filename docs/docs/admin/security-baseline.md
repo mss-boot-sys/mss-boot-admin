@@ -1,13 +1,13 @@
 ---
 title: 安全基线
 order: 7
-description: v1.3.7 稳定版 Admin 身份、授权、密钥、浏览器与供应链最低要求
+description: v1.3.9 发行版 Admin 身份、授权、密钥、浏览器与供应链最低要求
 ---
 
-# v1.3.7 稳定版安全基线
+# v1.3.9 发行版安全基线
 
 :::warning
-发布状态：**v1.3.7 是当前稳定版**；v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。
+版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 
@@ -44,21 +44,18 @@ Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或�
 
 ## 供应链与发布
 
-- v1.3.7 的 Root 工具、Go Module、官方 npmjs 包和多架构镜像都来自同一个精确
-  merged-main 提交；安装时固定版本或 digest，并核验 checksum、npm provenance 与来源；
-- v1.3.5 与 v1.3.6 是永久停止的部分发布列车，已公开标签、Release、包与镜像保持不可变，
-  不补附缺失制品，也不与 v1.3.7 混用；
-- v1.3.5 的 `SHA256SUMS.tools-v1.3.5` 只是未发布资产身份，v1.3.6 的 Root Release/工具
-  也不能补齐其失败的 Root image 与官方 npm；
-- GitHub Packages、本地 tarball、源码 checkout 或 `replace` 不能替代官方 npmjs 与公共
-  Go Module 对账；
-- Docs Tag 只发布网站，可由受控操作者删除后同名重建且可异步候补；直接更新被禁止，不参与组件完整性或采用门禁；
-- 后续完整版本同样必须从精确干净的 merged-main 提交资格，并冻结标签、Release 和 digest。
+- v1.3.9 的 Root 工具、Go Module、GitHub Packages 包和镜像绑定同一精确 merged-main
+  提交；安装固定版本或 digest，并核验 checksum、tarball integrity 与来源；
+- 发布前本地完整验证；标签流水线构建和发布产物，不以单一绿色检查冒充全部验证；
+- GitHub Packages 下载使用只读认证，发布工作流只授予必要的 `contents` 与 `packages`
+  写权限，不把秘密写入源码、镜像层、日志或归档；
+- 旧组织历史身份和新仓库正式标签均不可重写或混用；
+- Docs 部署核对公开 `/release.json` 与内置浏览器页面，核心制品不因网站修复而重发。
 
 ## 上线门禁
 
 Foundation 贡献者按 `.mss/commands.yaml` 运行源码诊断与验证；一般 `doctor`、`verify`
-合同可以保留，但这些结果不能替代 v1.3.7 公共制品证据，也不能证明已停止列车可用。
+合同可以保留，但这些结果不能替代 v1.3.9 公共制品证据，也不能证明已停止列车可用。
 
 同时完成迁移、权限正反例、真实业务流程、浏览器控制台和回滚演练。任何绕过项必须明确
 记录为阻断或剩余风险。

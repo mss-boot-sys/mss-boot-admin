@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 	"gorm.io/gorm"
 )
 

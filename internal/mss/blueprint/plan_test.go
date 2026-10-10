@@ -55,7 +55,7 @@ func TestGenerateWritesCompleteIdempotentApplication(t *testing.T) {
 	assertContains(t, filepath.Join(destination, "admin/main.go"), `"github.com/acme/customer-admin/mss-boot/pkg/config"`)
 	assertContains(t, filepath.Join(destination, "mss-boot", "go.mod"), "module github.com/acme/customer-admin/mss-boot")
 	assertContains(t, filepath.Join(destination, ".mss", "project.yaml"), "repository: acme/customer-admin")
-	assertContains(t, filepath.Join(destination, ".mss", "lock.yaml"), "repository: mss-boot-io/mss-boot-admin")
+	assertContains(t, filepath.Join(destination, ".mss", "lock.yaml"), "repository: mss-boot-sys/mss-boot-admin")
 
 	binary, err := os.ReadFile(filepath.Join(destination, "web", "antd-v6", "public", "fixture.bin"))
 	if err != nil {
@@ -75,7 +75,7 @@ func TestGenerateWritesCompleteIdempotentApplication(t *testing.T) {
 	if manifest.Metadata.Project != "customer-admin" || manifest.Metadata.Module != "github.com/acme/customer-admin" {
 		t.Fatalf("unexpected manifest metadata: %#v", manifest.Metadata)
 	}
-	if manifest.Metadata.FoundationRepository != "mss-boot-io/mss-boot-admin" || manifest.Metadata.FoundationCommit == "" {
+	if manifest.Metadata.FoundationRepository != "mss-boot-sys/mss-boot-admin" || manifest.Metadata.FoundationCommit == "" {
 		t.Fatalf("unexpected foundation metadata: %#v", manifest.Metadata)
 	}
 	if _, exists := manifest.Files["go.mod"]; !exists {
@@ -228,7 +228,7 @@ metadata:
   version: 0.1.0
 spec:
   sourceMode: git-tracked
-  sourceModule: github.com/mss-boot-io/mss-boot-admin
+  sourceModule: github.com/mss-boot-sys/mss-boot-admin
   sourceProjectName: mss-boot-admin
   defaultOutputDirectory: .mss/output
   manifestPath: .mss/blueprint-manifest.json
@@ -254,17 +254,17 @@ spec:
   textNames: [Makefile]
 `),
 		"AGENTS.md":     []byte("# mss-boot-admin Agent Contract\n"),
-		"go.mod":        []byte("module github.com/mss-boot-io/mss-boot-admin\n\ngo 1.26.0\n"),
+		"go.mod":        []byte("module github.com/mss-boot-sys/mss-boot-admin\n\ngo 1.26.0\n"),
 		"go.work":       []byte("go 1.26.0\n\nuse (\n\t.\n\t./admin\n\t./mss-boot\n)\n"),
-		"admin/go.mod":  []byte("module github.com/mss-boot-io/mss-boot-admin/admin\n\ngo 1.26.0\n\nrequire github.com/mss-boot-io/mss-boot-admin/mss-boot v1.0.0\n\nreplace github.com/mss-boot-io/mss-boot-admin/mss-boot v1.0.0 => ../mss-boot\n"),
-		"admin/main.go": []byte("package main\n\nimport (\n\t_ \"github.com/mss-boot-io/mss-boot-admin/admin/internal/example\"\n\t_ \"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config\"\n)\n\nfunc main() {}\n"),
+		"admin/go.mod":  []byte("module github.com/mss-boot-sys/mss-boot-admin/admin\n\ngo 1.26.0\n\nrequire github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.0.0\n\nreplace github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.0.0 => ../mss-boot\n"),
+		"admin/main.go": []byte("package main\n\nimport (\n\t_ \"github.com/mss-boot-sys/mss-boot-admin/admin/internal/example\"\n\t_ \"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config\"\n)\n\nfunc main() {}\n"),
 		"Makefile":      []byte("PROJECT:=mss-boot-admin\n"),
 		".mss/project.yaml": []byte(`apiVersion: mss.io/v1alpha1
 kind: Project
 metadata:
   name: mss-boot-admin
   displayName: mss-boot Agent-Native Management Foundation
-  repository: mss-boot-io/mss-boot-admin
+  repository: mss-boot-sys/mss-boot-admin
 spec:
   foundationVersion: 1.0.0
   repositoryLayout:
@@ -274,8 +274,8 @@ spec:
     documentation: docs
     specifications: .mss
   backend:
-    module: github.com/mss-boot-io/mss-boot-admin/admin
-    frameworkModule: github.com/mss-boot-io/mss-boot-admin/mss-boot
+    module: github.com/mss-boot-sys/mss-boot-admin/admin
+    frameworkModule: github.com/mss-boot-sys/mss-boot-admin/mss-boot
 `),
 		".mss/capabilities.yaml": []byte("apiVersion: mss.io/v1alpha1\nkind: CapabilityCatalog\nmetadata:\n  project: mss-boot-admin\nspec:\n  capabilities: []\n"),
 		".mss/commands.yaml":     []byte("apiVersion: mss.io/v1alpha1\nkind: CommandCatalog\nmetadata:\n  project: mss-boot-admin\nspec:\n  commands:\n    context:\n      command: go run ./cmd/mss context\n      description: Context\n      category: agent\n"),
@@ -301,7 +301,7 @@ spec:
 		".mss/lock.yaml":                 []byte("apiVersion: mss.io/v1alpha1\nkind: FoundationLock\nmetadata:\n  project: mss-boot-admin\n"),
 		"web/antd-v6/package.json":       []byte(`{"name":"mss-boot-admin-antd-v6"}`),
 		"docs/package.json":              []byte(`{"name":"mss-boot-docs"}`),
-		"mss-boot/go.mod":                []byte("module github.com/mss-boot-io/mss-boot-admin/mss-boot\n\ngo 1.26.0\n"),
+		"mss-boot/go.mod":                []byte("module github.com/mss-boot-sys/mss-boot-admin/mss-boot\n\ngo 1.26.0\n"),
 		"web/antd-v6/public/fixture.bin": {0, 1, 2, 255},
 		".mss/reports/ignored.txt":       []byte("ignore me"),
 	}
@@ -375,7 +375,7 @@ func TestExplicitSourceRepositoryPreservesModuleIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	updated := strings.Replace(string(data), "  sourceModule:", "  sourceRepository: mss-boot-sys/mss-boot-admin\n  sourceModule:", 1)
+	updated := strings.Replace(string(data), "  sourceModule:", "  sourceRepository: acme/mss-boot-admin\n  sourceModule:", 1)
 	if err := os.WriteFile(blueprintPath, []byte(updated), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -390,7 +390,7 @@ func TestExplicitSourceRepositoryPreservesModuleIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data = bytes.Replace(data, []byte("repository: mss-boot-io/mss-boot-admin"), []byte("repository: mss-boot-sys/mss-boot-admin"), 1)
+	data = bytes.Replace(data, []byte("repository: mss-boot-sys/mss-boot-admin"), []byte("repository: acme/mss-boot-admin"), 1)
 	if err := os.WriteFile(projectPath, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -400,17 +400,17 @@ func TestExplicitSourceRepositoryPreservesModuleIdentity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if plan.Identities.Foundation.Repository != "mss-boot-sys/mss-boot-admin" {
+	if plan.Identities.Foundation.Repository != "acme/mss-boot-admin" {
 		t.Fatalf("snapshot uses the old repository: %#v", plan.Identities.Foundation)
 	}
 	document, err := Load(root, "management-system")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if document.Spec.SourceModule != "github.com/mss-boot-io/mss-boot-admin" {
+	if document.Spec.SourceModule != "github.com/mss-boot-sys/mss-boot-admin" {
 		t.Fatalf("module identity changed: %s", document.Spec.SourceModule)
 	}
-	invalid := strings.Replace(updated, "sourceRepository: mss-boot-sys/mss-boot-admin", "sourceRepository: https://example.com/invalid", 1)
+	invalid := strings.Replace(updated, "sourceRepository: acme/mss-boot-admin", "sourceRepository: https://example.com/invalid", 1)
 	if err := os.WriteFile(blueprintPath, []byte(invalid), 0o644); err != nil {
 		t.Fatal(err)
 	}

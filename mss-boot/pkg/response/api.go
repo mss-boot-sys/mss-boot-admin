@@ -12,9 +12,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/language"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/security"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/language"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/security"
 )
 
 // DefaultLanguage is used when Accept-Language is absent.

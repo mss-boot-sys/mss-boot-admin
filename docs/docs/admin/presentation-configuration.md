@@ -1,17 +1,17 @@
 ---
-title: v1.3.7 页面展示配置发布治理
+title: v1.3.9 页面展示配置发布治理
 order: 16
 nav:
   order: 1
   title: Admin
-description: v1.3.7 稳定版页面展示配置的草稿、发布、回滚、权限与恢复合同
-keywords: [v1.3.7 v1.3.5 v1.3.6 admin presentation configuration publish rollback recovery etag]
+description: v1.3.9 发行版页面展示配置的草稿、发布、回滚、权限与恢复合同
+keywords: [v1.3.9 v1.3.5 v1.3.6 admin presentation configuration publish rollback recovery etag]
 ---
 
 # 页面展示配置发布治理
 
 :::warning
-发布状态：**v1.3.7 是当前稳定版**；v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。
+版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 
@@ -115,10 +115,10 @@ presentation:
 
 ## 设计与机器契约
 
-- [P0：受治理的页面展示配置 ADR](https://github.com/mss-boot-io/mss-boot-admin/blob/main/docs/adr/2026-08-24-governed-admin-presentation-configuration.md)
-- [P1：发布工作流 ADR](https://github.com/mss-boot-io/mss-boot-admin/blob/main/docs/adr/2026-08-24-admin-presentation-publication-workflow.md)
-- Foundation 设计合同：[展示配置 Feature](https://github.com/mss-boot-io/mss-boot-admin/blob/main/.mss/features/admin-presentation-configuration.yaml)、[发布工作流 Feature](https://github.com/mss-boot-io/mss-boot-admin/blob/main/.mss/features/admin-presentation-publication-workflow.yaml)
-- Foundation 可移植 Schema：[admin-page-presentation.schema.json](https://github.com/mss-boot-io/mss-boot-admin/blob/main/.mss/schemas/admin-page-presentation.schema.json)
+- [P0：受治理的页面展示配置 ADR](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/docs/adr/2026-08-24-governed-admin-presentation-configuration.md)
+- [P1：发布工作流 ADR](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/docs/adr/2026-08-24-admin-presentation-publication-workflow.md)
+- Foundation 设计合同：[展示配置 Feature](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/features/admin-presentation-configuration.yaml)、[发布工作流 Feature](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/features/admin-presentation-publication-workflow.yaml)
+- Foundation 可移植 Schema：[admin-page-presentation.schema.json](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/schemas/admin-page-presentation.schema.json)
 
 这些链接是 Foundation 贡献者与发布流程的设计证据，Thin Host 采用者无需在本地复制
 或维护它们。

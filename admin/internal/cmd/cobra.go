@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/business"
-	"github.com/mss-boot-io/mss-boot-admin/admin/internal/cmd/migrate"
-	"github.com/mss-boot-io/mss-boot-admin/admin/internal/cmd/server"
-	"github.com/mss-boot-io/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/internal/cmd/migrate"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/internal/cmd/server"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 )
 
 /*

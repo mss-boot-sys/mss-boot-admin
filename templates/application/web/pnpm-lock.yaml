@@ -29,7 +29,7 @@ importers:
       '@ant-design/icons':
         specifier: 6.3.2
         version: 6.3.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@mss-boot-io/admin-web':
+      '@mss-boot-sys/admin-web':
         specifier: __MSS_DISTRIBUTION_FRONTEND_VERSION__
         version: __MSS_DISTRIBUTION_FRONTEND_VERSION__(@babel/core@7.29.7)(dva@2.5.0-beta.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(jiti@2.7.0)(lightningcss@1.33.0)(moment@2.31.0)(prettier@3.9.9)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@19.2.8))(terser@5.51.2)(type-fest@0.20.2)(webpack@5.111.1(lightningcss@1.33.0)(postcss@8.5.29))
       '@tanstack/react-query':
@@ -1019,7 +1019,7 @@ packages:
   '@module-federation/webpack-bundler-runtime@0.8.12':
     resolution: {integrity: sha512-zd343RO7/R7Xjh5ym5KdnYQ70z4LBmMxWsa44FS0nyNv04sOq6V1eZSCGKbEhbfqqhbS5Wfj8OzJyedeVvV/OQ==}
 
-  '@mss-boot-io/admin-web@__MSS_DISTRIBUTION_FRONTEND_VERSION__':
+  '@mss-boot-sys/admin-web@__MSS_DISTRIBUTION_FRONTEND_VERSION__':
     resolution: {tarball: __MSS_DISTRIBUTION_FRONTEND_TARBALL__, integrity: __MSS_DISTRIBUTION_FRONTEND_INTEGRITY__}
     engines: {node: '>=24.0.0 <25', pnpm: 10.34.5}
     hasBin: true
@@ -7840,7 +7840,7 @@ snapshots:
       '@module-federation/runtime': 0.8.12
       '@module-federation/sdk': 0.8.12
 
-  '@mss-boot-io/admin-web@__MSS_DISTRIBUTION_FRONTEND_VERSION__(@babel/core@7.29.7)(dva@2.5.0-beta.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(jiti@2.7.0)(lightningcss@1.33.0)(moment@2.31.0)(prettier@3.9.9)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@19.2.8))(terser@5.51.2)(type-fest@0.20.2)(webpack@5.111.1(lightningcss@1.33.0)(postcss@8.5.29))':
+  '@mss-boot-sys/admin-web@__MSS_DISTRIBUTION_FRONTEND_VERSION__(@babel/core@7.29.7)(dva@2.5.0-beta.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(jiti@2.7.0)(lightningcss@1.33.0)(moment@2.31.0)(prettier@3.9.9)(rollup@3.30.0)(sass@1.54.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@19.2.8))(terser@5.51.2)(type-fest@0.20.2)(webpack@5.111.1(lightningcss@1.33.0)(postcss@8.5.29))':
     dependencies:
       '@ant-design/icons': 6.3.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@ant-design/pro-components': 3.1.14-6(antd@6.6.1(moment@2.31.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

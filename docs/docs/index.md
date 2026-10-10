@@ -1,63 +1,37 @@
 ---
-title: mss-boot Admin 采用状态
+title: mss-boot Admin
 hero:
   title: mss-boot Admin
-  description: v1.3.7 当前稳定；v1.3.5/v1.3.6 永久停止；Docs 网站独立异步发布
+  description: v1.3.9 · mss-boot-sys 首发 · 完整 Admin 发行版
   actions:
-    - text: 查看采用状态
+    - text: 快速开始
       link: /getting-started
-    - text: 查看 v1.3.5 部分发布
-      link: /releases/v1-3-5
-    - text: 查看 v1.3.6 部分发布
-      link: /releases/v1-3-6
-    - text: 查看 v1.3.7 稳定版
-      link: /releases/v1-3-7
-    - text: 人类与 Agent 文档边界
-      link: /agent
+    - text: v1.3.9 发布与迁移
+      link: /releases/v1-3-9
+    - text: GitHub Packages 配置
+      link: /getting-started/packages
 features:
-  - title: Current stable
-    emoji: ✅
-    description: v1.3.7 是当前稳定基线；安装、创建与升级从快速开始进入。
-  - title: Immutable partial
-    emoji: 🧊
-    description: v1.3.5 与 v1.3.6 各自公开了部分组件或 Root 身份，但都有缺失面，不能补发或拼装。
-  - title: Independent Docs delivery
-    emoji: 📚
-    description: Docs 网站 Tag 与部署可异步候补，不阻断组件发布、稳定别名或采用。
+  - title: 完整发行
+    emoji: 📦
+    description: Go Framework、Admin、完整前端、工具与镜像使用同一 v1.3.9 基线。
+  - title: 新仓库
+    emoji: 🏠
+    description: 代码与包迁至 mss-boot-sys，旧组织版本保留为历史记录。
+  - title: Agent 协作
+    emoji: 🛠️
+    description: 规格、确定性生成、验证与三方升级形成可审查的工作流。
 ---
 
-# 当前采用边界
+# mss-boot Admin
 
-:::warning
-v1.3.5 已停止为不可变部分发布：Framework、Admin、Admin Web 与 Root Tag 已公开；Root
-Release 及工具、官方 npmjs 包、Docs 和后端镜像未发布。已公开身份保持不可变，缺失制品
-不得补附，也不能用本地包、源码或其他 registry 拼成完整发行。
+**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首次发行基线。** v1.3.8 及更早版本
+发布于原 `mss-boot-io` 组织。当前指南统一使用新 Go 模块路径、GitHub Packages 上的
+`@mss-boot-sys/admin-web` 和新镜像地址。
 
-v1.3.6 从 `b1fe47a3a83209574e09d53526b122dd2cbc5277` 公开了 Framework、Admin、
-Admin Web 与 Root Release/工具，但 Root image 和官方 npm 发布失败，Docs 未创建。它也
-是不可续的不可变部分发布，不能用 token、rerun 或 v1.3.7 源码补齐。
-
-v1.3.7 已完成 Framework、Admin、Admin Web、Root、镜像、官方 npm、稳定别名与
-`currentStableVersion` 对账，是当前可采用的协调稳定发行版。Docs 网站通过 `docs/v*`
-独立异步发布；其缺失、延迟或失败不影响 Distribution 稳定与采用边界。
-:::
-
-当前稳定版本是 **v1.3.7**。需要可执行的安装、创建和升级资料时，请从
-[快速开始](/getting-started)进入；历史页只用于审计，不是采用入口。
-
-## 按任务阅读
-
-| 目标 | 文档 |
-| --- | --- |
-| 判断当前能否采用 | [采用状态](/getting-started) |
-| 查看包与组件边界 | [包发布状态](/getting-started/packages) |
-| 查看 Root 工具缺口 | [工具发布状态](/getting-started/tooling) |
-| 了解 mss-shop 前置条件 | [mss-shop 范本采用状态](/getting-started/mss-shop) |
-| 审计 v1.3.5 事实 | [v1.3.5 不可变部分发布记录](/releases/v1-3-5) |
-| 审计 v1.3.6 事实 | [v1.3.6 不可变部分发布记录](/releases/v1-3-6) |
-| 阅读当前稳定记录 | [v1.3.7 发布说明](/releases/v1-3-7) |
-| 开始采用稳定版 | [v1.3.7 快速开始](/getting-started) |
-| 阅读其他历史版本 | [历史归档](/releases/archive) |
+安装前阅读[快速开始](/getting-started)与[包认证指南](/getting-started/packages)。
+升级涉及命名空间、Go 1.27.2、Casbin v3 和 GitHub Packages 认证，完整步骤见
+[v1.3.9 发布说明](/releases/v1-3-9)。发行是否完成以实际 Release 与包资产为准；
+网站保留原域名，以 `/release.json` 标识部署版本和源码提交。
 
 ## 人类文档与 Agent 合同
 

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/modules/supplier"
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/migration"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/modules/supplier"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 )
 
 func TestApplicationsConstructWithoutRegistryPollution(t *testing.T) {

@@ -14,7 +14,9 @@ FROM --platform=$BUILDPLATFORM node:24.19.0-bookworm-slim@sha256:3638d9a6fe4030b
 WORKDIR /src/web
 RUN corepack enable
 COPY web/package.json web/pnpm-lock.yaml web/.npmrc ./
-RUN corepack pnpm@10.34.5 install --frozen-lockfile
+RUN --mount=type=secret,id=NODE_AUTH_TOKEN,required=true \
+    NODE_AUTH_TOKEN="$(cat /run/secrets/NODE_AUTH_TOKEN)" \
+    corepack pnpm@10.34.5 install --frozen-lockfile
 COPY web/ ./
 RUN corepack pnpm@10.34.5 build
 

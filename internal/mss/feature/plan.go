@@ -9,8 +9,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/generator"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/generator"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 )
 
 // Options controls one read-only Feature implementation plan.

@@ -1,1168 +1,350 @@
-name: Release
-run-name: ${{ github.event_name == 'workflow_dispatch' && format('Root Release candidate {0}', inputs.version) || format('Root Release {0}', github.ref_name) }}
-
-on:
+name: Root Release
+'on':
   push:
     tags:
-      - 'v*.*.*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Release version used for artifact metadata
-        required: true
-        type: string
-
+    - v*.*.*
 permissions:
-  actions: read
   contents: read
-
+  pull-requests: read
 concurrency:
-  group: ${{ github.event_name == 'push' && 'root-release-publication' || format('root-release-preview-{0}', github.ref) }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
-
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
   GOTOOLCHAIN: local
-
 jobs:
   metadata:
     runs-on: ubuntu-24.04
     outputs:
-      version: ${{ steps.release.outputs.version }}
-      commit: ${{ steps.release.outputs.commit }}
-      prerelease: ${{ steps.release.outputs.prerelease }}
-      publish: ${{ steps.release.outputs.publish }}
+      version: ${{ steps.identity.outputs.version }}
+      commit: ${{ github.sha }}
     steps:
-      - name: Require authorized release operator
-        if: ${{ github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' }}
-        env:
-          RELEASE_ACTOR_LOGIN: lwnmengjing
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" || "${GITHUB_TRIGGERING_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" ]]; then
-            echo "release operations must be initiated and triggered by ${RELEASE_ACTOR_LOGIN}" >&2
-            exit 1
-          fi
-
-      - name: Checkout release policy
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          sparse-checkout: |
-            .mss/release-policy.yaml
-            tools/release/check_release_policy.py
-
-      - name: Resolve and validate release metadata
-        id: release
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-
-          validate_release_version() {
-            local value="$1"
-            local unprefixed
-            local core
-            local prerelease
-            local identifier
-            local identifiers
-
-            [[ "${value}" == v* ]] || return 1
-            unprefixed="${value#v}"
-            core="${unprefixed%%-*}"
-            [[ "${core}" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || return 1
-            if [[ "${unprefixed}" != *-* ]]; then
-              return 0
-            fi
-            prerelease="${unprefixed#*-}"
-            [[ -n "${prerelease}" ]] || return 1
-            [[ "${prerelease}" != .* && "${prerelease}" != *. && "${prerelease}" != *..* ]] || return 1
-            IFS='.' read -r -a identifiers <<< "${prerelease}"
-            for identifier in "${identifiers[@]}"; do
-              [[ "${identifier}" =~ ^[0-9A-Za-z-]+$ ]] || return 1
-              if [[ "${identifier}" =~ ^[0-9]+$ && "${identifier}" =~ ^0[0-9]+$ ]]; then
-                return 1
-              fi
-            done
-          }
-
-          version="${GITHUB_REF_NAME}"
-          publish=true
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            if [[ "${GITHUB_REF_TYPE}" != "branch" || "${GITHUB_REF_NAME}" != "main" ]]; then
-              echo 'the unique release preview must run from the main branch' >&2
-              exit 1
-            fi
-            version="${INPUT_VERSION}"
-            publish=false
-          fi
-          if ! validate_release_version "${version}"; then
-            echo "invalid release version: ${version}" >&2
-            exit 1
-          fi
-          policy_intent=qualify
-          if [[ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            policy_intent=publish
-          fi
-          python3 tools/release/check_release_policy.py \
-            --component root \
-            --version "${version}" \
-            --tag "${version}" \
-            --intent "${policy_intent}"
-          if [[ "${publish}" == "true" && ("${GITHUB_EVENT_NAME}" != "push" || "${GITHUB_REF_TYPE}" != "tag" || "${GITHUB_REF_NAME}" != "${version}") ]]; then
-            echo "publication is authorized only by the exact ${version} tag push" >&2
-            exit 1
-          fi
-          prerelease=false
-          if [[ "${version}" == *-* ]]; then
-            prerelease=true
-          fi
-          {
-            echo "version=${version}"
-            echo "commit=${GITHUB_SHA}"
-            echo "prerelease=${prerelease}"
-            echo "publish=${publish}"
-          } >> "${GITHUB_OUTPUT}"
-
-  release-evidence:
-    needs: metadata
-    if: needs.metadata.outputs.publish == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 40
-    outputs:
-      preview-run-id: ${{ steps.preview.outputs.run-id }}
-    permissions:
-      actions: read
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Checkout release source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          fetch-depth: 0
-
-      - name: Verify merged-main release source
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-        run: |
-          python3 tools/release/verify_release_source.py \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${RELEASE_COMMIT}" \
-            --tag "${RELEASE_VERSION}" \
-            --policy .mss/release-policy.yaml
-
-      - name: Require successful exact preview
-        id: preview
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_ACTOR_LOGIN: lwnmengjing
-        run: |
-          set -euo pipefail
-
-          preview_run_id="$(bash tools/release/resolve_successful_preview.sh \
-            --repository "${GITHUB_REPOSITORY}" \
-            --commit "${RELEASE_COMMIT}" \
-            --version "${RELEASE_VERSION}" \
-            --actor "${RELEASE_ACTOR_LOGIN}")"
-          echo "run-id=${preview_run_id}" >> "${GITHUB_OUTPUT}"
-
-      - name: Require exact component releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-        run: |
-          set -euo pipefail
-
-          resolve_tag_commit() {
-            local tag_name="$1"
-            local object_type
-            local object_sha
-            local tag_object
-            local depth=0
-
-            tag_object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag_name}")"
-            object_type="$(jq -r '.object.type' <<< "${tag_object}")"
-            object_sha="$(jq -r '.object.sha' <<< "${tag_object}")"
-            while [[ "${object_type}" == "tag" ]]; do
-              depth=$((depth + 1))
-              if [[ "${depth}" -gt 5 ]]; then
-                echo "tag ${tag_name} has too many annotation levels" >&2
-                return 1
-              fi
-              tag_object="$(gh api "/repos/${GITHUB_REPOSITORY}/git/tags/${object_sha}")"
-              object_type="$(jq -r '.object.type' <<< "${tag_object}")"
-              object_sha="$(jq -r '.object.sha' <<< "${tag_object}")"
-            done
-            if [[ "${object_type}" != "commit" || ! "${object_sha}" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "tag ${tag_name} does not resolve to a commit" >&2
-              return 1
-            fi
-            printf '%s\n' "${object_sha}"
-          }
-
-          root_commit="$(resolve_tag_commit "${RELEASE_VERSION}")"
-          if [[ "${root_commit}" != "${RELEASE_COMMIT}" ]]; then
-            echo "root tag ${RELEASE_VERSION} resolves to ${root_commit}, not ${RELEASE_COMMIT}" >&2
-            exit 1
-          fi
-
-          expected_component_prerelease=false
-          if [[ "${RELEASE_VERSION}" == *-* ]]; then
-            expected_component_prerelease=true
-          fi
-          while IFS= read -r component_tag; do
-            if ! component_commit="$(resolve_tag_commit "${component_tag}" 2>/dev/null)"; then
-              echo "required component tag ${component_tag} is not available" >&2
-              exit 1
-            fi
-            if [[ "${component_commit}" != "${RELEASE_COMMIT}" ]]; then
-              echo "component tag ${component_tag} resolves to ${component_commit}, not ${RELEASE_COMMIT}" >&2
-              exit 1
-            fi
-            if ! component_release="$(gh release view "${component_tag}" --json tagName,isDraft,isPrerelease 2>/dev/null)"; then
-              echo "required component release ${component_tag} is not public" >&2
-              exit 1
-            fi
-            jq -e \
-              --arg tag "${component_tag}" \
-              --argjson prerelease "${expected_component_prerelease}" \
-              '.tagName == $tag and .isDraft == false and .isPrerelease == $prerelease' \
-              <<< "${component_release}" >/dev/null || {
-                echo "component release ${component_tag} has conflicting immutable identity" >&2
-                exit 1
-              }
-          done <<EOF
-          mss-boot/${RELEASE_VERSION}
-          admin/${RELEASE_VERSION}
-          web/antd-v6/${RELEASE_VERSION}
-          EOF
-
-  container-preview:
-    needs: metadata
-    if: needs.metadata.outputs.publish != 'true'
-    permissions:
-      actions: read
-      contents: read
-      packages: write
-      pull-requests: read
-    uses: ./.github/workflows/container.yml
-    with:
-      version: ${{ needs.metadata.outputs.version }}
-      release_preview: true
-
+    - name: Require authorized release operator
+      env:
+        RELEASE_ACTOR_LOGIN: mss-boot-sys
+      run: |
+        set -euo pipefail
+        test "${GITHUB_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+        test "${GITHUB_TRIGGERING_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+    - name: Checkout release source
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Verify merged-main source and release version
+      id: identity
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/verify_publication.py --component root
   backend-build:
     needs: metadata
-    if: needs.metadata.outputs.publish != 'true'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, windows, darwin]
-        arch: [amd64, arm64]
+        os:
+        - linux
+        - windows
+        - darwin
+        arch:
+        - amd64
+        - arm64
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - name: Setup Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      with:
+        go-version-file: admin/go.mod
+        cache: true
+        cache-dependency-path: |
+          go.sum
+          go.work.sum
+          admin/go.sum
+          mss-boot/go.sum
+    - name: Build Admin runtime and Agent tools
+      env:
+        CGO_ENABLED: 0
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
+        RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
+      run: |
+        set -euo pipefail
+        package="mss-boot-admin-${GOOS}-${GOARCH}"
+        suffix=""
+        if [[ "${GOOS}" == "windows" ]]; then
+          suffix=".exe"
+        fi
+        release_timestamp="$(git show -s --format=%cI "${RELEASE_COMMIT}")"
+        [[ "${release_timestamp}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([+-][0-9]{2}:[0-9]{2}|Z)$ ]]
 
-      - name: Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
-        with:
-          go-version-file: admin/go.mod
-          cache: true
-          cache-dependency-path: |
-            go.sum
-            go.work.sum
-            admin/go.sum
-            mss-boot/go.sum
+        mkdir -p "${package}/config" "${package}/foundation"
+        admin_ldflags="-s -w -X github.com/mss-boot-sys/mss-boot-admin/admin/pkg.Version=${RELEASE_VERSION} -X github.com/mss-boot-sys/mss-boot-admin/admin/pkg.Commit=${RELEASE_COMMIT}"
+        agent_ldflags="-s -w -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Version=${RELEASE_VERSION} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Commit=${RELEASE_COMMIT} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Timestamp=${release_timestamp}"
+        go build -trimpath -ldflags "${admin_ldflags}" -o "${package}/admin${suffix}" ./admin
+        GOWORK=off go build -trimpath -ldflags "${agent_ldflags}" -o "${package}/mss${suffix}" ./cmd/mss
+        GOWORK=off go build -trimpath -ldflags "${agent_ldflags}" -o "${package}/mss-mcp${suffix}" ./cmd/mss-mcp
 
-      - name: Build Admin runtime and Agent tools
-        env:
-          CGO_ENABLED: 0
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          package="mss-boot-admin-${GOOS}-${GOARCH}"
-          suffix=""
-          if [[ "${GOOS}" == "windows" ]]; then
-            suffix=".exe"
-          fi
-          release_timestamp="$(git show -s --format=%cI "${RELEASE_COMMIT}")"
-          [[ "${release_timestamp}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([+-][0-9]{2}:[0-9]{2}|Z)$ ]]
+        {
+          echo "version=${RELEASE_VERSION}"
+          echo "commit=${RELEASE_COMMIT}"
+          echo "timestamp=${release_timestamp}"
+        } > "${package}/BUILD-INFO"
 
-          mkdir -p "${package}/config" "${package}/foundation"
-          admin_ldflags="-s -w -X github.com/mss-boot-io/mss-boot-admin/admin/pkg.Version=${RELEASE_VERSION} -X github.com/mss-boot-io/mss-boot-admin/admin/pkg.Commit=${RELEASE_COMMIT}"
-          agent_ldflags="-s -w -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Version=${RELEASE_VERSION} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Commit=${RELEASE_COMMIT} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Timestamp=${release_timestamp}"
-          go build -trimpath -ldflags "${admin_ldflags}" -o "${package}/admin${suffix}" ./admin
-          GOWORK=off go build -trimpath -ldflags "${agent_ldflags}" -o "${package}/mss${suffix}" ./cmd/mss
-          GOWORK=off go build -trimpath -ldflags "${agent_ldflags}" -o "${package}/mss-mcp${suffix}" ./cmd/mss-mcp
+        cp -a admin/config/*.yml "${package}/config/"
+        cp AGENTS.md CLAUDE.md LICENSE README.md README.zh-CN.md "${package}/"
+        cp admin/README.md "${package}/ADMIN.md"
+        cp -a .mss/schemas .mss/blueprints "${package}/foundation/"
+        cp -a .agents/skills "${package}/foundation/skills"
+        cp .codex/README.md "${package}/foundation/CODEX.md"
+        cp -a docs/docs/agent "${package}/foundation/docs"
 
-          {
-            echo "version=${RELEASE_VERSION}"
-            echo "commit=${RELEASE_COMMIT}"
-            echo "timestamp=${release_timestamp}"
-          } > "${package}/BUILD-INFO"
-
-          cp -a admin/config/*.yml "${package}/config/"
-          cp AGENTS.md CLAUDE.md LICENSE README.md README.zh-CN.md "${package}/"
-          cp admin/README.md "${package}/ADMIN.md"
-          cp -a .mss/schemas .mss/blueprints "${package}/foundation/"
-          cp -a .agents/skills "${package}/foundation/skills"
-          cp .codex/README.md "${package}/foundation/CODEX.md"
-          cp -a docs/docs/agent "${package}/foundation/docs"
-
-          if [[ "${GOOS}/${GOARCH}" == "linux/amd64" ]]; then
-            for command in admin mss mss-mcp; do
-              output="$("${package}/${command}" --version)"
-              [[ "${output}" == *"${RELEASE_VERSION}"* ]]
-              [[ "${output}" == *"${RELEASE_COMMIT}"* ]]
-            done
-            for command in mss mss-mcp; do
-              output="$("${package}/${command}" --version)"
-              [[ "${output}" == *"${release_timestamp}"* ]]
-            done
-          fi
-
-      - name: Verify portable runtime artifact paths
-        run: >-
-          python3 tools/release/check_portable_paths.py
-          mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
-
-      - name: Upload runtime artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
-          path: mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
-          if-no-files-found: error
-
+        if [[ "${GOOS}/${GOARCH}" == "linux/amd64" ]]; then
+          for command in admin mss mss-mcp; do
+            output="$("${package}/${command}" --version)"
+            [[ "${output}" == *"${RELEASE_VERSION}"* ]]
+            [[ "${output}" == *"${RELEASE_COMMIT}"* ]]
+          done
+          for command in mss mss-mcp; do
+            output="$("${package}/${command}" --version)"
+            [[ "${output}" == *"${release_timestamp}"* ]]
+          done
+        fi
+    - name: Verify portable runtime artifact paths
+      run: python3 tools/release/check_portable_paths.py mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
+    - name: Upload runtime artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
+        path: mss-boot-admin-${{ matrix.os }}-${{ matrix.arch }}
+        if-no-files-found: error
   frontend-build:
     needs: metadata
-    if: needs.metadata.outputs.publish != 'true'
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: web/antd-v6
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 10.34.5
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: web/antd-v6/pnpm-lock.yaml
-
-      - name: Install frozen V6 dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-
-      - name: Build same-origin primary V6 frontend
-        run: pnpm run build:release
-
-      - name: Embed and verify primary V6 release identity
-        env:
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          jq -n \
-            --arg application 'mss-boot-admin-antd-v6' \
-            --arg version "${RELEASE_VERSION}" \
-            --arg commit "${RELEASE_COMMIT}" \
-            '{application: $application, version: $version, commit: $commit}' > dist/release.json
-          jq -e \
-            --arg version "${RELEASE_VERSION}" \
-            --arg commit "${RELEASE_COMMIT}" \
-            '.application == "mss-boot-admin-antd-v6" and .version == $version and .commit == $commit' \
-            dist/release.json >/dev/null
-
-      - name: Smoke-test primary V6 delivery
-        run: pnpm run delivery:smoke
-
-      - name: Package and verify portable primary V6 artifact
-        env:
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          python3 ../../tools/release/check_portable_paths.py dist
-          {
-            echo 'application=mss-boot-admin-antd-v6'
-            echo "version=${RELEASE_VERSION}"
-            echo "commit=${RELEASE_COMMIT}"
-          } > FRONTEND-V6-BUILD-INFO
-          source_epoch="$(git show -s --format=%ct "${RELEASE_COMMIT}")"
-          tar \
-            --sort=name \
-            --mtime="@${source_epoch}" \
-            --owner=0 \
-            --group=0 \
-            --numeric-owner \
-            --create \
-            --gzip \
-            --file dist-v6.tar.gz \
-            dist
-          sha256sum dist-v6.tar.gz FRONTEND-V6-BUILD-INFO > SHA256SUMS.frontend-v6
-          sha256sum --check SHA256SUMS.frontend-v6
-          python3 ../../tools/release/check_portable_paths.py \
-            dist-v6.tar.gz \
-            FRONTEND-V6-BUILD-INFO \
-            SHA256SUMS.frontend-v6
-
-      - name: Pack exact Admin Web package and release evidence
-        env:
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          candidate_root="$(mktemp -d)"
-          trap 'rm -rf "${candidate_root}"' EXIT
-          package_dir="${GITHUB_WORKSPACE}/web/antd-v6/admin-web-release-package"
-          mkdir -p "${candidate_root}/source" "${package_dir}"
-          git -C ../.. -c core.autocrlf=false archive \
-            --format=tar \
-            "${RELEASE_COMMIT}:web/antd-v6" \
-            | tar -xf - -C "${candidate_root}/source"
-          python3 - \
-            "${candidate_root}/source/package.json" \
-            "${RELEASE_VERSION#v}" \
-            "${RELEASE_COMMIT}" <<'PY'
-          import json
-          from pathlib import Path
-          import sys
-
-          path = Path(sys.argv[1]).resolve()
-          manifest = json.loads(path.read_text(encoding="utf-8"))
-          if manifest.get("name") != "@mss-boot-io/admin-web" or manifest.get("private") is True:
-              raise SystemExit("Admin Web candidate source has an unexpected identity")
-          manifest["version"] = sys.argv[2]
-          manifest["gitHead"] = sys.argv[3]
-          path.write_text(
-              json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
-              encoding="utf-8",
-          )
-          PY
-          (
-            cd "${candidate_root}/source"
-            pnpm pack --pack-destination "${package_dir}" >/dev/null
-          )
-          mapfile -t candidate_tarballs < <(
-            find "${package_dir}" -maxdepth 1 -type f -name '*.tgz' -print
-          )
-          [[ ${#candidate_tarballs[@]} -eq 1 ]]
-          tarball="${candidate_tarballs[0]}"
-
-          pnpm list --prod --json --depth Infinity > "${package_dir}/pnpm-tree.json"
-          created="$(date -u -d "$(git show -s --format=%cI "${RELEASE_COMMIT}")" '+%Y-%m-%dT%H:%M:%SZ')"
-          python3 ../../tools/release/verify_admin_web_package.py \
-            --tarball "${tarball}" \
-            --expected-name '@mss-boot-io/admin-web' \
-            --expected-version "${RELEASE_VERSION#v}" \
-            --source-repository "${GITHUB_REPOSITORY}" \
-            --source-commit "${RELEASE_COMMIT}" \
-            --output "${package_dir}/admin-web-package.json"
-          python3 ../../tools/release/generate_admin_web_sbom.py \
-            --dependency-tree "${package_dir}/pnpm-tree.json" \
-            --package-evidence "${package_dir}/admin-web-package.json" \
-            --source-repository "${GITHUB_REPOSITORY}" \
-            --source-commit "${RELEASE_COMMIT}" \
-            --created "${created}" \
-            --output "${package_dir}/admin-web.spdx.json"
-          rm -f "${package_dir}/pnpm-tree.json"
-          (
-            cd "${package_dir}"
-            sha256sum -- *.tgz admin-web-package.json admin-web.spdx.json \
-              > SHA256SUMS.admin-web
-            sha256sum --check SHA256SUMS.admin-web
-          )
-          python3 ../../tools/release/check_portable_paths.py \
-            "${tarball}" \
-            "${package_dir}/admin-web-package.json" \
-            "${package_dir}/admin-web.spdx.json" \
-            "${package_dir}/SHA256SUMS.admin-web"
-
-      - name: Set up V6 multi-platform emulation
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
-
-      - name: Set up V6 image builder
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-
-      - name: Qualify the exact V6 multi-platform release image
-        id: image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
-        with:
-          context: web/antd-v6
-          file: web/antd-v6/Dockerfile
-          push: false
-          outputs: type=oci,dest=${{ runner.temp }}/frontend-v6-image.oci.tar
-          labels: |
-            org.opencontainers.image.title=mss-boot-admin-antd-v6
-            org.opencontainers.image.description=Complete React 19 and Ant Design 6 Admin application for mss-boot business hosts.
-            org.opencontainers.image.version=${{ needs.metadata.outputs.version }}
-            org.opencontainers.image.revision=${{ needs.metadata.outputs.commit }}
-          platforms: linux/amd64,linux/arm64
-          provenance: mode=max
-          sbom: true
-          cache-from: type=gha,scope=frontend-v6-image
-          cache-to: type=gha,mode=max,scope=frontend-v6-image
-
-      - name: Verify and stage the exact V6 OCI image
-        env:
-          BUILD_DIGEST: ${{ steps.image.outputs.digest }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          source_archive="${RUNNER_TEMP}/frontend-v6-image.oci.tar"
-          layout_index="${RUNNER_TEMP}/frontend-v6-image.index.json"
-          source_manifest="${RUNNER_TEMP}/frontend-v6-image.manifest.json"
-          test -s "${source_archive}"
-          command -v skopeo >/dev/null
-          tar -xOf "${source_archive}" index.json > "${layout_index}"
-          archive_digest="$(
-            jq -er '
-              if (.manifests | length) == 1 then
-                .manifests[0].digest
-              else
-                error("OCI layout must expose exactly one top-level image")
-              end
-            ' "${layout_index}"
-          )"
-          manifest_hash="${archive_digest#sha256:}"
-          [[ "${manifest_hash}" =~ ^[0-9a-f]{64}$ ]]
-          tar -xOf \
-            "${source_archive}" \
-            "blobs/sha256/${manifest_hash}" \
-            > "${source_manifest}"
-          test "sha256:$(sha256sum "${source_manifest}" | awk '{print $1}')" = "${archive_digest}"
-          [[ "${BUILD_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          test "${archive_digest}" = "${BUILD_DIGEST}"
-          jq -e '
-            (.mediaType == "application/vnd.oci.image.index.v1+json" or
-             .mediaType == "application/vnd.docker.distribution.manifest.list.v2+json") and
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "amd64"
-            )] | length) == 1 and
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "arm64"
-            )] | length) == 1
-          ' "${source_manifest}" >/dev/null
-
-          for architecture in amd64 arm64; do
-            config="$(
-              skopeo \
-                --override-os linux \
-                --override-arch "${architecture}" \
-                inspect --config "oci-archive:${source_archive}"
-            )"
-            jq -e \
-              --arg version "${RELEASE_VERSION}" \
-              --arg commit "${RELEASE_COMMIT}" \
-              '.config.Labels["org.opencontainers.image.title"] == "mss-boot-admin-antd-v6" and
-               .config.Labels["org.opencontainers.image.description"] == "Complete React 19 and Ant Design 6 Admin application for mss-boot business hosts." and
-               .config.Labels["org.opencontainers.image.version"] == $version and
-               .config.Labels["org.opencontainers.image.revision"] == $commit' \
-              <<< "${config}" >/dev/null
-          done
-
-          install -m 0644 "${source_archive}" frontend-v6-image.oci.tar
-          {
-            echo 'application=mss-boot-admin-antd-v6'
-            echo "version=${RELEASE_VERSION}"
-            echo "commit=${RELEASE_COMMIT}"
-            echo "digest=${archive_digest}"
-          } > FRONTEND-V6-IMAGE-INFO
-          sha256sum \
-            frontend-v6-image.oci.tar \
-            FRONTEND-V6-IMAGE-INFO \
-            > SHA256SUMS.frontend-v6-image
-          sha256sum --check SHA256SUMS.frontend-v6-image
-
-      - name: Upload primary V6 artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: frontend-v6-dist
-          path: |
-            web/antd-v6/dist-v6.tar.gz
-            web/antd-v6/FRONTEND-V6-BUILD-INFO
-            web/antd-v6/SHA256SUMS.frontend-v6
-            web/antd-v6/admin-web-release-package/*.tgz
-            web/antd-v6/admin-web-release-package/admin-web-package.json
-            web/antd-v6/admin-web-release-package/admin-web.spdx.json
-            web/antd-v6/admin-web-release-package/SHA256SUMS.admin-web
-            web/antd-v6/frontend-v6-image.oci.tar
-            web/antd-v6/FRONTEND-V6-IMAGE-INFO
-            web/antd-v6/SHA256SUMS.frontend-v6-image
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 30
-
+    - name: Download published exact frontend archive
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        RELEASE_COMMIT: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        mkdir frontend-v6-dist
+        gh release download "web/antd-v6/${RELEASE_VERSION}" --repo "${GITHUB_REPOSITORY}" --dir frontend-v6-dist --pattern dist-v6.tar.gz --pattern FRONTEND-V6-BUILD-INFO --pattern SHA256SUMS.frontend-v6
+        (cd frontend-v6-dist && sha256sum --check SHA256SUMS.frontend-v6)
+        grep -Fx "version=${RELEASE_VERSION}" frontend-v6-dist/FRONTEND-V6-BUILD-INFO
+        grep -Fx "commit=${RELEASE_COMMIT}" frontend-v6-dist/FRONTEND-V6-BUILD-INFO
+    - name: Upload primary V6 artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: frontend-v6-dist
+        path: frontend-v6-dist/*
+        if-no-files-found: error
   assemble:
     needs:
-      - metadata
-      - container-preview
-      - backend-build
-      - frontend-build
-    if: needs.metadata.outputs.publish != 'true'
+    - metadata
+    - backend-build
+    - frontend-build
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Checkout release validation tooling
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          sparse-checkout: |
-            tools/install
-            tools/release
+    - name: Checkout release validation tooling
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        sparse-checkout: |
+          tools/install
+          tools/release
+    - name: Download all artifacts
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+    - name: Assemble release packages
+      env:
+        RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
+        RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
+      run: |
+        set -euo pipefail
+        [[ "$(git rev-parse HEAD)" == "${RELEASE_COMMIT}" ]]
+        release_timestamp="$(git show -s --format=%cI "${RELEASE_COMMIT}")"
+        source_date_epoch="$(git show -s --format=%ct "${RELEASE_COMMIT}")"
+        [[ "${release_timestamp}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([+-][0-9]{2}:[0-9]{2}|Z)$ ]]
+        [[ "${source_date_epoch}" =~ ^[0-9]+$ ]]
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        test -d frontend-v6-dist
+        (
+          cd frontend-v6-dist
+          sha256sum --check SHA256SUMS.frontend-v6
+        )
+        python3 tools/release/check_portable_paths.py \
+          frontend-v6-dist/dist-v6.tar.gz \
+          frontend-v6-dist/FRONTEND-V6-BUILD-INFO \
+          frontend-v6-dist/SHA256SUMS.frontend-v6
+        mkdir frontend-v6-extracted
+        tar --extract --gzip \
+          --file frontend-v6-dist/dist-v6.tar.gz \
+          --directory frontend-v6-extracted
+        python3 tools/release/check_portable_paths.py frontend-v6-extracted/dist
+        jq -e \
+          --arg version "${RELEASE_VERSION}" \
+          --arg commit "${RELEASE_COMMIT}" \
+          '.application == "mss-boot-admin-antd-v6" and .version == $version and .commit == $commit' \
+          frontend-v6-extracted/dist/release.json >/dev/null
+        runtime_dirs=(
+          mss-boot-admin-linux-amd64
+          mss-boot-admin-linux-arm64
+          mss-boot-admin-darwin-amd64
+          mss-boot-admin-darwin-arm64
+          mss-boot-admin-windows-amd64
+          mss-boot-admin-windows-arm64
+        )
+        reference_build_info="${runtime_dirs[0]}/BUILD-INFO"
+        reference_license="${runtime_dirs[0]}/LICENSE"
+        grep -Fx "version=${RELEASE_VERSION}" "${reference_build_info}" >/dev/null
+        grep -Fx "commit=${RELEASE_COMMIT}" "${reference_build_info}" >/dev/null
+        grep -Fx "timestamp=${release_timestamp}" "${reference_build_info}" >/dev/null
+        [[ "$(wc -l < "${reference_build_info}")" -eq 3 ]]
 
-      - name: Assemble release packages
-        env:
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          [[ "$(git rev-parse HEAD)" == "${RELEASE_COMMIT}" ]]
-          release_timestamp="$(git show -s --format=%cI "${RELEASE_COMMIT}")"
-          source_date_epoch="$(git show -s --format=%ct "${RELEASE_COMMIT}")"
-          [[ "${release_timestamp}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([+-][0-9]{2}:[0-9]{2}|Z)$ ]]
-          [[ "${source_date_epoch}" =~ ^[0-9]+$ ]]
+        for dir in "${runtime_dirs[@]}"; do
+          test -d "${dir}"
+          test -f "${dir}/LICENSE"
+          cmp -- "${reference_build_info}" "${dir}/BUILD-INFO"
+          cmp -- "${reference_license}" "${dir}/LICENSE"
+          rm -rf "${dir}/dist"
+          cp -a frontend-v6-extracted/dist "${dir}/dist"
+          case "${dir}" in
+            mss-boot-admin-linux-*|mss-boot-admin-darwin-*)
+              chmod 0755 "${dir}/admin" "${dir}/mss" "${dir}/mss-mcp"
+              ;;
+          esac
+          find "${dir}" -exec touch --date="@${source_date_epoch}" {} +
+          find "${dir}" -print | LC_ALL=C sort | TZ=UTC zip -X -q "${dir}.zip" -@
+        done
+        python3 tools/release/check_portable_paths.py mss-boot-admin-*.zip
 
-          root_image_dir="root-image-preview-${RELEASE_VERSION}"
-          test -d "${root_image_dir}"
-          (
-            cd "${root_image_dir}"
-            sha256sum --check SHA256SUMS.root-image
-          )
-          root_image_archive="${root_image_dir}/root-image.oci.tar"
-          root_image_index="$(mktemp)"
-          root_image_manifest="$(mktemp)"
-          test -s "${root_image_archive}"
-          tar -xOf "${root_image_archive}" index.json > "${root_image_index}"
-          root_image_digest="$(
-            jq -er '
-              if (.manifests | length) == 1 then
-                .manifests[0].digest
-              else
-                error("Root OCI layout must expose exactly one top-level image")
-              end
-            ' "${root_image_index}"
-          )"
-          [[ "${root_image_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]
-          tar -xOf \
-            "${root_image_archive}" \
-            "blobs/sha256/${root_image_digest#sha256:}" \
-            > "${root_image_manifest}"
-          test "sha256:$(sha256sum "${root_image_manifest}" | awk '{print $1}')" = "${root_image_digest}"
-          jq -e '
-            (.mediaType == "application/vnd.oci.image.index.v1+json" or
-             .mediaType == "application/vnd.docker.distribution.manifest.list.v2+json") and
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "amd64"
-            )] | length) == 1 and
-            ([.manifests[] | select(
-              .platform.os == "linux" and .platform.architecture == "arm64"
-            )] | length) == 1
-          ' "${root_image_manifest}" >/dev/null
-          grep -Fx 'application=mss-boot-admin' "${root_image_dir}/ROOT-IMAGE-INFO.txt" >/dev/null
-          grep -Fx "version=${RELEASE_VERSION}" "${root_image_dir}/ROOT-IMAGE-INFO.txt" >/dev/null
-          grep -Fx "commit=${RELEASE_COMMIT}" "${root_image_dir}/ROOT-IMAGE-INFO.txt" >/dev/null
-          grep -Fx "digest=${root_image_digest}" "${root_image_dir}/ROOT-IMAGE-INFO.txt" >/dev/null
-
-          test -d frontend-v6-dist
-          (
-            cd frontend-v6-dist
-            sha256sum --check SHA256SUMS.frontend-v6
-          )
-          python3 tools/release/check_portable_paths.py \
-            frontend-v6-dist/dist-v6.tar.gz \
-            frontend-v6-dist/FRONTEND-V6-BUILD-INFO \
-            frontend-v6-dist/SHA256SUMS.frontend-v6
-          mkdir frontend-v6-extracted
-          tar --extract --gzip \
-            --file frontend-v6-dist/dist-v6.tar.gz \
-            --directory frontend-v6-extracted
-          python3 tools/release/check_portable_paths.py frontend-v6-extracted/dist
-          jq -e \
-            --arg version "${RELEASE_VERSION}" \
-            --arg commit "${RELEASE_COMMIT}" \
-            '.application == "mss-boot-admin-antd-v6" and .version == $version and .commit == $commit' \
-            frontend-v6-extracted/dist/release.json >/dev/null
-          admin_web_package_dir="frontend-v6-dist/admin-web-release-package"
-          test -d "${admin_web_package_dir}"
-          (
-            cd "${admin_web_package_dir}"
-            sha256sum --check SHA256SUMS.admin-web
-          )
-          mapfile -t admin_web_packages < <(
-            find "${admin_web_package_dir}" -maxdepth 1 -type f -name '*.tgz' -print
-          )
-          [[ ${#admin_web_packages[@]} -eq 1 ]]
-          admin_web_package="${admin_web_packages[0]}"
-          tar -xOf "${admin_web_package}" package/package.json \
-            | jq -e \
-                --arg version "${RELEASE_VERSION#v}" \
-                --arg commit "${RELEASE_COMMIT}" \
-                '.name == "@mss-boot-io/admin-web" and
-                 .version == $version and .gitHead == $commit' \
-            >/dev/null
-
-          runtime_dirs=(
-            mss-boot-admin-linux-amd64
-            mss-boot-admin-linux-arm64
-            mss-boot-admin-darwin-amd64
-            mss-boot-admin-darwin-arm64
-            mss-boot-admin-windows-amd64
-            mss-boot-admin-windows-arm64
-          )
-          reference_build_info="${runtime_dirs[0]}/BUILD-INFO"
-          reference_license="${runtime_dirs[0]}/LICENSE"
-          grep -Fx "version=${RELEASE_VERSION}" "${reference_build_info}" >/dev/null
-          grep -Fx "commit=${RELEASE_COMMIT}" "${reference_build_info}" >/dev/null
-          grep -Fx "timestamp=${release_timestamp}" "${reference_build_info}" >/dev/null
-          [[ "$(wc -l < "${reference_build_info}")" -eq 3 ]]
-
-          for dir in "${runtime_dirs[@]}"; do
-            test -d "${dir}"
-            test -f "${dir}/LICENSE"
-            cmp -- "${reference_build_info}" "${dir}/BUILD-INFO"
-            cmp -- "${reference_license}" "${dir}/LICENSE"
-            rm -rf "${dir}/dist"
-            cp -a frontend-v6-extracted/dist "${dir}/dist"
-            case "${dir}" in
-              mss-boot-admin-linux-*|mss-boot-admin-darwin-*)
-                chmod 0755 "${dir}/admin" "${dir}/mss" "${dir}/mss-mcp"
-                ;;
-            esac
-            zip -qr "${dir}.zip" "${dir}"
-          done
-          python3 tools/release/check_portable_paths.py mss-boot-admin-*.zip
-
-          mkdir tool-staging
-          tool_assets=(
-            "mss-tools-${RELEASE_VERSION}-linux-amd64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-linux-arm64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-darwin-amd64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-darwin-arm64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-windows-amd64.zip"
-            "mss-tools-${RELEASE_VERSION}-windows-arm64.zip"
-          )
-          for dir in "${runtime_dirs[@]}"; do
-            platform_arch="${dir#mss-boot-admin-}"
-            stage="tool-staging/${platform_arch}"
-            mkdir "${stage}"
-            cp "${dir}/BUILD-INFO" "${dir}/LICENSE" "${stage}/"
-            case "${platform_arch}" in
-              windows-*)
-                cp "${dir}/mss.exe" "${dir}/mss-mcp.exe" "${stage}/"
-                chmod 0644 "${stage}/BUILD-INFO" "${stage}/LICENSE"
-                chmod 0755 "${stage}/mss.exe" "${stage}/mss-mcp.exe"
-                touch --date="@${source_date_epoch}" "${stage}"/*
-                archive_path="${PWD}/mss-tools-${RELEASE_VERSION}-${platform_arch}.zip"
-                (
-                  cd "${stage}"
-                  TZ=UTC zip -X -q "${archive_path}" \
-                    BUILD-INFO LICENSE mss.exe mss-mcp.exe
-                )
-                ;;
-              linux-*|darwin-*)
-                cp "${dir}/mss" "${dir}/mss-mcp" "${stage}/"
-                chmod 0644 "${stage}/BUILD-INFO" "${stage}/LICENSE"
-                chmod 0755 "${stage}/mss" "${stage}/mss-mcp"
-                tar \
-                  --sort=name \
-                  --format=gnu \
-                  --owner=0 \
-                  --group=0 \
-                  --numeric-owner \
-                  --mtime="@${source_date_epoch}" \
-                  --directory="${stage}" \
-                  --create \
-                  --file=- \
-                  BUILD-INFO LICENSE mss mss-mcp \
-                  | gzip -n > "mss-tools-${RELEASE_VERSION}-${platform_arch}.tar.gz"
-                ;;
-              *)
-                echo "unsupported tool platform: ${platform_arch}" >&2
-                exit 1
-                ;;
-            esac
-          done
-
-          expected_unix_entries=$'BUILD-INFO\nLICENSE\nmss\nmss-mcp'
-          for archive in mss-tools-${RELEASE_VERSION}-{linux,darwin}-{amd64,arm64}.tar.gz; do
-            actual_entries="$(tar -tzf "${archive}" | sed 's#^\./##' | LC_ALL=C sort)"
-            [[ "${actual_entries}" == "${expected_unix_entries}" ]]
-          done
-          expected_windows_entries=$'BUILD-INFO\nLICENSE\nmss-mcp.exe\nmss.exe'
-          for archive in mss-tools-${RELEASE_VERSION}-windows-{amd64,arm64}.zip; do
-            actual_entries="$(unzip -Z1 "${archive}" | sed 's#^\./##' | LC_ALL=C sort)"
-            [[ "${actual_entries}" == "${expected_windows_entries}" ]]
-          done
-
-          install -m 0755 tools/install/install-mss.sh install-mss.sh
-          install -m 0644 tools/install/install-mss.ps1 install-mss.ps1
-          grep -Fx "readonly DEFAULT_VERSION=\"${RELEASE_VERSION}\"" install-mss.sh >/dev/null
-          grep -Fx "    [string]\$Version = '${RELEASE_VERSION}'," install-mss.ps1 >/dev/null
-          bash -n install-mss.sh
-          python3 tools/release/check_portable_paths.py \
-            "${tool_assets[@]}" install-mss.sh install-mss.ps1
-
-          smoke_dir="$(mktemp -d)"
-          registry_pid=""
-          cleanup_smoke() {
-            local status=$?
-            trap - EXIT HUP INT TERM
-            if [[ -n "${registry_pid}" ]]; then
-              kill "${registry_pid}" >/dev/null 2>&1 || true
-              wait "${registry_pid}" >/dev/null 2>&1 || true
-            fi
-            rm -rf "${smoke_dir}"
-            exit "${status}"
-          }
-          trap cleanup_smoke EXIT HUP INT TERM
-          for archive in \
-            mss-boot-admin-linux-amd64 \
-            mss-boot-admin-linux-arm64 \
-            mss-boot-admin-darwin-amd64 \
-            mss-boot-admin-darwin-arm64; do
-            mkdir -p "${smoke_dir}/${archive}"
-            unzip -q "${archive}.zip" -d "${smoke_dir}/${archive}"
-            for command in admin mss mss-mcp; do
-              test -x "${smoke_dir}/${archive}/${archive}/${command}"
-            done
-          done
-          for command in admin mss mss-mcp; do
-            output="$("${smoke_dir}/mss-boot-admin-linux-amd64/mss-boot-admin-linux-amd64/${command}" --version)"
-            [[ "${output}" == *"${RELEASE_VERSION}"* ]]
-            [[ "${output}" == *"${RELEASE_COMMIT}"* ]]
-          done
-          mkdir "${smoke_dir}/tools"
-          tar -xzf "mss-tools-${RELEASE_VERSION}-linux-amd64.tar.gz" \
-            -C "${smoke_dir}/tools"
-          cmp -- "${reference_build_info}" "${smoke_dir}/tools/BUILD-INFO"
-          for command in mss mss-mcp; do
-            output="$("${smoke_dir}/tools/${command}" --version)"
-            [[ "${output}" == *"${RELEASE_VERSION}"* ]]
-            [[ "${output}" == *"${RELEASE_COMMIT}"* ]]
-            [[ "${output}" == *"${release_timestamp}"* ]]
-          done
-          registry_ready="${smoke_dir}/registry-url"
-          registry_log="${smoke_dir}/registry.log"
-          python3 - \
-            "${admin_web_package}" \
-            "${RELEASE_VERSION#v}" \
-            "${registry_ready}" \
-            >"${registry_log}" 2>&1 <<'PY' &
-          from hashlib import sha512
-          from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-          import base64
-          import json
-          from pathlib import Path
-          import sys
-          from urllib.parse import unquote, urlsplit
-
-          tarball = Path(sys.argv[1]).resolve()
-          version = sys.argv[2]
-          ready = Path(sys.argv[3]).resolve()
-          package_name = "@mss-boot-io/admin-web"
-          integrity = "sha512-" + base64.b64encode(
-              sha512(tarball.read_bytes()).digest()
-          ).decode("ascii")
-          metadata_path = f"/{package_name}/{version}"
-          tarball_path = f"/{package_name}/-/admin-web-{version}.tgz"
-
-          class Handler(BaseHTTPRequestHandler):
-              def do_GET(self):
-                  path = unquote(urlsplit(self.path).path)
-                  if path == metadata_path:
-                      payload = json.dumps(
-                          {
-                              "name": package_name,
-                              "version": version,
-                              "dist": {
-                                  "integrity": integrity,
-                                  "tarball": (
-                                      f"http://127.0.0.1:{self.server.server_port}"
-                                      f"{tarball_path}"
-                                  ),
-                              },
-                          },
-                          separators=(",", ":"),
-                      ).encode("utf-8")
-                  elif path == tarball_path:
-                      payload = tarball.read_bytes()
-                  else:
-                      self.send_error(404)
-                      return
-                  self.send_response(200)
-                  self.send_header("Content-Length", str(len(payload)))
-                  self.end_headers()
-                  self.wfile.write(payload)
-
-              def log_message(self, _format, *_args):
-                  return
-
-          server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-          ready.write_text(
-              f"http://127.0.0.1:{server.server_port}\n",
-              encoding="utf-8",
-          )
-          server.serve_forever()
-          PY
-          registry_pid=$!
-          for _ in $(seq 1 100); do
-            [[ -s "${registry_ready}" ]] && break
-            kill -0 "${registry_pid}" >/dev/null 2>&1 || {
-              sed -n '1,120p' "${registry_log}" >&2
-              echo "Admin Web candidate registry exited before readiness" >&2
+        mkdir tool-staging
+        tool_assets=(
+          "mss-tools-${RELEASE_VERSION}-linux-amd64.tar.gz"
+          "mss-tools-${RELEASE_VERSION}-linux-arm64.tar.gz"
+          "mss-tools-${RELEASE_VERSION}-darwin-amd64.tar.gz"
+          "mss-tools-${RELEASE_VERSION}-darwin-arm64.tar.gz"
+          "mss-tools-${RELEASE_VERSION}-windows-amd64.zip"
+          "mss-tools-${RELEASE_VERSION}-windows-arm64.zip"
+        )
+        for dir in "${runtime_dirs[@]}"; do
+          platform_arch="${dir#mss-boot-admin-}"
+          stage="tool-staging/${platform_arch}"
+          mkdir "${stage}"
+          cp "${dir}/BUILD-INFO" "${dir}/LICENSE" "${stage}/"
+          case "${platform_arch}" in
+            windows-*)
+              cp "${dir}/mss.exe" "${dir}/mss-mcp.exe" "${stage}/"
+              chmod 0644 "${stage}/BUILD-INFO" "${stage}/LICENSE"
+              chmod 0755 "${stage}/mss.exe" "${stage}/mss-mcp.exe"
+              touch --date="@${source_date_epoch}" "${stage}"/*
+              archive_path="${PWD}/mss-tools-${RELEASE_VERSION}-${platform_arch}.zip"
+              (
+                cd "${stage}"
+                TZ=UTC zip -X -q "${archive_path}" \
+                  BUILD-INFO LICENSE mss.exe mss-mcp.exe
+              )
+              ;;
+            linux-*|darwin-*)
+              cp "${dir}/mss" "${dir}/mss-mcp" "${stage}/"
+              chmod 0644 "${stage}/BUILD-INFO" "${stage}/LICENSE"
+              chmod 0755 "${stage}/mss" "${stage}/mss-mcp"
+              tar \
+                --sort=name \
+                --format=gnu \
+                --owner=0 \
+                --group=0 \
+                --numeric-owner \
+                --mtime="@${source_date_epoch}" \
+                --directory="${stage}" \
+                --create \
+                --file=- \
+                BUILD-INFO LICENSE mss mss-mcp \
+                | gzip -n > "mss-tools-${RELEASE_VERSION}-${platform_arch}.tar.gz"
+              ;;
+            *)
+              echo "unsupported tool platform: ${platform_arch}" >&2
               exit 1
-            }
-            sleep 0.05
-          done
-          [[ -s "${registry_ready}" ]]
-          registry_url="$(<"${registry_ready}")"
-          mkdir "${smoke_dir}/empty"
-          (
-            cd "${smoke_dir}/empty"
-            "${smoke_dir}/tools/mss" new app release-smoke \
-              --display-name "Release Smoke Administration" \
-              --module example.com/release-smoke \
-              --repository example/release-smoke \
-              --destination "${smoke_dir}/release-smoke" \
-              --contributor-npm-registry "${registry_url}" \
-              --write \
-              --git-init \
-              --format json \
-              > "${smoke_dir}/release-smoke.json"
-          )
-          jq -e '.success == true and .dryRun == false' "${smoke_dir}/release-smoke.json" >/dev/null
-          test -f "${smoke_dir}/release-smoke/go.mod"
-          test -f "${smoke_dir}/release-smoke/go.sum"
-          test -f "${smoke_dir}/release-smoke/web/pnpm-lock.yaml"
-          ! grep -R '__MSS_' "${smoke_dir}/release-smoke" --exclude-dir=.git
-          sha256sum mss-boot-admin-*.zip > SHA256SUMS
-          sha256sum "${tool_assets[@]}" install-mss.sh install-mss.ps1 \
-            > "SHA256SUMS.tools-${RELEASE_VERSION}"
-          [[ "$(wc -l < SHA256SUMS)" -eq 6 ]]
-          [[ "$(wc -l < "SHA256SUMS.tools-${RELEASE_VERSION}")" -eq 8 ]]
-          sha256sum --check SHA256SUMS
-          sha256sum --check "SHA256SUMS.tools-${RELEASE_VERSION}"
+              ;;
+          esac
+        done
 
-      - name: Upload assembled packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: release-packages-${{ needs.metadata.outputs.version }}
-          path: |
-            mss-boot-admin-*.zip
-            SHA256SUMS
-            mss-tools-*.tar.gz
-            mss-tools-*.zip
-            SHA256SUMS.tools-*
-            install-mss.sh
-            install-mss.ps1
-          if-no-files-found: error
-          retention-days: 30
+        expected_unix_entries=$'BUILD-INFO\nLICENSE\nmss\nmss-mcp'
+        for archive in mss-tools-${RELEASE_VERSION}-{linux,darwin}-{amd64,arm64}.tar.gz; do
+          actual_entries="$(tar -tzf "${archive}" | sed 's#^\./##' | LC_ALL=C sort)"
+          [[ "${actual_entries}" == "${expected_unix_entries}" ]]
+        done
+        expected_windows_entries=$'BUILD-INFO\nLICENSE\nmss-mcp.exe\nmss.exe'
+        for archive in mss-tools-${RELEASE_VERSION}-windows-{amd64,arm64}.zip; do
+          actual_entries="$(unzip -Z1 "${archive}" | sed 's#^\./##' | LC_ALL=C sort)"
+          [[ "${actual_entries}" == "${expected_windows_entries}" ]]
+        done
 
+        install -m 0755 tools/install/install-mss.sh install-mss.sh
+        install -m 0644 tools/install/install-mss.ps1 install-mss.ps1
+        grep -Fx "readonly DEFAULT_VERSION=\"${RELEASE_VERSION}\"" install-mss.sh >/dev/null
+        grep -Fx "    [string]\$Version = '${RELEASE_VERSION}'," install-mss.ps1 >/dev/null
+        bash -n install-mss.sh
+        python3 tools/release/check_portable_paths.py \
+          "${tool_assets[@]}" install-mss.sh install-mss.ps1
+
+        sha256sum mss-boot-admin-*.zip > SHA256SUMS
+        sha256sum "${tool_assets[@]}" install-mss.sh install-mss.ps1 \
+          > "SHA256SUMS.tools-${RELEASE_VERSION}"
+        [[ "$(wc -l < SHA256SUMS)" -eq 6 ]]
+        [[ "$(wc -l < "SHA256SUMS.tools-${RELEASE_VERSION}")" -eq 8 ]]
+        sha256sum --check SHA256SUMS
+        sha256sum --check "SHA256SUMS.tools-${RELEASE_VERSION}"
+    - name: Upload assembled packages
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: release-packages-${{ needs.metadata.outputs.version }}
+        path: |
+          mss-boot-admin-*.zip
+          SHA256SUMS
+          mss-tools-*.tar.gz
+          mss-tools-*.zip
+          SHA256SUMS.tools-*
+          install-mss.sh
+          install-mss.ps1
+        if-no-files-found: error
+        retention-days: 30
   publish:
     needs:
-      - metadata
-      - release-evidence
-    if: needs.metadata.outputs.publish == 'true'
+    - metadata
+    - assemble
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
     environment: release-auto
     permissions:
-      actions: read
       contents: write
+      pull-requests: read
     steps:
-      - name: Require authorized release operator
-        env:
-          RELEASE_ACTOR_LOGIN: lwnmengjing
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" || "${GITHUB_TRIGGERING_ACTOR}" != "${RELEASE_ACTOR_LOGIN}" ]]; then
-            echo "release operations must be initiated and triggered by ${RELEASE_ACTOR_LOGIN}" >&2
-            exit 1
-          fi
-
-      - name: Download exact preview packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: release-packages-${{ needs.metadata.outputs.version }}
-          path: .
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ needs.release-evidence.outputs.preview-run-id }}
-
-      - name: Prepare deterministic root release notes
-        id: release-notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-        run: |
-          set -euo pipefail
-          notes_file="${RUNNER_TEMP}/root-release-notes.md"
-          : > "${notes_file}"
-          {
-            echo "# mss-boot-admin ${RELEASE_VERSION}"
-            echo
-            echo "This release was assembled and qualified by the exact successful Root preview for commit \`${RELEASE_COMMIT}\`."
-            echo
-            echo '## Runtime image'
-            echo
-            echo '```shell'
-            echo "docker pull ${REGISTRY}/${IMAGE_NAME}:${RELEASE_VERSION}"
-            echo '```'
-            echo
-            echo 'The independent Container Image workflow publishes and verifies this immutable version tag from the same Root tag.'
-            echo
-            echo "Source commit: \`${RELEASE_COMMIT}\`"
-            echo
-            echo '## Package-first runtime and tools'
-            echo
-            echo 'The six full platform archives contain the independent Admin runtime (`admin`), runtime configuration, frontend assets, and the published contracts, Skills, Blueprints, and Agent documentation.'
-            echo
-            echo 'Install the versioned `mss` and `mss-mcp` commands with the attached `install-mss.sh` or `install-mss.ps1`. Each installer verifies `SHA256SUMS.tools-*` before replacing either command.'
-            echo
-            echo '`mss new app` and `mss upgrade` use the versioned Foundation Blueprint embedded in the installed tool, so application development starts from published packages without a Foundation source checkout.'
-            echo
-            echo '## Migration'
-            echo
-            echo 'The additive migration creates `mss_boot_presentation_profiles` and `mss_boot_presentation_revisions` without deleting existing business rows. Run `admin migrate` first, run one `admin server -a` API-registry synchronization, and only then start the long-running `admin server` process.'
-            echo
-            echo 'Important upgrade stop: databases upgraded with Admin v1.3.3 through v1.3.6 may already record permission migration `20260824121000` from its former overwrite-capable implementation. When that predecessor exists without the independent fail-closed attestation, forward guard `20260830193000` intentionally fails closed and leaves its version pending; this is expected protection, not a migration to bypass.'
-            echo
-            echo 'Before upgrading an affected database, stop writers and take a restorable pre-upgrade backup. Follow `docs/adr/2026-08-24-admin-presentation-publication-workflow.md` under “Forward permission-collision guard” to compare and restore `mss_boot_menus` metadata and related `mss_boot_casbin_rule` policies, or make an explicit ownership decision after reviewing the complete canonical inventory. Do not insert the attestation merely because current values look canonical. Record it only after the documented recovery review, then rerun `admin migrate`.'
-            echo
-            echo 'Initial administrator secrets are accepted only through the documented hidden prompt or one-use `MSS_ADMIN_INITIAL_PASSWORD` environment injection. The removed `--password` and `-p` migration flags are rejected.'
-            echo
-            echo '## Compatibility'
-            echo
-            echo 'Framework, Admin, Admin Web, Root tools, and images must use this exact coordinated version. The presentation tables and permission metadata are additive; the fourteen Foundation built-in management page capabilities use an exact startup allowlist and fail safely to compiled defaults for missing, invalid, drifted, unavailable, disabled, or recovery-bypassed profiles.'
-            echo
-            echo '## Security'
-            echo
-            echo 'Presentation documents are data-only and cannot carry JavaScript, HTML, SQL, URLs, permissions, executable components, or dynamic code. Backend RBAC remains authoritative; frontend visibility is not an authorization boundary.'
-            echo
-            echo '## Rollback'
-            echo
-            echo 'For a normal binary rollback, enable `presentation.recoveryMode`, verify compiled defaults, and redeploy one previously qualified coordinated Admin Distribution with its matching Framework, Admin, frontend, configuration, and lock. Keep the live forward-compatible database schema and data; do not down-migrate or delete additive presentation tables, immutable revisions, permission history, audit evidence, or business writes.'
-            echo
-            echo 'A full database-backup restore is disaster recovery only and discards every write after the backup time. Before restoring, export and preserve post-backup audit and business data outside the target database whenever the current storage remains readable.'
-            echo
-            echo '## Known limits'
-            echo
-            echo 'The qualified dependency graph carries six accepted non-runtime advisories whose bounded acceptances expire on 2026-11-08. Runtime bundle exclusion, exact advisory identity, dependency scope, and expiry remain release gates; this is not a zero-vulnerability claim.'
-            echo
-            echo 'Docs publication and the current-stable designation are reconciled independently after the package, image, tool, and registry surfaces are public.'
-          } >> "${notes_file}"
-          echo "path=${notes_file}" >> "${GITHUB_OUTPUT}"
-
-      - name: Stage, verify, and publish GitHub release atomically
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-          RELEASE_COMMIT: ${{ needs.metadata.outputs.commit }}
-          RELEASE_PRERELEASE: ${{ needs.metadata.outputs.prerelease }}
-          RELEASE_NOTES: ${{ steps.release-notes.outputs.path }}
-        run: |
-          set -euo pipefail
-          title="mss-boot-admin ${RELEASE_VERSION}"
-          assets=(
-            mss-boot-admin-linux-amd64.zip
-            mss-boot-admin-linux-arm64.zip
-            mss-boot-admin-darwin-amd64.zip
-            mss-boot-admin-darwin-arm64.zip
-            mss-boot-admin-windows-amd64.zip
-            mss-boot-admin-windows-arm64.zip
-            SHA256SUMS
-            "mss-tools-${RELEASE_VERSION}-linux-amd64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-linux-arm64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-darwin-amd64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-darwin-arm64.tar.gz"
-            "mss-tools-${RELEASE_VERSION}-windows-amd64.zip"
-            "mss-tools-${RELEASE_VERSION}-windows-arm64.zip"
-            "SHA256SUMS.tools-${RELEASE_VERSION}"
-            install-mss.sh
-            install-mss.ps1
-          )
-          sha256sum --check SHA256SUMS
-          sha256sum --check "SHA256SUMS.tools-${RELEASE_VERSION}"
-          expected_names="$(printf '%s\n' "${assets[@]}" | jq -R . | jq -cs 'sort')"
-
-          verify_release_assets() {
-            local release_json="$1"
-            local actual_names
-            local asset
-            local local_size
-            local remote_size
-            actual_names="$(jq -c '[.assets[].name] | sort' <<< "${release_json}")"
-            if [[ "${actual_names}" != "${expected_names}" ]]; then
-              echo "release assets do not match the exact preview package set" >&2
-              return 1
-            fi
-            for asset in "${assets[@]}"; do
-              local_size="$(stat --format='%s' "${asset}")"
-              remote_size="$(jq -r --arg name "${asset}" '.assets[] | select(.name == $name) | .size' <<< "${release_json}")"
-              if [[ -z "${remote_size}" || "${remote_size}" != "${local_size}" || "${remote_size}" -le 0 ]]; then
-                echo "release asset ${asset} failed size verification" >&2
-                return 1
-              fi
-            done
-          }
-
-          if release_json="$(gh release view "${RELEASE_VERSION}" --json isDraft,isPrerelease,assets 2>/dev/null)"; then
-            if [[ "$(jq -r '.isDraft' <<< "${release_json}")" != "true" ]]; then
-              jq -e \
-                --argjson prerelease "${RELEASE_PRERELEASE}" \
-                '.isDraft == false and .isPrerelease == $prerelease' \
-                <<< "${release_json}" >/dev/null
-              verify_release_assets "${release_json}"
-              echo "release ${RELEASE_VERSION} is already public with the exact preview assets"
-              exit 0
-            fi
-            gh release edit "${RELEASE_VERSION}" \
-              --title "${title}" \
-              --notes-file "${RELEASE_NOTES}" \
-              --draft=true \
-              --prerelease="${RELEASE_PRERELEASE}"
-          else
-            release_flags=(--draft)
-            if [[ "${RELEASE_PRERELEASE}" == "true" ]]; then
-              release_flags+=(--prerelease)
-            fi
-            gh release create "${RELEASE_VERSION}" \
-              --verify-tag \
-              --target "${RELEASE_COMMIT}" \
-              --title "${title}" \
-              --notes-file "${RELEASE_NOTES}" \
-              "${release_flags[@]}"
-          fi
-
-          gh release upload "${RELEASE_VERSION}" "${assets[@]}" --clobber
-          release_json="$(gh release view "${RELEASE_VERSION}" --json isDraft,isPrerelease,assets)"
-          verify_release_assets "${release_json}"
-
-          gh release edit "${RELEASE_VERSION}" \
-            --title "${title}" \
-            --notes-file "${RELEASE_NOTES}" \
-            --draft=false \
-            --prerelease="${RELEASE_PRERELEASE}" \
-            --latest=false
+    - name: Require authorized release operator
+      env:
+        RELEASE_ACTOR_LOGIN: mss-boot-sys
+      run: |
+        set -euo pipefail
+        test "${GITHUB_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+        test "${GITHUB_TRIGGERING_ACTOR}" = "${RELEASE_ACTOR_LOGIN}"
+    - name: Checkout release source
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+    - name: Verify merged-main source and release version
+      id: identity
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/verify_publication.py --component root
+    - name: Download release archives
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      with:
+        name: release-packages-${{ needs.metadata.outputs.version }}
+        path: release-assets
+    - name: Publish immutable Root release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        python3 tools/release/publish_release_assets.py --directory release-assets --latest

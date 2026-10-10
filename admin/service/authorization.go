@@ -13,12 +13,12 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/dto"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
-	adminpkg "github.com/mss-boot-io/mss-boot-admin/admin/pkg"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/gormdb"
-	bootenum "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
-	runtimeeventbus "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/eventbus"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/dto"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
+	adminpkg "github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/gormdb"
+	bootenum "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
+	runtimeeventbus "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/eventbus"
 )
 
 const (

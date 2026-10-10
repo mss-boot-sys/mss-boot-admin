@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	skillcontract "github.com/mss-boot-io/mss-boot-admin/internal/mss/skills"
+	skillcontract "github.com/mss-boot-sys/mss-boot-admin/internal/mss/skills"
 )
 
 func newSkillsCommand(rootOverride *string) *cobra.Command {

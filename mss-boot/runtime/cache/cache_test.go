@@ -12,8 +12,8 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/glebarez/sqlite"
-	runtimeconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/config"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
+	runtimeconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/config"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )

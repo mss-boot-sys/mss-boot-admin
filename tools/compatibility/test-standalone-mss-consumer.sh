@@ -15,19 +15,18 @@ Options:
   --next-foundation   Rehearse a traceable next-Foundation three-way upgrade,
                       CLI/MCP/doctor parity, conflict rejection, and all evals.
   --release-artifact  Use MSS_TOOLS_ARCHIVE instead of locally built tools.
-  --public-packages   Resolve the published v1.3.7 Go and npm packages through
+  --public-packages   Resolve the published v1.3.9 Go and npm packages through
                       proxy.golang.org and the exact GitHub Packages Admin Web
-                      candidate; requires NODE_AUTH_TOKEN. Official npmjs is a
-                      later post-publication gate.
+                      package; requires NODE_AUTH_TOKEN.
   --help              Show this help.
 
 Environment:
-  MSS_RELEASE_VERSION     Release version (default: v1.3.7).
+  MSS_RELEASE_VERSION     Release version (default: v1.3.9).
   MSS_RELEASE_COMMIT      Full release commit (default: current HEAD).
   MSS_RELEASE_TIMESTAMP   RFC3339 source timestamp (default: current HEAD).
   MSS_TOOLS_ARCHIVE       Versioned mss tools tar.gz or zip for
                           --release-artifact.
-  MSS_ADMIN_WEB_TARBALL   Optional exact v1.3.7 Admin Web candidate tarball.
+  MSS_ADMIN_WEB_TARBALL   Optional exact v1.3.9 Admin Web candidate tarball.
                          When omitted, the script packs the release commit;
                          either candidate is served only from loopback.
   NODE_AUTH_TOKEN         GitHub Packages read token required only with
@@ -93,7 +92,7 @@ repository_root=$(realpath -- "${repository_root}")
   exit 1
 }
 
-release_version=${MSS_RELEASE_VERSION:-v1.3.7}
+release_version=${MSS_RELEASE_VERSION:-v1.3.9}
 release_commit=${MSS_RELEASE_COMMIT:-$(git -C "${repository_root}" rev-parse 'HEAD^{commit}')}
 release_timestamp=${MSS_RELEASE_TIMESTAMP:-$(git -C "${repository_root}" show -s --format=%cI "${release_commit}")}
 [[ "${release_version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]] || {
@@ -162,7 +161,7 @@ if git -C "${consumer_parent}" rev-parse --is-inside-work-tree >/dev/null 2>&1; 
   exit 1
 fi
 
-ldflags="-X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Version=${release_version} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Commit=${release_commit} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Timestamp=${release_timestamp}"
+ldflags="-X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Version=${release_version} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Commit=${release_commit} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Timestamp=${release_timestamp}"
 
 if [[ "${use_release_artifact}" = true ]]; then
   archive=${MSS_TOOLS_ARCHIVE:-}
@@ -207,7 +206,7 @@ assert_tool_identity "${mss}" --version
 assert_tool_identity "${mss_mcp}" --version
 
 # Build a standards-shaped local file proxy from the candidate source, then
-# qualify the same module paths users can install after v1.3.7 is public. The
+# qualify the same module paths users can install after v1.3.9 is public. The
 # release installer remains the recommended acquisition path because it also
 # verifies the immutable tools archive checksum and BUILD-INFO manifest.
 if [[ "${use_public_packages}" = false ]]; then
@@ -232,9 +231,9 @@ for path in repository.rglob('*'):
     if stat.S_ISREG(mode) or stat.S_ISLNK(mode):
         repository_paths.append(path.relative_to(repository).as_posix())
 modules = (
-    ('github.com/mss-boot-io/mss-boot-admin', ''),
-    ('github.com/mss-boot-io/mss-boot-admin/admin', 'admin'),
-    ('github.com/mss-boot-io/mss-boot-admin/mss-boot', 'mss-boot'),
+    ('github.com/mss-boot-sys/mss-boot-admin', ''),
+    ('github.com/mss-boot-sys/mss-boot-admin/admin', 'admin'),
+    ('github.com/mss-boot-sys/mss-boot-admin/mss-boot', 'mss-boot'),
 )
 
 for module, source_prefix in modules:
@@ -309,8 +308,8 @@ PY
   GOWORK=off GOPROXY="file://${proxy_root},https://proxy.golang.org" GOSUMDB=off \
     GOMODCACHE="${work_dir}/go-install-modcache" GOCACHE="${work_dir}/go-install-buildcache" \
     GOBIN="${candidate_bin}" go install -trimpath \
-    "github.com/mss-boot-io/mss-boot-admin/cmd/mss@${release_version}" \
-    "github.com/mss-boot-io/mss-boot-admin/cmd/mss-mcp@${release_version}"
+    "github.com/mss-boot-sys/mss-boot-admin/cmd/mss@${release_version}" \
+    "github.com/mss-boot-sys/mss-boot-admin/cmd/mss-mcp@${release_version}"
   for installed_tool in "${candidate_bin}/mss" "${candidate_bin}/mss-mcp"; do
     installed_version=$("${installed_tool}" --version)
     [[ "${installed_version}" == *"${release_version}"* ]] || {
@@ -355,7 +354,7 @@ if [[ "${use_public_packages}" = true ]]; then
   # shellcheck disable=SC2016
   printf '%s\n' \
     'registry=https://registry.npmjs.org/' \
-    '@mss-boot-io:registry=https://npm.pkg.github.com/' \
+    '@mss-boot-sys:registry=https://npm.pkg.github.com/' \
     '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' \
     'always-auth=true' \
     > "${npm_user_config}"
@@ -363,17 +362,17 @@ if [[ "${use_public_packages}" = true ]]; then
   public_package_metadata="${work_dir}/public-admin-web-metadata.json"
   mkdir -p -- "${public_package_output}"
   NPM_CONFIG_USERCONFIG="${npm_user_config}" npm view \
-    "@mss-boot-io/admin-web@${release_version#v}" \
+    "@mss-boot-sys/admin-web@${release_version#v}" \
     --json \
     --registry=https://npm.pkg.github.com \
     > "${public_package_metadata}"
   jq -e \
     --arg version "${release_version#v}" \
     --arg commit "${release_commit}" \
-    '.name == "@mss-boot-io/admin-web" and
+    '.name == "@mss-boot-sys/admin-web" and
      .version == $version and .gitHead == $commit and
      (.dist.integrity | type == "string" and startswith("sha512-")) and
-     (.dist.tarball | type == "string" and startswith("https://") and
+     (.dist.tarball | type == "string" and startswith("https://npm.pkg.github.com/") and
       (contains("?") or contains("#")) == false)' \
     "${public_package_metadata}" >/dev/null || {
     echo "published GitHub Packages Admin Web candidate has the wrong identity or provenance" >&2
@@ -381,7 +380,7 @@ if [[ "${use_public_packages}" = true ]]; then
   }
   expected_admin_web_integrity=$(jq -er '.dist.integrity' "${public_package_metadata}")
   NPM_CONFIG_USERCONFIG="${npm_user_config}" npm pack \
-    "@mss-boot-io/admin-web@${release_version#v}" \
+    "@mss-boot-sys/admin-web@${release_version#v}" \
     --pack-destination "${public_package_output}" \
     --registry=https://npm.pkg.github.com \
     >/dev/null
@@ -412,7 +411,7 @@ import sys
 
 path = Path(sys.argv[1]).resolve()
 manifest = json.loads(path.read_text(encoding='utf-8'))
-if manifest.get('name') != '@mss-boot-io/admin-web' or manifest.get('private') is True:
+if manifest.get('name') != '@mss-boot-sys/admin-web' or manifest.get('private') is True:
     raise SystemExit('Admin Web package source has an unexpected identity')
 manifest['version'] = sys.argv[2]
 manifest['gitHead'] = sys.argv[3]
@@ -441,7 +440,7 @@ tar -xOf "${admin_web_tarball}" package/package.json \
   | jq -e \
       --arg version "${release_version#v}" \
       --arg commit "${release_commit}" \
-      '.name == "@mss-boot-io/admin-web" and .version == $version and .gitHead == $commit' \
+      '.name == "@mss-boot-sys/admin-web" and .version == $version and .gitHead == $commit' \
       >/dev/null || {
   echo "Admin Web candidate must contain the exact package name, version, and release gitHead" >&2
   exit 1
@@ -460,10 +459,11 @@ if [[ -n "${expected_admin_web_integrity}" && "${computed_admin_web_integrity}" 
   exit 1
 fi
 
+if [[ "${use_public_packages}" = false ]]; then
 registry_ready="${work_dir}/registry-url"
 registry_log="${work_dir}/registry.log"
 fixture_tarball_path="/artifacts/frozen-admin-web-${release_version#v}.tgz"
-pnpm_fallback_tarball_path="/@mss-boot-io/admin-web/-/admin-web-${release_version#v}.tgz"
+pnpm_fallback_tarball_path="/@mss-boot-sys/admin-web/-/admin-web-${release_version#v}.tgz"
 [[ "${fixture_tarball_path}" != "${pnpm_fallback_tarball_path}" ]] || {
   echo "temporary registry tarball path must differ from pnpm's generic registry fallback" >&2
   exit 1
@@ -482,7 +482,7 @@ version = sys.argv[2]
 commit = sys.argv[3]
 ready = Path(sys.argv[4]).resolve()
 tarball_path = sys.argv[5]
-package_name = '@mss-boot-io/admin-web'
+package_name = '@mss-boot-sys/admin-web'
 integrity = 'sha512-' + base64.b64encode(sha512(tarball.read_bytes()).digest()).decode('ascii')
 metadata_path = f'/{package_name}/{version}'
 
@@ -538,8 +538,11 @@ done
 }
 registry_url=$(<"${registry_ready}")
 contributor_registry_args=(--contributor-npm-registry "${registry_url}")
-if [[ "${use_public_packages}" = false ]]; then
-  printf 'registry=https://registry.npmjs.org/\n@mss-boot-io:registry=%s/\n' "${registry_url}" > "${npm_user_config}"
+expected_tarball_url="${registry_url}${fixture_tarball_path}"
+  printf 'registry=https://registry.npmjs.org/\n@mss-boot-sys:registry=%s/\n' "${registry_url}" > "${npm_user_config}"
+else
+  registry_url="https://npm.pkg.github.com"
+  expected_tarball_url=$(jq -er '.dist.tarball' "${public_package_metadata}")
 fi
 consumer_go_modcache="${work_dir}/consumer-modcache"
 
@@ -604,7 +607,7 @@ if grep -Eq 'go run ./cmd/mss|--foundation|__MSS_' "${host_root}/.github/workflo
 fi
 grep -Fq 'admin: go run ./cmd/server server' "${host_root}/.mss/project.yaml"
 grep -Fq 'command: [go, run, ./cmd/server, server]' "${host_root}/.mss/dev.yaml"
-grep -Fq "tarball: ${registry_url}${fixture_tarball_path}" "${host_root}/web/pnpm-lock.yaml" || {
+grep -Fq "tarball: ${expected_tarball_url}" "${host_root}/web/pnpm-lock.yaml" || {
   echo "generated frontend lock does not pin the metadata dist.tarball URL" >&2
   exit 1
 }
@@ -612,14 +615,28 @@ grep -Fq "integrity: ${computed_admin_web_integrity}" "${host_root}/web/pnpm-loc
   echo "generated frontend lock does not pin the metadata dist.integrity" >&2
   exit 1
 }
-if grep -Fq "${registry_url}${pnpm_fallback_tarball_path}" "${host_root}/web/pnpm-lock.yaml"; then
+if [[ "${use_public_packages}" = false ]] && grep -Fq "${registry_url}${pnpm_fallback_tarball_path}" "${host_root}/web/pnpm-lock.yaml"; then
   echo "generated frontend lock fell back to pnpm's inferred tarball URL" >&2
   exit 1
 fi
-if grep -Eq 'NODE_AUTH_TOKEN|_authToken' "${host_root}/web/.npmrc" "${host_root}/web/pnpm-lock.yaml"; then
-  echo "generated frontend files contain a registry credential reference" >&2
+# The npmrc contains an environment reference, never the credential value.
+# shellcheck disable=SC2016
+grep -Fxq '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' "${host_root}/web/.npmrc"
+if grep -Eq 'NODE_AUTH_TOKEN|_authToken' "${host_root}/web/pnpm-lock.yaml"; then
+  echo "generated lock contains a registry credential reference" >&2
   exit 1
 fi
+python3 - "${host_root}" <<'PYTOKEN'
+import os
+from pathlib import Path
+import sys
+
+token = os.environ.get('NODE_AUTH_TOKEN', '')
+if token:
+    for relative in ('web/.npmrc', 'web/pnpm-lock.yaml'):
+        if token in (Path(sys.argv[1]) / relative).read_text(encoding='utf-8'):
+            raise SystemExit('generated frontend files contain an expanded registry credential')
+PYTOKEN
 
 tree_digest() {
   python3 - "$1" <<'PY'
@@ -754,8 +771,8 @@ validate_external_host_go() {
   (
     cd "${validation_root}"
     GOWORK=off GOFLAGS= go mod edit \
-      -replace=github.com/mss-boot-io/mss-boot-admin/admin="${foundation_root}/admin" \
-      -replace=github.com/mss-boot-io/mss-boot-admin/mss-boot="${foundation_root}/mss-boot"
+      -replace=github.com/mss-boot-sys/mss-boot-admin/admin="${foundation_root}/admin" \
+      -replace=github.com/mss-boot-sys/mss-boot-admin/mss-boot="${foundation_root}/mss-boot"
     GOWORK=off GOFLAGS= GOMODCACHE="${consumer_go_modcache}" GOPROXY="${consumer_go_proxy}" GOSUMDB="${consumer_go_sumdb}" \
       go mod tidy
     GOWORK=off GOFLAGS=-mod=readonly GOMODCACHE="${consumer_go_modcache}" GOPROXY="${consumer_go_proxy}" GOSUMDB="${consumer_go_sumdb}" \
@@ -867,7 +884,7 @@ PY
 
   local mss_next="${tool_dir}/mss-next"
   local mss_mcp_next="${tool_dir}/mss-mcp-next"
-  local next_ldflags="-X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Version=${release_version} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Commit=${next_foundation_commit} -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Timestamp=${next_foundation_timestamp}"
+  local next_ldflags="-X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Version=${release_version} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Commit=${next_foundation_commit} -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Timestamp=${next_foundation_timestamp}"
   (
     cd "${next_foundation}"
     GOWORK=off go build -mod=mod -trimpath -ldflags "${next_ldflags}" -o "${mss_next}" ./cmd/mss

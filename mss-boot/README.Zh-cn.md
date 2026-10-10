@@ -2,17 +2,12 @@
 
 [English](./README.md)
 
-## v1.3.7 稳定组件状态
+## v1.3.9 发行身份
 
-v1.3.7 已是当前稳定且可采用的完整 Admin Distribution。公开 Framework Module
-`github.com/mss-boot-io/mss-boot-admin/mss-boot@v1.3.7` 已使用 `GOWORK=off`，并与
-匹配的 Admin、Admin Web、Root 工具和镜像一起从精确 merged-main 提交
-`77b53d41092741eac62fa6418c0bdbf87413c7cd` 完成资格验证。
-
-v1.3.5 与 v1.3.6 都是不可变部分发布。v1.3.6 Framework 组件已公开并绑定
-`b1fe47a3a83209574e09d53526b122dd2cbc5277`，但协调列车从未完成。部分列车的公共 Go
-组件只能作为不可变审计证据，不能与其他补丁版本、本地替换、源码检出或未发布包混合，
-拼成完整 Admin Distribution。Docs 网站独立发布，不影响此 Framework Module 的稳定状态。
+Framework 模块为 `github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.3.9`。
+这是 `mss-boot-sys` 下的首个版本；v1.3.8 及更早版本归属原 `mss-boot-io` 组织。
+请将业务 Go imports 迁入新命名空间，使用 Go 1.27.2，并将 Casbin 导出类型适配至 v3。
+详细步骤见[发布迁移指南](../docs/docs/releases/v1-3-9.md)。
 
 ## Framework 边界
 
@@ -20,14 +15,14 @@ mss-boot 提供生命周期、配置、日志、缓存、队列、锁、存储�
 重试、幂等与协调等基础能力；不包含 Admin 实体、菜单、业务流程、React 代码或 Agent
 编排。
 
-v1.3.7 的受支持依赖方向是：
+v1.3.9 的受支持依赖方向是：
 
 ```text
 Thin Host 业务代码 -> Admin -> mss-boot
 ```
 
 大多数应用应依赖完整 Admin Module，并让 Go 传递解析匹配的 Framework。只有领域无关
-基础设施扩展才直接依赖 Framework。Thin Host 必须锁定完整 v1.3.7 发行版，不能从
+基础设施扩展才直接依赖 Framework。Thin Host 必须锁定完整 v1.3.9 发行版，不能从
 v1.3.5 或 v1.3.6 组件拼装安装路径。
 
 公开 API、配置键、接口和持久化行为仍是兼容性表面。参见

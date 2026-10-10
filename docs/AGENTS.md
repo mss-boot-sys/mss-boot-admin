@@ -59,8 +59,12 @@ Architecture and roadmap documents must identify a next executable step and a me
 
 ## Docs publication identity
 
-- Docs is a non-blocking website track. Its failure or absence never blocks the
-  Admin Distribution, npm, images, GitHub Latest, or stable-version policy.
+- v1.3.9 is the first release in `mss-boot-sys/mss-boot-admin`; older versions
+  remain historical records of `mss-boot-io`. The existing Docs domain stays
+  `https://docs.mss-boot-io.top`.
+- A request that includes Docs publication is complete only after the deployed
+  site and `/release.json` are verified. A website failure does not authorize
+  moving or republishing immutable core artifacts.
 - `docs/vX.Y.Z` and its Docs GitHub Release are replaceable deployment pointers,
   not immutable package identities. Only the authorized release operator may
   delete both and recreate the same tag.

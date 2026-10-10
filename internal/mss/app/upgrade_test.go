@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/blueprint"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 func TestUpgradeApplicationDefersRootModuleIdentityToManifest(t *testing.T) {
@@ -109,10 +109,10 @@ func TestValidateEmbeddedAdminUpgradeVersionRequiresMatchingReleaseTool(t *testi
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.7"
+	buildinfo.Version = "v1.3.9"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
-	if err := validateEmbeddedAdminUpgradeVersion("v1.3.7"); err != nil {
+	if err := validateEmbeddedAdminUpgradeVersion("v1.3.9"); err != nil {
 		t.Fatalf("matching embedded version error = %v", err)
 	}
 	if err := validateEmbeddedAdminUpgradeVersion("v9.9.9"); err == nil || !strings.Contains(err.Error(), "install the matching mss v9.9.9") {
@@ -162,7 +162,7 @@ func TestWriteUpgradeStatusPreservesFlatJSONAndReportsFourIdentities(t *testing.
 			Repository:           "acme/customer-admin",
 			Blueprint:            "management-system",
 			BlueprintVersion:     "0.2.1-ci",
-			FoundationRepository: "mss-boot-io/mss-boot-admin",
+			FoundationRepository: "mss-boot-sys/mss-boot-admin",
 			FoundationCommit:     strings.Repeat("a", 40),
 			GeneratorVersion:     "1.1.0",
 			GeneratorCommit:      strings.Repeat("b", 40),
@@ -170,11 +170,11 @@ func TestWriteUpgradeStatusPreservesFlatJSONAndReportsFourIdentities(t *testing.
 		Distribution: project.DistributionSpec{
 			Name:     "mss-boot-admin",
 			Version:  "v1.3.0",
-			Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-io/mss-boot-admin/admin", Version: "v1.3.0"},
-			Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-io/admin-web", Version: "1.3.0"},
+			Backend:  project.DistributionBackendSpec{Module: "github.com/mss-boot-sys/mss-boot-admin/admin", Version: "v1.3.0"},
+			Frontend: project.DistributionFrontendSpec{Package: "@mss-boot-sys/admin-web", Version: "1.3.0"},
 		},
 		Identities: blueprint.IdentitySet{
-			Foundation: blueprint.FoundationIdentity{Repository: "mss-boot-io/mss-boot-admin", Version: "1.1.0", Commit: strings.Repeat("a", 40)},
+			Foundation: blueprint.FoundationIdentity{Repository: "mss-boot-sys/mss-boot-admin", Version: "1.1.0", Commit: strings.Repeat("a", 40)},
 			Blueprint:  blueprint.BlueprintIdentity{Name: "management-system", Version: "0.2.1-ci", SHA256: strings.Repeat("c", 64)},
 			Generator:  blueprint.GeneratorIdentity{Tool: "mss", Version: "1.1.0", Commit: strings.Repeat("b", 40)},
 			Snapshot:   blueprint.DownstreamSnapshotIdentity{Project: "customer-admin", Module: "github.com/acme/customer-admin", Repository: "acme/customer-admin", SHA256: strings.Repeat("d", 64)},
@@ -213,7 +213,7 @@ func TestWriteUpgradeStatusPreservesFlatJSONAndReportsFourIdentities(t *testing.
 	for _, expected := range []string{
 		"admin distribution: mss-boot-admin@v1.3.0",
 		"blueprint: management-system@0.2.1-ci sha256 ",
-		"foundation: mss-boot-io/mss-boot-admin@1.1.0 commit ",
+		"foundation: mss-boot-sys/mss-boot-admin@1.1.0 commit ",
 		"generator: mss@1.1.0 commit ",
 		"snapshot: " + strings.Repeat("d", 64),
 		"lock: .mss/lock.yaml sha256 ",

@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/spec"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/spec"
 	"gopkg.in/yaml.v3"
 )
 

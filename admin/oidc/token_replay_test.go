@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )

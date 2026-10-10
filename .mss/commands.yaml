@@ -252,29 +252,16 @@ spec:
       idempotent: true
 
     remote-release-governance-verify:
-      command: bash tools/release/verify_remote_release_governance.sh --repository <owner/repository> --release-actor-login lwnmengjing --scope core
-      description: As any authenticated repository administrator, emit sanitized metadata proving that Root, Framework, Admin, frontend, and npm publication authority belongs only to lwnmengjing, stopped component refs have a creation-only no-bypass freeze, every core release tag remains immutable, active core publishing environments have exact tag policies with no reviewer pause or administrator bypass, and retired environments allow no ref. Docs credentials, environments, tags, and site state are deliberately outside this core distribution gate.
+      command: bash tools/release/verify_remote_release_governance.sh --repository mss-boot-sys/mss-boot-admin --release-actor-login mss-boot-sys --scope core
+      description: Verify the new repository's PR-to-main and immutable-tag rules without historical release or npmjs prerequisites.
       outputFormats: [json]
       category: release
       idempotent: true
 
     docs-release-governance-verify:
-      command: bash tools/release/verify_remote_release_governance.sh --repository <owner/repository> --release-actor-login lwnmengjing --scope docs
-      description: Before an optional Docs site publication, independently verify controlled Docs tag creation and deletion, the no-in-place-update rule, exclusion from core immutability, the prod environment policy, and effective availability of the organization-managed CF_API_TOKEN without reading its value. Failure blocks only the Docs deployment and never blocks the core distribution, official npm, GitHub Latest, current-stable policy, or adopter availability.
+      command: bash tools/release/verify_remote_release_governance.sh --repository mss-boot-sys/mss-boot-admin --release-actor-login mss-boot-sys --scope docs
+      description: Verify the Docs tag and deployment environment plus presence of CF_API_TOKEN, without reading its value.
       outputFormats: [json]
-      category: release
-      idempotent: true
-
-    root-release-preview:
-      command: gh workflow run release.yml --ref main -f version=<version>
-      description: Build and verify only the unique non-publishing Root binaries, archives, packages, SBOMs, checksums, portable delivery paths, Thin Host composition, and multi-platform image candidate after a self-bound local release-evidence result on the same merged-main commit; this is artifact staging, not a second broad quality suite.
-      outputFormats: [text]
-      category: release
-
-    official-npm-stable-promotion:
-      command: gh workflow run npm-release.yml --ref <exact-root-tag> -f version=<version>
-      description: After every immutable distribution component, Root, image, Go module, and package surface reconciles, dispatch the reviewed exact Root tag to publish or reconcile official npm latest through Trusted Publishing; the workflow verifies npm identity and provenance before moving GitHub Latest. Docs is an asynchronous site-only track and is never a promotion prerequisite.
-      outputFormats: [text]
       category: release
       idempotent: true
 

@@ -18,9 +18,8 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from typing import NamedTuple
 
-
-FRAMEWORK_MODULE = "github.com/mss-boot-io/mss-boot-admin/mss-boot"
-ADMIN_MODULE = "github.com/mss-boot-io/mss-boot-admin/admin"
+FRAMEWORK_MODULE = "github.com/mss-boot-sys/mss-boot-admin/mss-boot"
+ADMIN_MODULE = "github.com/mss-boot-sys/mss-boot-admin/admin"
 VERSION_RE = re.compile(r"^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$")
 
 
@@ -139,7 +138,9 @@ def _git_module_candidate(
         )
     prefix = source_directory.rstrip("/") + "/"
     try:
-        with tarfile.open(fileobj=io.BytesIO(archive_result.stdout), mode="r:") as archive:
+        with tarfile.open(
+            fileobj=io.BytesIO(archive_result.stdout), mode="r:"
+        ) as archive:
             result: list[GitCandidateFile] = []
             for member in archive.getmembers():
                 if member.isdir() or not member.name.startswith(prefix):
@@ -262,7 +263,10 @@ def _module_archive_files(
             continue
         if any(part in {".git", ".hg", ".svn", ".bzr"} for part in relative.parts):
             continue
-        if any(relative == nested or nested in relative.parents for nested in nested_modules):
+        if any(
+            relative == nested or nested in relative.parents
+            for nested in nested_modules
+        ):
             continue
         selected.append(source)
     if not any(source.relative == PurePosixPath("go.mod") for source in selected):
@@ -302,7 +306,7 @@ def _write_file_module_proxy(
             info.date_time = (1980, 1, 1, 0, 0, 0)
             info.compress_type = zipfile.ZIP_DEFLATED
             executable = bool(source.mode & 0o111)
-            info.external_attr = ((0o100755 if executable else 0o100644) << 16)
+            info.external_attr = (0o100755 if executable else 0o100644) << 16
             archive.writestr(info, source.content)
     return len(selected)
 
@@ -375,7 +379,9 @@ def _calculate_module_candidate_sums(
             label=label,
             source_commit=source_commit,
         )
-    with tempfile.TemporaryDirectory(prefix=f"mss-{label.lower()}-file-proxy-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix=f"mss-{label.lower()}-file-proxy-"
+    ) as directory:
         proxy_root = Path(directory)
         file_count = _write_file_module_proxy(
             proxy_root,
@@ -477,7 +483,9 @@ def _required_framework_version(admin_go_mod: Path, *, go_command: str) -> str:
         and entry["Old"].get("Path") == FRAMEWORK_MODULE
         for entry in replacements
     ):
-        raise ChecksumContractError("admin/go.mod must not replace the Framework module")
+        raise ChecksumContractError(
+            "admin/go.mod must not replace the Framework module"
+        )
     return matches[0]
 
 
@@ -511,7 +519,9 @@ def _verify_workspace_replacement(
     old = replacement.get("Old")
     new = replacement.get("New")
     if not isinstance(old, dict) or not isinstance(new, dict):
-        raise ChecksumContractError("go.work contains a malformed Framework replacement")
+        raise ChecksumContractError(
+            "go.work contains a malformed Framework replacement"
+        )
     if (
         old.get("Version") != version
         or new.get("Path") != "./mss-boot"
@@ -792,9 +802,11 @@ def refresh_repository_metadata(
         label="admin/go.sum",
     )
     updated_admin_sources = [
-        GitCandidateFile(source.relative, updated_admin_go_sum, source.mode)
-        if source.relative == PurePosixPath("go.sum")
-        else source
+        (
+            GitCandidateFile(source.relative, updated_admin_go_sum, source.mode)
+            if source.relative == PurePosixPath("go.sum")
+            else source
+        )
         for source in admin_sources
     ]
     admin_sum, admin_go_mod_sum, admin_file_count = _calculate_module_candidate_sums(
@@ -858,6 +870,8 @@ def refresh_repository_metadata(
         raise ChecksumContractError(
             "HEAD changed before refreshed checksum metadata could be written"
         )
+    if expected_head_commit is not None:
+        _ensure_core_tags_absent(repository_root, version=version)
     updated_files: list[str] = []
     for relative, content in outputs.items():
         if _head_commit(repository_root) != head_commit:
@@ -1112,7 +1126,13 @@ def _resolve_published_source_commit(
             "published stable source commit must be a full lowercase commit SHA"
         )
     resolved = _run(
-        ["git", "rev-parse", "--verify", "--end-of-options", f"{source_commit}^{{commit}}"],
+        [
+            "git",
+            "rev-parse",
+            "--verify",
+            "--end-of-options",
+            f"{source_commit}^{{commit}}",
+        ],
         cwd=repository_root,
     )
     if resolved.returncode != 0 or resolved.stdout.strip() != source_commit:
@@ -1277,6 +1297,39 @@ def verify_current_stable_repository(
     return result
 
 
+def _ensure_core_tags_absent(repository_root: Path, *, version: str) -> None:
+    """Never rewrite metadata for a train that already has a public identity."""
+    refs = [
+        f"refs/tags/{prefix}{version}"
+        for prefix in ("", "mss-boot/", "admin/", "web/antd-v6/")
+    ]
+    for ref in refs:
+        result = _run(
+            ["git", "show-ref", "--verify", "--quiet", ref], cwd=repository_root
+        )
+        if result.returncode == 0:
+            raise ChecksumContractError(
+                f"checksum metadata is immutable once core tag {ref} exists"
+            )
+        if result.returncode != 1:
+            raise ChecksumContractError(f"cannot verify local core tag absence: {ref}")
+    remotes = _run(["git", "remote"], cwd=repository_root)
+    if remotes.returncode != 0:
+        raise ChecksumContractError("cannot inspect remotes before checksum refresh")
+    if "origin" in remotes.stdout.splitlines():
+        remote = _run(
+            ["git", "ls-remote", "--tags", "origin", *refs], cwd=repository_root
+        )
+        if remote.returncode != 0:
+            raise ChecksumContractError(
+                "cannot verify remote core tag absence before checksum refresh"
+            )
+        if remote.stdout.strip():
+            raise ChecksumContractError(
+                "checksum metadata is immutable once a remote core tag exists"
+            )
+
+
 def _require_active_future_candidate(
     repository_root: Path,
     *,
@@ -1288,15 +1341,25 @@ def _require_active_future_candidate(
     stable_version = policy.get("currentStableVersion")
     next_version = policy.get("nextPublicVersion")
     target_state = policy.get("releaseTargetState")
+    pending_first_release = (
+        policy.get("publicationMode") == "direct"
+        and policy.get("currentStableCommit") == "pending"
+        and version
+        == next_version
+        == policy.get("distributionVersion")
+        == stable_version
+        == "v1.3.9"
+    )
     if (
         version != next_version
-        or version == stable_version
+        or (version == stable_version and not pending_first_release)
         or target_state != "active"
     ):
         raise ChecksumContractError(
             "checksum metadata may be refreshed only for the active future "
             "candidate declared by release policy"
         )
+    _ensure_core_tags_absent(repository_root, version=version)
     if _head_commit(repository_root) != head_commit:
         raise ChecksumContractError(
             "HEAD changed while future-candidate policy was being verified"

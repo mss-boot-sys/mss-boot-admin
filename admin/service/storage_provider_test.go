@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gin-gonic/gin"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/center"
-	adminconfig "github.com/mss-boot-io/mss-boot-admin/admin/config"
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	adminconfig "github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 type failingUploadPolicySnapshot struct{ err error }

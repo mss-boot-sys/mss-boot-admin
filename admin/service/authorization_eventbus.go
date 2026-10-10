@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	runtimeeventbus "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/eventbus"
+	runtimeeventbus "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/eventbus"
 	"gorm.io/gorm"
 )
 

@@ -2,7 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { compilePortablePresentationPattern } from '@mss-boot-io/admin-web/runtime/presentation';
+import { compilePortablePresentationPattern } from '@mss-boot-sys/admin-web/runtime/presentation';
 
 const APP_BASE_URL = process.env.MSS_V6_BASE_URL ?? 'http://127.0.0.1:18001';
 const API_BASE_URL = (process.env.MSS_E2E_API_URL ?? `${APP_BASE_URL}/admin/api`).replace(/\/$/, '');

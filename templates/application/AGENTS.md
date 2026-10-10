@@ -49,11 +49,13 @@ configuration, deployment, tests, and generated composition glue.
 
 ## Admin Web package
 
-- `web/.npmrc` uses the public npm registry and exact dependency pins. Installing
-  `@mss-boot-io/admin-web` must not require a long-lived registry token.
-- GitHub Packages remains a release mirror for compatibility and evidence. A
-  host that explicitly selects that mirror must inject `NODE_AUTH_TOKEN` only
-  for the command process and must never commit the expanded token.
+- `web/.npmrc` sends `@mss-boot-sys` packages to GitHub Packages and third-party
+  dependencies to npmjs, with exact dependency pins.
+- Inject `NODE_AUTH_TOKEN` with package read access only into generation,
+  dependency installation, and upgrade command processes. The committed npm
+  configuration must contain only the literal `${NODE_AUTH_TOKEN}` reference.
+- Never commit the expanded token or pass it as a Docker build argument. Use a
+  BuildKit secret named `NODE_AUTH_TOKEN` for the generated Dockerfile.
 
 ## Admin Distribution upgrades
 

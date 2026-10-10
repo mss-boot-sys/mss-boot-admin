@@ -6,6 +6,26 @@ and the project uses semantic versioning for nested-module releases.
 
 ## [Unreleased]
 
+No unreleased changes are recorded.
+
+## [mss-boot/v1.3.9] - 2026-10-11
+
+Release scope: first coordinated release under `mss-boot-sys/mss-boot-admin`.
+Publication results are recorded by the corresponding tags, Releases, registry
+assets and checksums; this source entry does not itself certify publication.
+Versions v1.3.8 and earlier belong to `mss-boot-io`; historical entries below
+retain the facts and terminology recorded at that time.
+
+### Repository migration
+
+- Move Go modules, generated hosts and package identities to `mss-boot-sys`.
+- Publish `@mss-boot-sys/admin-web@1.3.9` only to GitHub Packages; consumers
+  supply `read:packages` authentication through `NODE_AUTH_TOKEN`.
+- Qualify locally on an exact merged-main commit. Tag workflows build and
+  publish artifacts without a hosted preview or separate stable-promotion round.
+- Align and deploy Docs to the existing `https://docs.mss-boot-io.top` domain.
+
+
 ### Changed
 
 - Migrate exported SQL and MongoDB enforcers and watcher interfaces to Casbin
@@ -28,7 +48,7 @@ and the project uses semantic versioning for nested-module releases.
 
 ## [mss-boot/v1.3.7] - 2026-08-31
 
-Status: **published / coordinated current stable**. The public Framework module,
+Status at original publication: **published / historical coordinated stable**. The public Framework module,
 Admin, Admin Web, Root tools, images, npm stable alias, and current-stable policy
 reconcile to exact release commit
 `77b53d41092741eac62fa6418c0bdbf87413c7cd`. The Framework API remains source

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/enum"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/enum"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/api/errors"

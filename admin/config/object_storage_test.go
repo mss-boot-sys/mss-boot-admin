@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	frameworkconfig "github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config"
+	frameworkconfig "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config"
 )
 
 func TestObjectStorageSingleClientOwnedClose(t *testing.T) {

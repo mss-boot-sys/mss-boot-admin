@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/mss-boot-io/mss-boot-admin/admin/center/websocket"
-	"github.com/mss-boot-io/mss-boot-admin/admin/models"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/center/websocket"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/models"
 )
 
 type NotificationService struct{}

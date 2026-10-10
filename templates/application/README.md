@@ -7,7 +7,9 @@ composition glue.
 
 ## Start development
 
-Install the matching `mss` tool from the versioned release bundle, then run:
+Install the matching `mss` tool from the versioned release bundle. Inject
+`NODE_AUTH_TOKEN` with `read:packages` access to `@mss-boot-sys/admin-web` in the
+command environment, then run:
 
 ```shell
 mss doctor --strict
@@ -103,6 +105,23 @@ or one missing its manifest cannot
 use three-way upgrade: generate a clean target baseline in a new directory and
 migrate business-owned specifications and files instead of fabricating a
 manifest.
+
+## Package access and container builds
+
+Admin Web is distributed only through GitHub Packages. `web/.npmrc` selects
+`https://npm.pkg.github.com/` for `@mss-boot-sys` and npmjs for third-party
+packages. Supply `NODE_AUTH_TOKEN` from your credential manager or CI secret
+store when generating, setting up, or upgrading a host. Never write the token
+into a lockfile or configuration file. For another repository's GitHub Actions,
+configure `MSS_PACKAGES_READ_TOKEN` with package read access, or grant that
+repository access to the package so its `GITHUB_TOKEN` can read it.
+
+Container builds pass the token as a BuildKit secret, without embedding it in
+an image layer:
+
+```shell
+docker build --secret id=NODE_AUTH_TOKEN,env=NODE_AUTH_TOKEN -t my-admin .
+```
 
 ## Configuration and security
 

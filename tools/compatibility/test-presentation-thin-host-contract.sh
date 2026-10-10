@@ -55,11 +55,11 @@ replacements = {
     "__MSS_APP_REPOSITORY__": "example/presentation-thin-host",
     "__MSS_APP_MODULE__": "example.com/presentation-thin-host",
     "__MSS_DISTRIBUTION_NAME__": "mss-boot-admin",
-    "__MSS_DISTRIBUTION_VERSION__": "v1.3.7",
-    "__MSS_DISTRIBUTION_BACKEND_MODULE__": "github.com/mss-boot-io/mss-boot-admin/admin",
-    "__MSS_DISTRIBUTION_BACKEND_VERSION__": "v1.3.7",
-    "__MSS_DISTRIBUTION_FRONTEND_PACKAGE__": "@mss-boot-io/admin-web",
-    "__MSS_DISTRIBUTION_FRONTEND_VERSION__": "1.3.7",
+    "__MSS_DISTRIBUTION_VERSION__": "v1.3.9",
+    "__MSS_DISTRIBUTION_BACKEND_MODULE__": "github.com/mss-boot-sys/mss-boot-admin/admin",
+    "__MSS_DISTRIBUTION_BACKEND_VERSION__": "v1.3.9",
+    "__MSS_DISTRIBUTION_FRONTEND_PACKAGE__": "@mss-boot-sys/admin-web",
+    "__MSS_DISTRIBUTION_FRONTEND_VERSION__": "1.3.9",
 }
 for relative in (".mss/project.yaml", ".mss/capabilities.yaml", ".mss/commands.yaml"):
     content = (foundation / "templates/application" / relative).read_text(encoding="utf-8")
@@ -116,7 +116,7 @@ for generated_output in \
     exit 1
   }
 done
-grep -Fq "from '@mss-boot-io/admin-web/runtime/presentation'" "${generated_test}" || {
+grep -Fq "from '@mss-boot-sys/admin-web/runtime/presentation'" "${generated_test}" || {
   echo "generated Thin Host test does not use the public presentation runtime subpath" >&2
   exit 1
 }
@@ -124,7 +124,7 @@ if grep -Fq "../../../shared/" "${generated_test}"; then
   echo "generated Thin Host test depends on Foundation-only shared sources" >&2
   exit 1
 fi
-grep -Fq "from '@mss-boot-io/admin-web/runtime/presentation/client'" "${generated_page}" || {
+grep -Fq "from '@mss-boot-sys/admin-web/runtime/presentation/client'" "${generated_page}" || {
   echo "generated Supplier page does not use the public effective presentation client" >&2
   exit 1
 }
@@ -321,9 +321,9 @@ consumer = Path(sys.argv[2])
             "",
             "go 1.27.2",
             "",
-            "require github.com/mss-boot-io/mss-boot-admin/admin v0.0.0",
+            "require github.com/mss-boot-sys/mss-boot-admin/admin v0.0.0",
             "",
-            f"replace github.com/mss-boot-io/mss-boot-admin/admin => {(foundation / 'admin').as_posix()}",
+            f"replace github.com/mss-boot-sys/mss-boot-admin/admin => {(foundation / 'admin').as_posix()}",
             "",
         ]
     ),
@@ -338,7 +338,7 @@ import (
 	"reflect"
 	"testing"
 
-	corepresentation "github.com/mss-boot-io/mss-boot-admin/admin/presentation/core"
+	corepresentation "github.com/mss-boot-sys/mss-boot-admin/admin/presentation/core"
 )
 
 type coreIdentity struct {
@@ -498,7 +498,7 @@ tarball = Path(sys.argv[2]).resolve()
 admin_manifest = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
 web.mkdir(parents=True, exist_ok=True)
 dependencies = dict(admin_manifest["dependencies"])
-dependencies["@mss-boot-io/admin-web"] = f"file:{tarball}"
+dependencies["@mss-boot-sys/admin-web"] = f"file:{tarball}"
 manifest = {
     "name": "presentation-thin-host-web",
     "version": "0.0.0",
@@ -573,7 +573,7 @@ export default defineConfig({
 )
 (web / "runtime.presentation.test.ts").write_text(
     """import { describe, expect, it } from 'vitest';
-import { compilePortablePresentationPattern } from '@mss-boot-io/admin-web/runtime/presentation';
+import { compilePortablePresentationPattern } from '@mss-boot-sys/admin-web/runtime/presentation';
 
 describe('published presentation runtime', () => {
   it('exports Unicode-safe portable pattern compilation', () => {
@@ -597,7 +597,7 @@ vi.mock('@umijs/max', () => ({
 import {
   createEffectivePresentationAPI,
   resolveEffectivePagePresentation,
-} from '@mss-boot-io/admin-web/runtime/presentation/client';
+} from '@mss-boot-sys/admin-web/runtime/presentation/client';
 import { generatedPresentationRegistry } from './src/generated/presentation-registry.generated';
 
 describe('published effective presentation client', () => {
@@ -646,7 +646,7 @@ describe('published effective presentation client', () => {
 import {
   corePresentationInventory,
   corePresentationRegistry,
-} from './node_modules/@mss-boot-io/admin-web/src/generated/core-presentation-registry.generated';
+} from './node_modules/@mss-boot-sys/admin-web/src/generated/core-presentation-registry.generated';
 import {
   generatedPresentationInventory,
   generatedPresentationRegistry,
@@ -656,15 +656,15 @@ import {
   menuPresentationRegistryEntry,
   postPresentationRegistryEntry,
   rolePresentationRegistryEntry,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/administration/tablePresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/administration/tablePresentation';
 import {
   userPresentationListComponents,
   userPresentationRegistryEntry,
   userPresentationSearchComponents,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/administration/userPresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/administration/userPresentation';
 import {
   languagePresentationRegistryEntry,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/language/tablePresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/language/tablePresentation';
 import {
   auditLogPresentationRegistryEntry,
   loginLogPresentationRegistryEntry,
@@ -672,13 +672,13 @@ import {
   runtimeLogPresentationRegistryEntry,
   systemConfigPresentationRegistryEntry,
   taskPresentationRegistryEntry,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/operations/tablePresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/operations/tablePresentation';
 import {
   optionPresentationRegistryEntry,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/option/tablePresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/option/tablePresentation';
 import {
   onlineSessionPresentationRegistryEntry,
-} from './node_modules/@mss-boot-io/admin-web/src/modules/session/tablePresentation';
+} from './node_modules/@mss-boot-sys/admin-web/src/modules/session/tablePresentation';
 
 const expectedCoreEntries = [
   ['department.list', 'sha256:01d4677adb1b5aeacc0e81ef51e7f4f46bdaad17e73a8c38075704c2e304be5d'],
@@ -768,7 +768,7 @@ describe('packaged Foundation core presentation', () => {
 PY
 
 consumer_node_modules="${host_root}/web/node_modules"
-consumer_admin_web="${consumer_node_modules}/@mss-boot-io/admin-web"
+consumer_admin_web="${consumer_node_modules}/@mss-boot-sys/admin-web"
 (
   cd -- "${host_root}/web"
   corepack pnpm@10.34.5 install \
@@ -778,7 +778,7 @@ consumer_admin_web="${consumer_node_modules}/@mss-boot-io/admin-web"
     --reporter=append-only
 )
 [[ -d "${consumer_admin_web}" ]] || {
-  echo "external pnpm install did not resolve @mss-boot-io/admin-web" >&2
+  echo "external pnpm install did not resolve @mss-boot-sys/admin-web" >&2
   exit 1
 }
 python3 - "${consumer_admin_web}" <<'PY'

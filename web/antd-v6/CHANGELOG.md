@@ -6,6 +6,26 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+No unreleased changes are recorded.
+
+## [web/antd-v6/v1.3.9] - 2026-10-11
+
+Release scope: first coordinated release under `mss-boot-sys/mss-boot-admin`.
+Publication results are recorded by the corresponding tags, Releases, registry
+assets and checksums; this source entry does not itself certify publication.
+Versions v1.3.8 and earlier belong to `mss-boot-io`; historical entries below
+retain the facts and terminology recorded at that time.
+
+### Repository migration
+
+- Move Go modules, generated hosts and package identities to `mss-boot-sys`.
+- Publish `@mss-boot-sys/admin-web@1.3.9` only to GitHub Packages; consumers
+  supply `read:packages` authentication through `NODE_AUTH_TOKEN`.
+- Qualify locally on an exact merged-main commit. Tag workflows build and
+  publish artifacts without a hosted preview or separate stable-promotion round.
+- Align and deploy Docs to the existing `https://docs.mss-boot-io.top` domain.
+
+
 - Refresh the development dependency graph to React 19.3.0, Ant Design 6.6.5,
   ProComponents 3.1.15-7 beta, React Query 5.104.1, Umi Max 4.7.23, Vite 8.3.4
   and Playwright 1.64.0. Align Vitest 5.0.3 and all package/Thin Host dependency
@@ -25,12 +45,11 @@ and the root changelog, not as a current release surface.
   after successful password recovery, without waiting for the success message
   to close. Preserve existing same-origin redirects and identity checks.
 - Preserve business-owned registration modules across coordinated upgrades.
-  These additions require a future distribution release and are not available
-  in the published v1.3.7 package.
+  These additions ship in the v1.3.9 package.
 
 ## [web/antd-v6/v1.3.7] - 2026-08-31
 
-Status: **published / coordinated current stable**. The Admin Web Release,
+Status at original publication: **published / historical coordinated stable**. The Admin Web Release,
 frontend image, official npm package `@mss-boot-io/admin-web@1.3.7`, npm
 `latest`, Root image, GitHub Latest, and current-stable policy reconcile to exact
 release commit `77b53d41092741eac62fa6418c0bdbf87413c7cd`. npm was published

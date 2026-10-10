@@ -1,31 +1,24 @@
 ---
 title: 容器发布状态与部署合同
 order: 6
-description: v1.3.7 稳定镜像合同、v1.3.5/v1.3.6 部分发布事实与 Thin Host 部署边界
+description: v1.3.9 稳定镜像合同、v1.3.5/v1.3.6 部分发布事实与 Thin Host 部署边界
 ---
 
-# v1.3.7 稳定容器发布与部署合同
+# v1.3.9 稳定容器发布与部署合同
 
 :::warning
-发布状态：**v1.3.7 是当前稳定版**，后端与前端镜像已按不可变 digest 完成多架构对账；
+版本范围：**v1.3.9 是新仓库首发基线**，部署时核对后端与前端镜像的不可变 digest；
 v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。Docs 网站可通过 `docs/v*` 异步候补，
 其状态不影响镜像、组件、稳定别名或采用。
 :::
 
-v1.3.5 的镜像发布只完成了一部分：
-
-| 镜像身份 | v1.3.5 结果 |
-| --- | --- |
-| `ghcr.io/mss-boot-io/mss-boot-admin:v1.3.5` | 后端 Root 镜像未发布 |
-| `ghcr.io/mss-boot-io/mss-boot-admin-antd-v6:v1.3.5` | 前端镜像已发布并保持不可变 |
-
-单个前端镜像不能证明完整 Admin Distribution。v1.3.7 的两个参考镜像虽已存在并完成
-多架构对账，它们也只是 Foundation 发行证据，不包含采用者的业务模块、组合入口或业务
-前端路由，Thin Host 不能直接部署它们来代替自己的业务镜像。
+v1.3.9 后端与前端镜像位于 `ghcr.io/mss-boot-sys/`。正式发布后从对应 Release 取得
+不可变 digest，验证目标平台，并把使用的 digest 记录到部署配置。
+Foundation 参考镜像不能直接部署成包含业务模块的 Thin Host，需构建自有业务镜像。
 
 ## 构建 Thin Host 镜像
 
-v1.3.7 生成的 Dockerfile 从同一协调版本的公共依赖和冻结锁构建后端、Admin Web
+v1.3.9 生成的 Dockerfile 从同一协调版本的公共依赖和冻结锁构建后端、Admin Web
 与业务代码，并把 Go、Node 和最终运行时基础镜像固定到已核验的多架构 digest。配套
 `.dockerignore` 会排除 Git 元数据、Agent 指令、运行报告/日志、数据库、环境文件、配置
 覆盖和前端构建缓存；不得删除这些边界把本地 secret 带入构建上下文。应在业务仓库自己

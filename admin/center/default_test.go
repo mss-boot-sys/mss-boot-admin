@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/grafana/pyroscope-go"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server"
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/config/storage/cache"
-	runtimechallenge "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/challenge"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/config/storage/cache"
+	runtimechallenge "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/challenge"
 )
 
 type concurrentChallenge struct{}

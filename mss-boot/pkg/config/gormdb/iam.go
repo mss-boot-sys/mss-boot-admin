@@ -24,7 +24,7 @@ import (
 	gpostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/pkg/search/gorms"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/search/gorms"
 )
 
 type iamTokenBuilder func(

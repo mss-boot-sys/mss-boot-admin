@@ -17,7 +17,7 @@ $RepositoryRoot = [System.IO.Path]::GetFullPath(
 )
 $GitSafeRoot = $RepositoryRoot.Replace('\', '/')
 $Installer = Join-Path $PSScriptRoot 'install-mss.ps1'
-$Version = 'v1.3.7'
+$Version = 'v1.3.9'
 $UsePrebuilt = -not [string]::IsNullOrWhiteSpace($MssFixture) -or -not [string]::IsNullOrWhiteSpace($McpFixture)
 if ($UsePrebuilt) {
     if (
@@ -67,7 +67,7 @@ function Get-Sha256Hex {
 
 try {
     New-Item -ItemType Directory -Path $Fixture, $ArchiveRoot, $InstallDir | Out-Null
-    $Ldflags = "-s -w -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Version=$Version -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Commit=$Commit -X github.com/mss-boot-io/mss-boot-admin/internal/mss/buildinfo.Timestamp=$Timestamp"
+    $Ldflags = "-s -w -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Version=$Version -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Commit=$Commit -X github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo.Timestamp=$Timestamp"
     if ($UsePrebuilt) {
         Copy-Item -LiteralPath $MssFixture -Destination (Join-Path $ArchiveRoot 'mss.exe')
         Copy-Item -LiteralPath $McpFixture -Destination (Join-Path $ArchiveRoot 'mss-mcp.exe')

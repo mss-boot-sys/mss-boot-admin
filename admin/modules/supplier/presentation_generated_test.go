@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mss-boot-io/mss-boot-admin/admin/presentation"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 )
 
 func TestGeneratedPresentationDefinitionContract(t *testing.T) {

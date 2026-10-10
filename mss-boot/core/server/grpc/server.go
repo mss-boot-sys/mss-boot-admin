@@ -7,7 +7,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/core/server"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/core/server"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"

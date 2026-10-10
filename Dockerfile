@@ -12,7 +12,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -mod=vendor \
     -trimpath \
-    -ldflags="-s -w -X github.com/mss-boot-io/mss-boot-admin/admin/pkg.Version=${VERSION} -X github.com/mss-boot-io/mss-boot-admin/admin/pkg.Commit=${COMMIT}" \
+    -ldflags="-s -w -X github.com/mss-boot-sys/mss-boot-admin/admin/pkg.Version=${VERSION} -X github.com/mss-boot-sys/mss-boot-admin/admin/pkg.Commit=${COMMIT}" \
     -o /out/mss-boot-admin \
     ./admin
 
@@ -21,7 +21,7 @@ FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6ee
 ARG VERSION=devel
 ARG COMMIT=unknown
 
-LABEL org.opencontainers.image.source="https://github.com/mss-boot-io/mss-boot-admin" \
+LABEL org.opencontainers.image.source="https://github.com/mss-boot-sys/mss-boot-admin" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.revision="${COMMIT}"
 

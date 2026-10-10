@@ -5,6 +5,8 @@ export default defineConfig({
     name: 'mss-boot Admin',
     rtl: false,
     logo: '/favicon.ico',
+    editLink: 'https://github.com/mss-boot-sys/mss-boot-admin/edit/main/docs/{filename}',
+    sourceLink: 'https://github.com/mss-boot-sys/mss-boot-admin/blob/main/docs/{fileName}#L{line}',
     nav: [
       {
         title: '快速开始',
@@ -33,9 +35,9 @@ export default defineConfig({
     ],
     footer: `Open-source MIT Licensed | Copyright © 2024-present
     <br />
-    Powered by <a target="_blank" href="https://github.com/mss-boot-io">mss-boot-io</a>`,
+    Powered by <a target="_blank" href="https://github.com/mss-boot-sys">mss-boot-sys</a>`,
     socialLinks: {
-      github: 'https://github.com/mss-boot-io/mss-boot-admin',
+      github: 'https://github.com/mss-boot-sys/mss-boot-admin',
     },
   },
   sitemap: { hostname: 'https://docs.mss-boot-io.top' },

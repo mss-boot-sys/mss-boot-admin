@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 	"gopkg.in/yaml.v3"
 )
 
@@ -57,6 +57,9 @@ type foundationReleasePolicy struct {
 	} `yaml:"metadata"`
 	Spec struct {
 		Mode                      string                   `yaml:"mode"`
+		PublicationMode           string                   `yaml:"publicationMode"`
+		LegacyRepository          string                   `yaml:"legacyRepository"`
+		LegacyStableVersion       string                   `yaml:"legacyStableVersion"`
 		ReleaseBranch             string                   `yaml:"releaseBranch"`
 		RequireMergedPRSource     *bool                    `yaml:"requireMergedPullRequestSource"`
 		CurrentStableVersion      string                   `yaml:"currentStableVersion"`
@@ -400,6 +403,21 @@ func decodeFoundationReleasePolicy(data []byte) (foundationReleasePolicy, error)
 	if policy.Spec.Mode != "development-first" {
 		return foundationReleasePolicy{}, errors.New("committed foundation release policy mode must equal development-first")
 	}
+	directPublication := policy.Spec.PublicationMode == "direct"
+	if policy.Spec.PublicationMode != "" && !directPublication {
+		return foundationReleasePolicy{}, errors.New("committed foundation publicationMode must equal direct")
+	}
+	if directPublication {
+		if policy.Spec.ReleaseBranch != "main" || policy.Spec.RequireMergedPRSource == nil || !*policy.Spec.RequireMergedPRSource {
+			return foundationReleasePolicy{}, errors.New("direct publication requires the merged pull request main boundary")
+		}
+		if policy.Spec.LegacyRepository != "mss-boot-io/mss-boot-admin" || policy.Spec.LegacyStableVersion != "v1.3.8" {
+			return foundationReleasePolicy{}, errors.New("direct publication must record the legacy repository v1.3.8 baseline")
+		}
+		if policy.Spec.StablePromotionReady != nil || len(policy.Spec.ImmutableStoppedTrains) != 0 {
+			return foundationReleasePolicy{}, errors.New("direct publication must not import legacy promotion or stopped-train controls")
+		}
+	}
 	extendedReleaseContract := strings.TrimSpace(policy.Spec.ReleaseTargetState) != "" ||
 		len(policy.Spec.ImmutableStoppedTrains) != 0 ||
 		policy.Spec.DocsTagMutable != nil ||
@@ -514,7 +532,9 @@ func decodeFoundationReleasePolicy(data []byte) (foundationReleasePolicy, error)
 		return foundationReleasePolicy{}, errors.New("committed foundation release policy distributionComponents must equal root,framework,admin,frontend")
 	}
 	policy.Spec.CurrentStableCommit = strings.ToLower(strings.TrimSpace(policy.Spec.CurrentStableCommit))
-	if !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit) {
+	pendingFirstRelease := directPublication && policy.Spec.CurrentStableCommit == "pending" &&
+		currentRaw == nextRaw && currentRaw == "v1.3.9" && targetState == "active"
+	if !pendingFirstRelease && !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit) {
 		return foundationReleasePolicy{}, errors.New("committed foundation release policy currentStableCommit must be a full commit")
 	}
 	templates := []struct {
@@ -538,7 +558,7 @@ func decodeFoundationReleasePolicy(data []byte) (foundationReleasePolicy, error)
 			return foundationReleasePolicy{}, fmt.Errorf("committed foundation release policy %s must contain exactly one {version} placeholder", template.name)
 		}
 	}
-	if extendedReleaseContract {
+	if extendedReleaseContract && !directPublication {
 		stoppedVersions, err := validateFoundationStoppedTrains(policy)
 		if err != nil {
 			return foundationReleasePolicy{}, err

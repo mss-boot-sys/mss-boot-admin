@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	featurecmd "github.com/mss-boot-io/mss-boot-admin/internal/mss/feature"
+	featurecmd "github.com/mss-boot-sys/mss-boot-admin/internal/mss/feature"
 )
 
 func newFeatureCommand(rootOverride *string) *cobra.Command {

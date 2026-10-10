@@ -6,14 +6,14 @@ description: 明确隔离的 mss-boot-admin 源码贡献流程
 
 # Foundation 贡献者入门
 
-> 发布状态：**v1.3.7 是当前稳定版**；v1.3.5 与 v1.3.6 已永久停止并保持不可变部分发布。
+> 版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 > 本页只适用于修改 Foundation 的贡献者；采用者从[快速开始](/getting-started)进入。Docs 网站
 > 可异步候补，不阻断组件、稳定别名或采用。
 
 ## 获取源码
 
 ```sh
-git clone https://github.com/mss-boot-io/mss-boot-admin.git
+git clone https://github.com/mss-boot-sys/mss-boot-admin.git
 cd mss-boot-admin
 git switch main
 ```

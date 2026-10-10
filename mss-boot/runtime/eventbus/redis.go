@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/redisresource"
-	runtimeresource "github.com/mss-boot-io/mss-boot-admin/mss-boot/runtime/resource"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/redisresource"
+	runtimeresource "github.com/mss-boot-sys/mss-boot-admin/mss-boot/runtime/resource"
 )
 
 const (

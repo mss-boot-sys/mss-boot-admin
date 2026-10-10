@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/command"
-	"github.com/mss-boot-io/mss-boot-admin/internal/mss/project"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/command"
+	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
 )
 
 // Options selects setup surfaces. Setup never uses production credentials.

@@ -24,7 +24,7 @@ func TestGeneratePresentationUsesPortableRegexRuntimeInEveryFrontendConsumer(t *
 		if !strings.Contains(generated, `compilePortablePresentationPattern("^[A-Z0-9_-]+$")`) {
 			t.Errorf("generated presentation consumer %s omitted the portable pattern compiler", relative)
 		}
-		if !strings.Contains(generated, "@mss-boot-io/admin-web/runtime/presentation") {
+		if !strings.Contains(generated, "@mss-boot-sys/admin-web/runtime/presentation") {
 			t.Errorf("generated presentation consumer %s omitted the stable runtime subpath", relative)
 		}
 		if strings.Contains(generated, `new RegExp("^[A-Z0-9_-]+$")`) {

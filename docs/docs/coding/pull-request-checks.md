@@ -4,8 +4,9 @@ title: Pull request checks
 
 # Pull request checks after the repository migration
 
-Development uses `mss-boot-sys/mss-boot-admin`. Go import paths and the
-`@mss-boot-io/admin-web` package identity remain compatible with existing consumers.
+Development uses `mss-boot-sys/mss-boot-admin`. The v1.3.9 release migrates Go
+import paths and the package identity to `@mss-boot-sys/admin-web`; consumers must
+update imports and configure GitHub Packages authentication.
 
 Every PR to `main` starts **PR Checks** (`.github/workflows/pr-checks.yml`).
 The single `pr-ci` job waits for the repository owner `mss-boot-sys` to approve the
@@ -32,8 +33,16 @@ or reject it to stop execution. Never approve runs automatically through a bot.
 
 `tools/ci/pr_checks.py` reads the merge-base diff, including both sides of
 renames, and reports which checks to run locally. The PR contract retains the
-maximum of 140 changed paths and requires documentation for API, configuration,
-migration and workflow changes.
+maximum of 140 substantive changed paths and requires documentation for API,
+configuration, migration and workflow changes. For the first-repository migration,
+the checker verifies the root Go module transition and compares every old/new blob.
+Files containing only the exact `mss-boot-io` to `mss-boot-sys` repository/package
+identity and 1.3.7 to 1.3.9 release-version substitutions are reported separately;
+the Admin Web publish registry is part of that exact package identity rewrite.
+Added/deleted files, other code edits and third-party dependency updates still count
+against the limit. This does not reduce local verification scope: all changed paths,
+including verified mechanical replacements, continue to select their component tests.
+Ordinary PRs without that root module transition retain the original 140-path limit.
 
 ## Execution budget
 
@@ -43,7 +52,7 @@ migration and workflow changes.
 | Push to `main` | None |
 | Schedule or branch-protection change | None |
 | Release tag | Existing publication checks and necessary artifact handling; broad quality suites are not repeated |
-| Explicit manual dispatch | Optional diagnostics, or the existing one-time release candidate build |
+| Explicit manual dispatch | Optional diagnostics |
 
 The PR job has a five-minute execution timeout, read-only repository access,
 no service containers and no Go, frontend, Docs or CodeQL matrix. A green
@@ -53,12 +62,11 @@ security scans, browser behavior or release readiness.
 Run `mss verify --changed` locally for the affected components.
 Before release, qualify the exact clean merged-main commit once with
 `mss verify --all --release-evidence --expect-commit <full-sha>`.
-The existing candidate preview builds the actual release artifacts once; tag
-publication verifies and reuses those artifacts. Admin retains the focused
-public Framework dependency check, and Docs builds its independently published
-site. Version/source checks, checksums, immutable identities and registry
-publication authority remain in place. No additional release runner, evidence
-service or approval chain is introduced.
+Tag workflows validate release identity, build and publish the actual artifacts.
+Admin retains the focused public Framework dependency check, and Docs builds and
+deploys its site. Checksums, immutable identities and registry publication
+authority remain in place. npm publishes only to GitHub Packages; there is no
+hosted preview, npmjs setup, or additional stable-promotion round.
 
 The heavy Admin, Framework, compatibility, migration, CodeQL, vulnerability,
 Scorecard and Swagger workflows are manual diagnostics only. They do not run
