@@ -85,7 +85,7 @@ jobs:
         run: govulncheck ./...
 
   required-status:
-    # Keep this exact job name for the existing main-branch required check.
+    # Stable post-merge/scheduled result; PR scans are aggregated by pr-ci.
     name: govulncheck
     needs:
       - scope

@@ -113,13 +113,16 @@ func TestGeneratedServiceOptionalEventsAndPatterns(t *testing.T) {
 			if err := os.WriteFile(filepath.Join(root, "go.sum"), sum, 0o600); err != nil {
 				t.Fatal(err)
 			}
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+			// A toolchain patch invalidates the compiler cache. Allow the first
+			// fixture to compile the Admin dependency graph on a two-core runner,
+			// while bounding the generated test binary separately below.
+			ctx, cancel := context.WithTimeout(context.Background(), 8*time.Minute)
 			defer cancel()
-			command := exec.CommandContext(ctx, filepath.Join(runtime.GOROOT(), "bin", "go"), "test", "-count=1", "./admin/modules/supplier")
+			command := exec.CommandContext(ctx, filepath.Join(runtime.GOROOT(), "bin", "go"), "test", "-timeout=2m", "-count=1", "./admin/modules/supplier")
 			command.Dir = root
 			command.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-p=2", "GOMAXPROCS=2", "GOMEMLIMIT=2GiB")
 			if output, err := command.CombinedOutput(); err != nil {
-				t.Fatalf("generated service tests: %v\n%s", err, output)
+				t.Fatalf("generated service tests: %v (context: %v)\n%s", err, ctx.Err(), output)
 			}
 		})
 	}
