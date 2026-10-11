@@ -221,19 +221,19 @@ spec:
 
     verify-all:
       command: go run ./cmd/mss verify --all
-      description: Execute the complete local Distribution quality suite, including strict contracts, Agent builds, Admin and Framework race/coverage/vet/metadata checks, standalone next-Foundation generation and upgrade, CLI/MCP/doctor identity parity, deterministic conflict and empty second upgrade, evals, dependency policy, frontend delivery and browser behavior, both packaged and real external Thin Hosts, and release workflow contracts. Docs changes remain strict under verify-changed and docs-build, but the asynchronous website track is deliberately outside this Distribution gate. Hosted Agent and frontend matrices are explicit diagnostics. Use verify-release-evidence for the frozen merged-main Distribution release gate.
+      description: Execute the complete local Distribution quality suite, including strict contracts, Agent builds, Admin and Framework race/coverage/vet/metadata checks, standalone next-Foundation generation and upgrade, CLI/MCP/doctor identity parity, deterministic conflict and empty second upgrade, evals, dependency policy, frontend delivery and browser behavior, both packaged and real external Thin Hosts, and release workflow contracts. Coordinated publication additionally requires separate Docs build, browser, and deployed-site verification. Hosted Agent and frontend matrices are explicit diagnostics. Use verify-release-evidence for the frozen merged-main Distribution release gate.
       outputFormats: [text, json]
       category: verification
 
     verify-release-evidence:
       command: go run ./cmd/mss verify --all --release-evidence --expect-commit <full-sha>
-      description: Execute the complete local Distribution suite and fail closed unless HEAD remains the supplied full commit and tracked files remain clean before and after; verify.json and verify.md bind the result to that commit and record both clean-state checks, while the external Thin Host check persists sanitized detailed reports and an evidence manifest in a recorded system-temporary directory. Docs site qualification is a separate non-blocking docs-build plus browser-evidence path.
+      description: Execute the complete local Distribution suite and fail closed unless HEAD remains the supplied full commit and tracked files remain clean before and after; verify.json and verify.md bind the result to that commit and record both clean-state checks, while the external Thin Host check persists sanitized detailed reports and an evidence manifest in a recorded system-temporary directory. Coordinated publication also requires separate Docs build, browser, and production deployment verification.
       outputFormats: [text, json]
       category: verification
 
     release-policy-check:
       command: python3 tools/release/check_release_policy.py --component <root|framework|admin|frontend|docs|npm> --version <version> --tag <tag> --intent <qualify|publish|promote> [--commit <full-sha>]
-      description: Validate the reviewed target and namespace; qualify permits candidate work, core publish requires enabled immutable publication workflows, promote additionally requires a reviewed exact stable-promotion version and commit for Root or official npm aliases, and Docs uses the replaceable current-stable docs/vX.Y.Z identity independently of the core publication switch.
+      description: Validate the reviewed direct-publication target, coordinated version, component tag, and optional exact source commit. Docs uses the replaceable current-stable docs/vX.Y.Z identity.
       outputFormats: [text]
       category: release
 
