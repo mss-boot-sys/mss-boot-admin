@@ -49,13 +49,13 @@ GitHub 的 `demo` environment 只允许 `main` 分支。使用如下配置；不
 | `DEMO_SSH_KNOWN_HOSTS` | demo variable | 经已有可信 SSH 连接核对的主机公钥 |
 
 Cloudflare 需要读取 zone 和 Worker 路由、读取和上传 Worker 版本、创建 Worker
-deployment 的权限。脚本没有 DNS 或路由写入操作。令牌权限不足会在停写前失败。
+deployment 的权限。脚本没有 DNS 或路由写入操作。路由读取或版本上传权限不足会在停写前失败，切换阶段的 API 故障则执行事务回滚。
 Node 使用 nvm 管理的 24，Wrangler 由 `tools/demo/package-lock.json` 固定。
 
 服务器安装经评审的 `tools/demo/backend.py`，文件由 root 所有，部署密钥不能修改。
 其专用 `authorized_keys` 条目必须使用 `restrict` 和固定的 Python 强制命令，禁止
 交互 shell、端口转发、代理转发和 PTY。该入口只接受有界 JSON 请求，只允许
-`prepare`、`deploy`、`commit`、`rollback`、`status`，所有 Kubernetes 命令固定到
+`prepare`、`deploy`、`commit`、`rollback`、`finalize-rollback`、`status`，所有 Kubernetes 命令固定到
 demo 命名空间。不能把普通 root SSH 私钥交给 Actions。
 
 服务器保留 `/var/lib/mss-admin-demo-maintenance`，权限为 `0700`；备份和状态文件为
@@ -79,7 +79,9 @@ GitHub concurrency 保证流水线串行执行，服务器还有持久事务锁�
 迁移失败、后端启动失败、Cloudflare 切换失败或公网验收失败都会触发恢复：使用
 同一事务保存的旧 Worker 版本、后端 Deployment、完整数据卷和配置。
 恢复先停止应用，不能让旧二进制直接运行在已迁移的新数据库上。
-备份成功前发生失败只恢复原有运行状态，不能使用不完整备份。
+备份成功前发生失败只恢复原有运行状态，不能使用不完整备份。恢复数据后重启独立的
+demo 缓存以清除候选版本的临时状态；旧版本的公网登录和协议验收通过后，才通过
+`finalize-rollback` 释放服务器事务锁。前端恢复失败会保留锁，禁止后续部署覆盖。
 
 单节点 SQLite 部署在备份和迁移期间会有短暂停机。上线后、验收完成前的少量写入可能
 在回滚时被恢复点覆盖，因此 demo 不应存放不可丢失的业务数据。备份含私有数据，不能
