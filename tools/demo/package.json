@@ -1,0 +1,7 @@
+{
+  "name": "mss-admin-demo-deployment",
+  "private": true,
+  "version": "0.0.0",
+  "engines": { "node": ">=24 <25" },
+  "devDependencies": { "wrangler": "4.149.0" }
+}

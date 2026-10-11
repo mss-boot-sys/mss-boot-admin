@@ -30,7 +30,10 @@ class ReleasePolicyTest(unittest.TestCase):
         self.assertEqual(self.policy["legacyStableVersion"], "v1.3.8")
         self.assertNotIn("stablePromotionReady", self.policy)
         self.assertNotIn("immutableStoppedTrains", self.policy)
-        self.assertEqual(self.policy["currentStableCommit"], "pending")
+        self.assertEqual(
+            self.policy["currentStableCommit"],
+            "0df458a1a89ad53fac9554685a6b83557c761629",
+        )
 
     def test_canonical_components_publish_only_reviewed_version(self):
         for component in POLICY.COMPONENT_TEMPLATE_KEYS:
@@ -73,9 +76,13 @@ class ReleasePolicyTest(unittest.TestCase):
             ("releaseBranch: main", "releaseBranch: topic"),
             ("distributionVersion: v1.3.9", "distributionVersion: v1.3.8"),
             ("publicPrereleases: false", "publicPrereleases: true"),
-            ("currentStableCommit: pending", "currentStableCommit: invalid"),
+            (
+                f'currentStableCommit: {self.policy["currentStableCommit"]}',
+                "currentStableCommit: invalid",
+            ),
             ("@mss-boot-sys/admin-web", "@other/admin-web"),
         ]:
+            self.assertIn(old, original, "policy mutation must change an existing field")
             candidates.append(original.replace(old, new))
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "policy.yaml"

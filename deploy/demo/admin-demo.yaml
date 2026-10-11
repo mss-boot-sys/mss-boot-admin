@@ -1,0 +1,312 @@
+# Historical v1.3.9 baseline; see docs/docs/devops/demo-maintenance.md.
+# Reference only: do not kubectl apply this pinned baseline over a later release.
+# The demo deployment pipeline is the sole owner of routine release updates.
+# The completed historical bootstrap Job is deliberately not managed here.
+# Configuration Secrets are operator-owned; no credential values belong here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mss-admin-demo
+  labels:
+    app.kubernetes.io/part-of: mss-admin-demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: admin-demo-data
+  namespace: mss-admin-demo
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-demo-cache
+  namespace: mss-admin-demo
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: admin-demo-cache}
+  template:
+    metadata:
+      labels: {app: admin-demo-cache}
+    spec:
+      serviceAccountName: admin-demo
+      automountServiceAccountToken: false
+      nodeSelector: {kubernetes.io/hostname: lax-sm5039mp-h8tnr-7-7}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: redis
+          image: redis:8.6.3@sha256:4d25e2fe601f7ffaeb4437cb6ced3518bc36edf34ebe98863c80836943d94529
+          command: [redis-server, /run/cache/redis.conf]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          ports: [{name: redis, containerPort: 6379}]
+          readinessProbe:
+            exec:
+              command: [sh, -ec, 'export REDISCLI_AUTH="$(cat /run/cache/password)"; test "$(redis-cli --no-auth-warning ping)" = PONG']
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: [sh, -ec, 'export REDISCLI_AUTH="$(cat /run/cache/password)"; test "$(redis-cli --no-auth-warning ping)" = PONG']
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 250m, memory: 256Mi}
+          volumeMounts:
+            - {name: config, mountPath: /run/cache, readOnly: true}
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: config
+          secret: {secretName: admin-demo-cache-config, defaultMode: 0440}
+        - name: data
+          emptyDir: {sizeLimit: 32Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-demo-cache
+  namespace: mss-admin-demo
+spec:
+  selector: {app: admin-demo-cache}
+  ports: [{name: redis, port: 6379, targetPort: redis}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: admin-demo, component: server}
+  template:
+    metadata:
+      labels: {app: admin-demo, component: server}
+    spec:
+      serviceAccountName: admin-demo
+      automountServiceAccountToken: false
+      nodeSelector: {kubernetes.io/hostname: lax-sm5039mp-h8tnr-7-7}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        - name: require-migration
+          image: ghcr.io/mss-boot-sys/mss-boot-admin@sha256:0385ff37bc7a39ecf591d26229551656de96d998944a3b2ee1308ba23dc41d06
+          command: [/bin/sh, -ec]
+          args: ['test "$(cat /app/data/.migrated-v1.3.9)" = 0df458a1a89ad53fac9554685a6b83557c761629']
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 32Mi}
+          volumeMounts:
+            - {name: data, mountPath: /app/data, readOnly: true}
+      containers:
+        - name: admin
+          image: ghcr.io/mss-boot-sys/mss-boot-admin@sha256:0385ff37bc7a39ecf591d26229551656de96d998944a3b2ee1308ba23dc41d06
+          args: [server]
+          env:
+            - name: MSS_RUNTIME_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: admin-demo-cache-config, key: password}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          ports: [{name: http, containerPort: 8080}]
+          startupProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: {path: /readyz, port: http}
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 100m, memory: 128Mi}
+            limits: {cpu: '1', memory: 512Mi}
+          volumeMounts:
+            - {name: config, mountPath: /app/config, readOnly: true}
+            - {name: data, mountPath: /app/data}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: config
+          secret: {secretName: admin-demo-config, defaultMode: 0440}
+        - name: data
+          persistentVolumeClaim: {claimName: admin-demo-data}
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+spec:
+  selector: {app: admin-demo, component: server}
+  ports: [{name: http, port: 8080, targetPort: http}]
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: admin-demo-letsencrypt-production
+  namespace: mss-admin-demo
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: lwnmengjing@gmail.com
+    privateKeySecretRef:
+      name: admin-demo-letsencrypt-account
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+spec:
+  secretName: demo-mss-boot-io-top-tls
+  issuerRef:
+    name: admin-demo-letsencrypt-production
+    kind: Issuer
+  dnsNames: [demo.mss-boot-io.top]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/proxy-body-size: '20m'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '300'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '300'
+    nginx.ingress.kubernetes.io/proxy-buffering: 'off'
+    nginx.ingress.kubernetes.io/proxy-request-buffering: 'off'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [demo.mss-boot-io.top]
+      secretName: demo-mss-boot-io-top-tls
+  rules:
+    - host: demo.mss-boot-io.top
+      http:
+        paths:
+          - path: /admin
+            pathType: Prefix
+            backend: {service: {name: admin-demo, port: {number: 8080}}}
+          - path: /public
+            pathType: Prefix
+            backend: {service: {name: admin-demo, port: {number: 8080}}}
+          - path: /healthz
+            pathType: Exact
+            backend: {service: {name: admin-demo, port: {number: 8080}}}
+          - path: /readyz
+            pathType: Exact
+            backend: {service: {name: admin-demo, port: {number: 8080}}}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: mss-admin-demo
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-demo-cache
+  namespace: mss-admin-demo
+spec:
+  podSelector:
+    matchLabels: {app: admin-demo-cache}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app: admin-demo}
+      ports: [{protocol: TCP, port: 6379}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-demo
+  namespace: mss-admin-demo
+spec:
+  podSelector:
+    matchLabels: {app: admin-demo}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ingress-nginx}
+          podSelector:
+            matchLabels: {app.kubernetes.io/name: ingress-nginx, app.kubernetes.io/component: controller}
+      ports: [{protocol: TCP, port: 8080}]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: {app: admin-demo-cache}
+      ports: [{protocol: TCP, port: 6379}]
+    - to:
+        # NodeLocalDNS address observed on node 81; review if the cluster changes.
+        - ipBlock: {cidr: 169.254.25.10/32}
+      ports: [{protocol: UDP, port: 53}, {protocol: TCP, port: 53}]
+# GitHub HTTPS egress is an explicit cutover step in the runbook. SMTP and all
+# other external access remain closed until their exact destinations are known.
+---
+# HTTP-01 solver pods are created by cert-manager in this isolated namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-demo-acme
+  namespace: mss-admin-demo
+spec:
+  podSelector:
+    matchLabels: {acme.cert-manager.io/http01-solver: 'true'}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ingress-nginx}
+          podSelector:
+            matchLabels: {app.kubernetes.io/name: ingress-nginx, app.kubernetes.io/component: controller}
+      ports: [{protocol: TCP, port: 8089}]

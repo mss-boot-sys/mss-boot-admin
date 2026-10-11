@@ -209,6 +209,30 @@ class WorkflowGovernanceTest(unittest.TestCase):
                 self.assertEqual(set(triggers["push"]), {"tags"}, name)
                 self.assertTrue(triggers["push"]["tags"], name)
 
+    def test_demo_deploy_uses_only_the_successful_root_boundary_and_reviewed_main(self):
+        workflow = self.workflows["demo-deploy.yml"]
+        self.assertEqual(set(workflow["on"]), {"workflow_run", "workflow_dispatch"})
+        self.assertEqual(workflow["on"]["workflow_run"],
+                         {"workflows": ["Root Release"], "types": ["completed"]})
+        self.assertEqual(workflow["permissions"], {"contents": "read", "actions": "read"})
+        self.assertEqual(workflow["concurrency"],
+                         {"group": "demo-deployment", "cancel-in-progress": "false"})
+        job = workflow["jobs"]["deploy"]
+        self.assertEqual(job["environment"], "demo")
+        for guard in ("conclusion == 'success'", "event == 'push'", "refs/heads/main",
+                      "head_repository.full_name == github.repository"):
+            self.assertIn(guard, job["if"])
+        checkout = next(step for step in job["steps"] if step.get("uses", "").startswith("actions/checkout@"))
+        self.assertEqual(checkout["with"]["ref"], "main")
+        self.assertEqual(checkout["with"]["persist-credentials"], "false")
+        scripts = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn("--source-run", scripts)
+        self.assertIn("--wait-seconds", scripts)
+        self.assertIn("--rollback --apply", scripts)
+        self.assertNotIn("publish", scripts)
+        recovery = next(step for step in job["steps"] if step.get("name") == "Recover an interrupted transaction")
+        self.assertIn("always()", recovery["if"])
+
     def test_foundation_compatibility_is_a_single_local_gate(self):
         agent = self.workflows["agent-native-ci.yml"]
         root = self.workflows["release.yml"]
