@@ -152,7 +152,7 @@ class Cloudflare:
         path = directory / "worker.json"
         path.write_text(json.dumps(config, indent=2) + "\n")
         command = ["node", str(Path(__file__).parent / "node_modules/wrangler/bin/wrangler.js"),
-                   "versions", "upload", "--config", str(path), "--message",
+                   "versions", "upload", "--keep-vars", "--config", str(path), "--message",
                    f"Demo {release['version']} {release['commit']} {transaction}"]
         # Give the CLI only the token it needs, never SSH or administrator credentials.
         env = {key: value for key, value in os.environ.items() if key in
