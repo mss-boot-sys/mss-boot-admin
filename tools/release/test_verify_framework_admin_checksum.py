@@ -2,6 +2,7 @@ import importlib.util
 import json
 import sys
 import os
+import re
 import stat
 import subprocess
 import tempfile
@@ -23,10 +24,22 @@ EXPECTED_FRAMEWORK_SUM = "h1:U3AwHpaj3sL/16IAOxpr2Nw6G/GJOrIM7C3NmOYsOm0="
 EXPECTED_FRAMEWORK_GO_MOD_SUM = "h1:8zdG8z5Iiq1I/3+tlEauatjrJhhXRXQzfWm0E0CEZ/c="
 EXPECTED_ADMIN_SUM = "h1:Y2lcNdWpG6OyjW4Ql/QTXtYy+3BRWS4g2OnnADRUmOQ="
 EXPECTED_ADMIN_GO_MOD_SUM = "h1:g+eMGcVtkW67wuSD55Fa03V37Vuf28PZv+0QGIncXJk="
-EXPECTED_RELEASE_COMMIT = "77b53d41092741eac62fa6418c0bdbf87413c7cd"
 
 
 class FrameworkAdminChecksumTest(unittest.TestCase):
+    def _policy_with_stable_commit(self, commit: str) -> str:
+        policy = (REPOSITORY_ROOT / ".mss/release-policy.yaml").read_text(
+            encoding="utf-8"
+        )
+        policy, replacements = re.subn(
+            r"^  currentStableCommit: .+$",
+            f"  currentStableCommit: {commit}",
+            policy,
+            flags=re.MULTILINE,
+        )
+        self.assertEqual(replacements, 1, "fixture must set its own stable identity")
+        return policy
+
     def _git(self, root: Path, *argv: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["git", *argv],
@@ -94,14 +107,8 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
         self._git(root, "commit", "-qm", "freeze release metadata")
         release_commit = self._git(root, "rev-parse", "HEAD").stdout.strip()
 
-        policy_text = (
-            (REPOSITORY_ROOT / ".mss" / "release-policy.yaml")
-            .read_text(encoding="utf-8")
-            .replace(
-                "currentStableCommit: pending", "currentStableCommit: " + release_commit
-            )
-            .replace(EXPECTED_RELEASE_COMMIT, release_commit)
-            .replace("v1.3.9", "v1.3.3")
+        policy_text = self._policy_with_stable_commit(release_commit).replace(
+            "v1.3.9", "v1.3.3"
         )
         policy_path = root / ".mss" / "release-policy.yaml"
         policy_path.parent.mkdir(parents=True)
@@ -250,11 +257,7 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
         ):
             path = root / relative
             path.write_text(path.read_text().replace("v1.3.3", "v1.3.9"))
-        policy = (REPOSITORY_ROOT / ".mss/release-policy.yaml").read_text()
-        if published:
-            policy = policy.replace(
-                "currentStableCommit: pending", "currentStableCommit: " + "a" * 40
-            )
+        policy = self._policy_with_stable_commit("a" * 40 if published else "pending")
         path = root / ".mss/release-policy.yaml"
         path.parent.mkdir(parents=True)
         path.write_text(policy)
