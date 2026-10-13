@@ -35,6 +35,7 @@ vi.mock('@ant-design/pro-components', () => {
   const Field = () => null;
   return {
     LoginFormPage: Form,
+    LoginForm: Form,
     StepsForm: Object.assign(Form, {
       StepForm: ({ children }: { children?: ReactNode }) => children,
     }),

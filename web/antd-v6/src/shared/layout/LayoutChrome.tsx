@@ -5,6 +5,7 @@ import { Button, Typography } from 'antd';
 import type { InitialState, StartupFailure } from '../auth/types';
 import { PageError } from '../design-system/PageState';
 import { AvatarMenu, HeaderActions } from './HeaderActions';
+import { LayoutBreadcrumb } from './LayoutBreadcrumb';
 import { LayoutContributions } from './LayoutContributions';
 
 export function StartupFailureView({ failure }: { failure: StartupFailure }) {
@@ -53,7 +54,14 @@ export function ApplicationBrand({
       to="/workplace"
     >
       <img alt="" className="h-7 w-7 shrink-0 object-contain" src={logo} />
-      {collapsed ? null : <span className="truncate font-semibold">{title}</span>}
+      {collapsed ? null : (
+        <span
+          className="truncate font-semibold"
+          style={{ color: 'var(--mss-color-text)', fontSize: 16 }}
+        >
+          {title}
+        </span>
+      )}
     </Link>
   );
 }
@@ -94,6 +102,26 @@ export function AccessibleMobileHeader({
       <div className="ml-auto flex shrink-0 items-center">
         <HeaderActions compact initialState={initialState} />
         <AvatarMenu compact initialState={initialState} />
+      </div>
+    </div>
+  );
+}
+
+/** Desktop header for the side layout: breadcrumb, search field, actions, avatar. */
+export function DesktopSideHeader({ initialState }: { initialState?: InitialState }) {
+  return (
+    <div
+      className="sticky top-0 z-20 -mx-6 -mt-6 mb-6 hidden h-14 min-w-0 items-center gap-3 px-6 md:flex"
+      style={{
+        backdropFilter: 'blur(8px)',
+        background: 'color-mix(in srgb, var(--mss-color-bg-container) 80%, transparent)',
+        borderBottom: '1px solid var(--mss-color-border-secondary)',
+      }}
+    >
+      <LayoutBreadcrumb initialState={initialState} />
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        <HeaderActions initialState={initialState} />
+        <AvatarMenu initialState={initialState} />
       </div>
     </div>
   );

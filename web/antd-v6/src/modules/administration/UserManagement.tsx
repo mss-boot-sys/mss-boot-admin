@@ -1,3 +1,4 @@
+import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
 import {
   finishManagementRouteIntent,
@@ -32,6 +33,14 @@ import {
   userPresentationMobileFields,
   userPresentationSearchComponents,
 } from './userPresentation';
+
+const AVATAR_COLORS = ['#3b5bfd', '#12b76a', '#f79009', '#ef4444', '#6b4dff', '#0ea5e9'];
+
+function avatarColor(seed: string) {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 interface UserManagementProps {
   canCreate: boolean;
@@ -171,11 +180,24 @@ export default function UserManagement({
       dataIndex: 'username',
       width: 210,
       render: (_, user) => (
-        <Space>
-          <Avatar src={user.avatar || undefined}>
+        <Space size={10}>
+          <Avatar
+            src={user.avatar || undefined}
+            style={{ background: avatarColor(user.username), fontWeight: 600 }}
+          >
             {(user.name || user.username).slice(0, 1).toUpperCase()}
           </Avatar>
-          <span>{user.username}</span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span style={{ fontWeight: 500 }}>{user.username}</span>
+            {user.email ? (
+              <span
+                className="truncate text-xs"
+                style={{ color: 'var(--mss-color-text-tertiary)' }}
+              >
+                {user.email}
+              </span>
+            ) : null}
+          </span>
         </Space>
       ),
     },
@@ -188,13 +210,16 @@ export default function UserManagement({
       title: intl.formatMessage({ id: 'user.field.email' }),
       dataIndex: 'email',
       ellipsis: true,
-      responsive: ['md'],
+      responsive: ['xxl'],
     },
     {
       title: intl.formatMessage({ id: 'user.field.role' }),
       key: 'roleName',
       width: 150,
-      render: (_, user) => administrationReferenceName(user.role, user.roleID, roleNamesByID),
+      render: (_, user) => {
+        const name = administrationReferenceName(user.role, user.roleID, roleNamesByID);
+        return name === '—' ? name : <span className="mss-pill">{name}</span>;
+      },
     },
     {
       title: intl.formatMessage({ id: 'user.field.organization' }),
@@ -207,7 +232,17 @@ export default function UserManagement({
           departmentNamesByID,
         );
         const post = administrationReferenceName(user.post, user.postID, postNamesByID);
-        return [department, post].filter((name) => name !== '—').join(' · ') || '—';
+        if (department === '—' && post === '—') return '—';
+        return (
+          <span className="flex flex-col leading-tight">
+            <span>{department === '—' ? post : department}</span>
+            {department !== '—' && post !== '—' ? (
+              <span className="text-xs" style={{ color: 'var(--mss-color-text-tertiary)' }}>
+                {post}
+              </span>
+            ) : null}
+          </span>
+        );
       },
     },
     {
@@ -294,9 +329,37 @@ export default function UserManagement({
         setParams={setParams}
         statusSearch={statusSearch}
         mobileColumnKeys={tablePresentation.mobileColumnKeys}
+        bulkActions={
+          canDelete
+            ? (selected, clear) => (
+                <Popconfirm
+                  title={intl.formatMessage(
+                    { id: 'administration.bulk.deleteConfirm' },
+                    { count: selected.length },
+                  )}
+                  description={intl.formatMessage({ id: 'user.delete.description' })}
+                  onConfirm={async () => {
+                    const targets = selected.filter(
+                      (user) => (user.role ?? rolesByID.get(user.roleID))?.root !== true,
+                    );
+                    for (const user of targets) await remove.mutateAsync(user);
+                    clear();
+                  }}
+                >
+                  <Button danger size="small" loading={remove.isPending}>
+                    {intl.formatMessage({ id: 'administration.bulk.delete' })}
+                  </Button>
+                </Popconfirm>
+              )
+            : undefined
+        }
         toolbar={
           canCreate ? (
-            <Button type="primary" onClick={() => openEditor('create')}>
+            <Button
+              icon={<PlusOutlined aria-hidden />}
+              type="primary"
+              onClick={() => openEditor('create')}
+            >
               {intl.formatMessage({ id: 'user.create.action' })}
             </Button>
           ) : null

@@ -326,7 +326,7 @@ export function HeaderActions({
   return (
     <>
       <LayoutContributions compact={compact} initialState={initialState} position="header" />
-      <MenuSearch items={initialState?.authorizedMenu ?? []} />
+      <MenuSearch items={initialState?.authorizedMenu ?? []} variant={compact ? 'icon' : 'field'} />
       <HeaderNotice user={initialState?.currentUser} />
       {compact ? null : <DocumentationLink />}
       <LocaleSwitcher />
@@ -337,7 +337,7 @@ export function HeaderActions({
 export function desktopHeaderActions(initialState?: InitialState) {
   return [
     <LayoutContributions key="custom-content" initialState={initialState} position="header" />,
-    <MenuSearch key="menu-search" items={initialState?.authorizedMenu ?? []} />,
+    <MenuSearch key="menu-search" items={initialState?.authorizedMenu ?? []} variant="field" />,
     <HeaderNotice key="notice" user={initialState?.currentUser} />,
     <DocumentationLink key="documentation" />,
     <LocaleSwitcher key="language" />,

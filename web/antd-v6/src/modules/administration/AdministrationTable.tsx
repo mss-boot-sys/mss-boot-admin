@@ -1,5 +1,7 @@
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
+import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { usePageHeaderActionsSlot } from '@mss-admin-core/shared/design-system/PageContainer';
 import {
   PageEmpty,
   PageError,
@@ -14,15 +16,17 @@ import type {
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, Button, Col, Form, Input, Row, Select, Space, Tag, Tooltip } from 'antd';
+import { Alert, Button, Form, Input, Tooltip } from 'antd';
 import {
   type Dispatch,
   type ReactNode,
   type SetStateAction,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ADMIN_PAGE_SIZES,
   type AdministrationListParams,
@@ -51,17 +55,26 @@ interface AdministrationTableProps<T extends { id: string }> {
   density?: PresentationDensity;
   searchCollapsedByDefault?: boolean;
   toolbar?: ReactNode;
+  /**
+   * Enables row selection. Receives the selected rows and a clear callback and
+   * renders the floating batch-action bar content.
+   */
+  bulkActions?: (selected: T[], clear: () => void) => ReactNode;
 }
 
 export function AdministrationStatusTag({ status }: { status: AdministrationStatus }) {
   const intl = useIntl();
-  const color = status === 'enabled' ? 'green' : status === 'locked' ? 'orange' : 'red';
+  const tone =
+    status === 'enabled' || status === 'disabled' || status === 'locked' ? status : 'unknown';
   return (
-    <Tag color={color}>
+    <span className={`mss-status mss-status-${tone}`}>
       {intl.formatMessage({ id: `administration.status.${status || 'unknown'}` })}
-    </Tag>
+    </span>
   );
 }
+
+const STATUS_FILTERS = ['all', 'enabled', 'disabled', 'locked'] as const;
+const ROW_STAGGER_LIMIT = 10;
 
 export default function AdministrationTable<T extends { id: string }>({
   columns,
@@ -76,10 +89,13 @@ export default function AdministrationTable<T extends { id: string }>({
   density,
   searchCollapsedByDefault = false,
   toolbar,
+  bulkActions,
 }: AdministrationTableProps<T>) {
   const intl = useIntl();
+  const headerSlot = usePageHeaderActionsSlot();
   const [form] = Form.useForm<FilterValues>();
   const [searchExpanded, setSearchExpanded] = useState(() => !searchCollapsedByDefault);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const searchExpansionWasChanged = useRef(false);
   const status = getRequestStatus(query.error);
   const nameSearchField: PageRenderField | null =
@@ -100,6 +116,11 @@ export default function AdministrationTable<T extends { id: string }>({
           order: 20,
         }
       : statusSearch;
+  const rows = query.data?.data ?? [];
+  const selectedRows = useMemo(
+    () => rows.filter((row) => selectedKeys.includes(row.id)),
+    [rows, selectedKeys],
+  );
 
   useEffect(() => {
     if (!searchExpansionWasChanged.current) {
@@ -130,8 +151,20 @@ export default function AdministrationTable<T extends { id: string }>({
     );
   }
 
+  const activeStatus = params.status ?? 'all';
+  const applyStatus = (value: AdministrationStatusFilter) =>
+    setParams((current) => ({ ...current, current: 1, status: value }));
+  const clearSelection = () => setSelectedKeys([]);
+  const headerActions = toolbar ? (
+    headerSlot ? (
+      createPortal(toolbar, headerSlot)
+    ) : (
+      <div className="flex items-center gap-2">{toolbar}</div>
+    )
+  ) : null;
+
   return (
-    <Space orientation="vertical" size="middle" className="w-full">
+    <div className="flex w-full flex-col gap-4">
       {query.isError ? (
         <Alert
           showIcon
@@ -139,111 +172,186 @@ export default function AdministrationTable<T extends { id: string }>({
           type="warning"
         />
       ) : null}
-      <Form<FilterValues>
-        form={form}
-        initialValues={{ status: 'all' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            name: values.name?.trim() || undefined,
-            status: values.status,
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchExpanded && nameSearchField ? (
-            <Col xs={24} sm={12} lg={7} style={{ order: nameSearchField.order }}>
-              <Form.Item name="name" label={nameSearchField.label} extra={nameSearchField.help}>
-                <Input allowClear maxLength={255} placeholder={nameSearchField.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchExpanded && statusSearchField ? (
-            <Col xs={24} sm={12} lg={5} style={{ order: statusSearchField.order }}>
-              <Form.Item
-                name="status"
-                label={statusSearchField.label}
-                extra={statusSearchField.help}
-              >
-                <Select
-                  options={(['all', 'enabled', 'disabled', 'locked'] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `administration.status.${value}` }),
-                  }))}
-                  placeholder={statusSearchField.placeholder}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col flex="auto" style={{ order: 10_000 }}>
-            <Form.Item>
-              <div className="flex flex-wrap items-center gap-2">
-                {searchExpanded ? (
-                  <>
-                    <Button htmlType="submit">
-                      {intl.formatMessage({ id: 'actions.search' })}
-                    </Button>
-                    <Button
-                      type="text"
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({ current: 1, pageSize: resetPageSize, status: 'all' });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    onClick={() => {
-                      searchExpansionWasChanged.current = true;
-                      setSearchExpanded(true);
-                    }}
-                  >
-                    {intl.formatMessage({ id: 'actions.search' })}
-                  </Button>
-                )}
-                <div className="ml-auto flex flex-wrap items-center gap-2">
-                  <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
-                    <Button
-                      aria-label={intl.formatMessage({ id: 'actions.refresh' })}
-                      icon={<ReloadOutlined />}
-                      loading={query.isFetching}
-                      onClick={() => void query.refetch()}
-                    />
-                  </Tooltip>
-                  {toolbar}
-                </div>
+      <section className="mss-surface overflow-hidden">
+        <Form<FilterValues>
+          form={form}
+          initialValues={{ status: 'all' }}
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              name: values.name?.trim() || undefined,
+            }))
+          }
+        >
+          <div
+            className="flex flex-wrap items-center gap-2 px-4 py-3"
+            style={{ borderBottom: '1px solid var(--mss-color-border-secondary)' }}
+          >
+            {searchExpanded && nameSearchField ? (
+              <div className="flex items-center gap-1" style={{ order: nameSearchField.order }}>
+                <label className="sr-only" htmlFor="mss-admin-name-filter">
+                  {nameSearchField.label}
+                </label>
+                <Form.Item name="name" noStyle>
+                  <Input
+                    allowClear
+                    id="mss-admin-name-filter"
+                    maxLength={255}
+                    placeholder={
+                      typeof nameSearchField.placeholder === 'string'
+                        ? nameSearchField.placeholder
+                        : `${intl.formatMessage({ id: 'actions.search' })} ${
+                            typeof nameSearchField.label === 'string' ? nameSearchField.label : ''
+                          }`.trim()
+                    }
+                    prefix={
+                      <SearchOutlined style={{ color: 'var(--mss-color-text-quaternary)' }} />
+                    }
+                    style={{ width: 260 }}
+                  />
+                </Form.Item>
+                <Button
+                  aria-label={intl.formatMessage({ id: 'actions.search' })}
+                  htmlType="submit"
+                  type="text"
+                >
+                  {intl.formatMessage({ id: 'actions.search' })}
+                </Button>
               </div>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<T>
-        columns={columns}
-        dataSource={query.data?.data ?? []}
-        loading={query.isFetching}
-        locale={{ emptyText: <PageEmpty description={emptyText} /> }}
-        mobileColumnKeys={mobileColumnKeys}
-        size={density === 'compact' ? 'small' : density}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: ADMIN_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: query.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isAdminPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        rowKey="id"
-        scroll={{ x: 960 }}
-      />
-    </Space>
+            ) : null}
+            {!searchExpanded ? (
+              <Button
+                icon={<SearchOutlined />}
+                aria-label={intl.formatMessage({ id: 'actions.search' })}
+                onClick={() => {
+                  searchExpansionWasChanged.current = true;
+                  setSearchExpanded(true);
+                }}
+              >
+                {intl.formatMessage({ id: 'actions.search' })}
+              </Button>
+            ) : null}
+            {searchExpanded && statusSearchField ? (
+              <fieldset
+                aria-label={
+                  typeof statusSearchField.label === 'string' ? statusSearchField.label : undefined
+                }
+                className="m-0 flex flex-wrap items-center gap-2 border-0 p-0"
+                style={{ order: statusSearchField.order }}
+              >
+                {STATUS_FILTERS.map((value) => (
+                  <button
+                    aria-pressed={activeStatus === value}
+                    className="mss-filter-chip"
+                    key={value}
+                    type="button"
+                    onClick={() => applyStatus(value)}
+                  >
+                    {value === 'all'
+                      ? intl.formatMessage({ id: 'administration.status.all' })
+                      : `${
+                          typeof statusSearchField.label === 'string'
+                            ? `${statusSearchField.label}：`
+                            : ''
+                        }${intl.formatMessage({ id: `administration.status.${value}` })}`}
+                  </button>
+                ))}
+              </fieldset>
+            ) : null}
+            {searchExpanded && (params.name || activeStatus !== 'all') ? (
+              <Button
+                size="small"
+                type="link"
+                style={{ order: 9_000 }}
+                onClick={() => {
+                  form.resetFields();
+                  setParams({ current: 1, pageSize: resetPageSize, status: 'all' });
+                }}
+              >
+                {intl.formatMessage({ id: 'actions.reset' })}
+              </Button>
+            ) : null}
+            <div className="ml-auto flex items-center gap-1" style={{ order: 10_000 }}>
+              <span
+                className="mss-tabular mr-2 text-xs"
+                style={{ color: 'var(--mss-color-text-tertiary)' }}
+              >
+                {intl.formatMessage(
+                  { id: 'administration.total' },
+                  { total: query.data?.total ?? 0 },
+                )}
+              </span>
+              <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
+                <Button
+                  aria-label={intl.formatMessage({ id: 'actions.refresh' })}
+                  icon={<ReloadOutlined />}
+                  loading={query.isFetching}
+                  type="text"
+                  onClick={() => void query.refetch()}
+                />
+              </Tooltip>
+              {headerSlot ? null : headerActions}
+            </div>
+          </div>
+        </Form>
+        {headerSlot ? headerActions : null}
+        <ResponsiveEntityTable<T>
+          columns={columns}
+          dataSource={rows}
+          loading={query.isFetching}
+          locale={{ emptyText: <PageEmpty description={emptyText} /> }}
+          mobileColumnKeys={mobileColumnKeys}
+          size={density === 'compact' ? 'small' : density}
+          rowClassName={() => 'mss-row-enter'}
+          onRow={(_, index = 0) => ({
+            style: index < ROW_STAGGER_LIMIT ? { animationDelay: `${index * 20}ms` } : undefined,
+          })}
+          rowSelection={
+            bulkActions
+              ? {
+                  selectedRowKeys: selectedKeys,
+                  onChange: (keys) => setSelectedKeys(keys.map(String)),
+                }
+              : undefined
+          }
+          pagination={{
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: ADMIN_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            style: { margin: 0, padding: '12px 16px' },
+            total: query.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isAdminPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          rowKey="id"
+          scroll={{ x: 960 }}
+        />
+      </section>
+      {bulkActions && selectedRows.length > 0 ? (
+        <div
+          className="mss-bulk-bar fixed bottom-7 left-1/2 z-50 flex items-center gap-3 rounded-xl py-2 pr-2 pl-4 text-[13px] text-white"
+          role="toolbar"
+          aria-label={intl.formatMessage({ id: 'administration.bulk.label' })}
+          style={{ background: '#111827', boxShadow: '0 12px 32px rgb(0 0 0 / 0.28)' }}
+        >
+          <span className="mss-tabular">
+            {intl.formatMessage(
+              { id: 'administration.bulk.selected' },
+              { count: selectedRows.length },
+            )}
+          </span>
+          {bulkActions(selectedRows, clearSelection)}
+          <Button size="small" type="text" style={{ color: '#9ca3af' }} onClick={clearSelection}>
+            {intl.formatMessage({ id: 'administration.bulk.clear' })}
+          </Button>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -22,6 +22,15 @@ and the root changelog, not as a current release surface.
   "Go back" / "Back to workplace" actions.
 - Page descriptions and login security notes use plain product language in
   zh-CN and en-US. Two-character buttons no longer get an inserted space.
+- Design-system pass matching the concept mockups: split login (brand panel +
+  form), side layout by default with a sticky header (breadcrumb, ⌘K search
+  field, actions, avatar), custom page header with a portal slot for the page's
+  primary action, card-surfaced list with inline search, status filter chips,
+  total count, icon refresh, row selection with a floating batch bar (users:
+  batch delete), avatar/email user cell, pill role tags and dot status tags,
+  icon quick-link cards on the workplace, and CSS motion tokens (page enter
+  240 ms, row stagger, batch bar rise, card hover lift) that honour
+  `prefers-reduced-motion`. The default layout watermark is removed.
 
 ## [web/antd-v6/v1.3.9] - 2026-10-11
 
