@@ -2,6 +2,7 @@ import DownloadOutlined from '@ant-design/icons/DownloadOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
 import { FilterChipSelect } from '@mss-admin-core/shared/design-system/FilterChipSelect';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import { buildCsv, downloadCsv } from '@mss-admin-core/shared/export/csv';
 import {
@@ -18,7 +19,7 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, App, Avatar, Button, Form, Input, Modal, Popconfirm, Select, Space } from 'antd';
+import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Select, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import AdministrationTable, { AdministrationStatusTag } from './AdministrationTable';
 import { administrationAPI } from './api';
@@ -45,7 +46,7 @@ import {
   userPresentationSearchComponents,
 } from './userPresentation';
 
-const AVATAR_COLORS = ['#3b5bfd', '#12b76a', '#f79009', '#ef4444', '#6b4dff', '#0ea5e9'];
+const AVATAR_TONES = 6;
 
 export function formatRelativeTime(iso: string, locale: string, now = Date.now()): string {
   const seconds = Math.round((Date.parse(iso) - now) / 1000);
@@ -67,7 +68,7 @@ export function formatRelativeTime(iso: string, locale: string, now = Date.now()
 function avatarColor(seed: string) {
   let hash = 0;
   for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  return String(Math.abs(hash) % AVATAR_TONES);
 }
 
 interface UserManagementProps {
@@ -216,19 +217,15 @@ export default function UserManagement({
         <Space size={10}>
           <Avatar
             src={user.avatar || undefined}
-            style={{ background: avatarColor(user.username), fontWeight: 600 }}
+            className="mss-avatar"
+            data-tone={avatarColor(user.username)}
           >
             {(user.name || user.username).slice(0, 1).toUpperCase()}
           </Avatar>
           <span className="flex min-w-0 flex-col leading-tight">
-            <span style={{ fontWeight: 500 }}>{user.username}</span>
+            <span className="font-medium">{user.username}</span>
             {user.email ? (
-              <span
-                className="truncate text-xs"
-                style={{ color: 'var(--mss-color-text-tertiary)' }}
-              >
-                {user.email}
-              </span>
+              <span className="truncate text-xs text-fg-tertiary">{user.email}</span>
             ) : null}
           </span>
         </Space>
@@ -270,9 +267,7 @@ export default function UserManagement({
           <span className="flex flex-col leading-tight">
             <span>{department === '—' ? post : department}</span>
             {department !== '—' && post !== '—' ? (
-              <span className="text-xs" style={{ color: 'var(--mss-color-text-tertiary)' }}>
-                {post}
-              </span>
+              <span className="text-xs text-fg-tertiary">{post}</span>
             ) : null}
           </span>
         );
@@ -298,7 +293,7 @@ export default function UserManagement({
                   {formatRelativeTime(at, intl.locale)}
                 </time>
               ) : (
-                <span style={{ color: 'var(--mss-color-text-quaternary)' }}>
+                <span className="text-fg-quaternary">
                   {intl.formatMessage({ id: 'user.lastLogin.never' })}
                 </span>
               );
@@ -515,7 +510,7 @@ export default function UserManagement({
           </>
         }
       />
-      <Modal
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -532,7 +527,7 @@ export default function UserManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'user.create.title' : 'user.edit.title',
         })}
-        width={720}
+        size="md"
         onCancel={() => {
           setEditing(undefined);
           form.resetFields();
@@ -668,8 +663,8 @@ export default function UserManagement({
             />
           </Form.Item>
         </Form>
-      </Modal>
-      <Modal
+      </FormModal>
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={resetPassword.isPending}
@@ -738,7 +733,7 @@ export default function UserManagement({
             <Input.Password autoComplete="new-password" />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </>
   );
 }

@@ -3,7 +3,7 @@ import EmailPanel from '@mss-admin-core/modules/app-config/EmailPanel';
 import SecurityPanel from '@mss-admin-core/modules/app-config/SecurityPanel';
 import StoragePanel from '@mss-admin-core/modules/app-config/StoragePanel';
 import ThemeSettingsEditor from '@mss-admin-core/modules/theme/ThemeSettingsEditor';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { useIntl, useSearchParams } from '@umijs/max';
 import { Grid, Tabs } from 'antd';
 
@@ -15,7 +15,7 @@ export default function AppConfigPage() {
   const requestedTab = searchParams.get('tab') ?? searchParams.get('key') ?? 'base';
   const activeTab = validTabs.has(requestedTab) ? requestedTab : 'base';
   return (
-    <PageContainer title={intl.formatMessage({ id: 'pages.appConfig.title' })}>
+    <PageShell title={intl.formatMessage({ id: 'pages.appConfig.title' })}>
       <Tabs
         activeKey={activeTab}
         tabPlacement={screens.lg ? 'start' : 'top'}
@@ -62,6 +62,6 @@ export default function AppConfigPage() {
           setSearchParams(next);
         }}
       />
-    </PageContainer>
+    </PageShell>
   );
 }

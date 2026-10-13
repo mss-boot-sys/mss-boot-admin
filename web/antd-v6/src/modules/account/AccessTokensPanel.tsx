@@ -6,6 +6,7 @@ import SafetyCertificateOutlined from '@ant-design/icons/SafetyCertificateOutlin
 import SyncOutlined from '@ant-design/icons/SyncOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/client';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import { PageError, PageLoading } from '@mss-admin-core/shared/design-system/PageState';
 import { queryClient, queryKeys } from '@mss-admin-core/shared/query/client';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +19,6 @@ import {
   Empty,
   Form,
   Input,
-  Modal,
   Popconfirm,
   Select,
   Space,
@@ -223,7 +223,7 @@ export default function AccessTokensPanel() {
         </ul>
       )}
 
-      <Modal
+      <FormModal
         title={intl.formatMessage({ id: 'account.tokens.create' })}
         open={createOpen}
         destroyOnHidden
@@ -254,9 +254,9 @@ export default function AccessTokensPanel() {
             />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
 
-      <Modal
+      <FormModal
         title={intl.formatMessage({ id: 'account.tokens.secretTitle' })}
         open={Boolean(secret)}
         closable={false}
@@ -297,7 +297,7 @@ export default function AccessTokensPanel() {
           value={secret?.token}
           className="font-mono"
         />
-      </Modal>
+      </FormModal>
     </Space>
   );
 }

@@ -277,7 +277,7 @@ function AvatarMenuContent({
                   items={menuItems}
                   onClick={close}
                   selectable={false}
-                  style={{ border: 0, background: 'transparent' }}
+                  className="mss-menu-plain"
                 />
               </div>
             </div>

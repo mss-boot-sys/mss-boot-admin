@@ -10,7 +10,7 @@ import UserOutlined from '@ant-design/icons/UserOutlined';
 import MonitorOverview from '@mss-admin-core/modules/monitor/MonitorOverview';
 import { hasPermission } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { WorkplaceContributions } from '@mss-admin-core/shared/workplace/WorkplaceContributions';
 import { Link, useIntl, useModel } from '@umijs/max';
 import { Avatar, Col, Row, Space, Tooltip, Typography } from 'antd';
@@ -72,7 +72,7 @@ export default function WorkplacePage() {
   ].filter((item) => item.visible);
 
   return (
-    <PageContainer
+    <PageShell
       content={
         <Space>
           <Avatar src={currentUser?.avatar || undefined} icon={<UserOutlined />} />
@@ -94,31 +94,15 @@ export default function WorkplacePage() {
           <h2 className="m-0 text-[15px] font-semibold">
             {intl.formatMessage({ id: 'pages.workplace.quickLinks' })}
           </h2>
-          <span className="text-xs" style={{ color: 'var(--mss-color-text-tertiary)' }}>
+          <span className="text-xs text-fg-tertiary">
             {intl.formatMessage({ id: 'pages.workplace.quickLinks.hint' })}
           </span>
         </div>
         <Row gutter={[12, 12]}>
-          {quickLinks.map((item, index) => (
+          {quickLinks.map((item) => (
             <Col key={item.path} xs={12} sm={8} lg={6} xl={6}>
-              <Link
-                className="mss-lift mss-row-enter flex items-center gap-3 rounded-xl px-4 py-3"
-                prefetch
-                style={{
-                  animationDelay: `${index * 30}ms`,
-                  border: '1px solid var(--mss-color-border-secondary)',
-                  color: 'var(--mss-color-text)',
-                }}
-                to={item.path}
-              >
-                <span
-                  aria-hidden
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-base"
-                  style={{
-                    background: 'color-mix(in srgb, var(--mss-color-primary) 10%, transparent)',
-                    color: 'var(--mss-color-primary)',
-                  }}
-                >
+              <Link className="mss-quick-link mss-lift mss-row-enter" prefetch to={item.path}>
+                <span aria-hidden className="mss-quick-link-icon">
                   {item.icon}
                 </span>
                 <span className="truncate font-medium">{item.label}</span>
@@ -131,14 +115,11 @@ export default function WorkplacePage() {
         <h2 className="m-0 mb-4 flex items-center gap-2 text-[15px] font-semibold">
           {intl.formatMessage({ id: 'monitor.title' })}
           <Tooltip title={intl.formatMessage({ id: 'monitor.authorityNotice' })}>
-            <InfoCircleOutlined
-              aria-hidden
-              style={{ color: 'var(--mss-color-text-quaternary)', fontSize: 13 }}
-            />
+            <InfoCircleOutlined aria-hidden className="text-[13px] text-fg-quaternary" />
           </Tooltip>
         </h2>
         <MonitorOverview />
       </section>
-    </PageContainer>
+    </PageShell>
   );
 }

@@ -795,7 +795,7 @@ export default function PresentationConfigConsole({
                 autoSize={{ minRows: 18, maxRows: 36 }}
                 maxLength={128 * 1024}
                 showCount
-                style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                className="font-mono"
                 value={editorText}
                 onChange={(event) => {
                   setEditorText(event.target.value);

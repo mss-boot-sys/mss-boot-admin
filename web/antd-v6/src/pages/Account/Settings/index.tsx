@@ -4,7 +4,7 @@ import OAuthBindingsPanel from '@mss-admin-core/modules/account/OAuthBindingsPan
 import ProfilePanel from '@mss-admin-core/modules/account/ProfilePanel';
 import SecurityPanel from '@mss-admin-core/modules/account/SecurityPanel';
 import ThemeSettingsEditor from '@mss-admin-core/modules/theme/ThemeSettingsEditor';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { useIntl, useSearchParams } from '@umijs/max';
 import { Grid, Tabs } from 'antd';
 
@@ -24,7 +24,7 @@ export default function AccountSettingsPage() {
   const activeTab = validTabs.has(requestedTab) ? requestedTab : 'profile';
 
   return (
-    <PageContainer title={intl.formatMessage({ id: 'pages.accountSettings.title' })}>
+    <PageShell title={intl.formatMessage({ id: 'pages.accountSettings.title' })}>
       <Tabs
         activeKey={activeTab}
         tabPlacement={screens.lg ? 'start' : 'top'}
@@ -76,6 +76,6 @@ export default function AccountSettingsPage() {
           setSearchParams(next);
         }}
       />
-    </PageContainer>
+    </PageShell>
   );
 }

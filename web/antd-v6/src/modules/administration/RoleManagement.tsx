@@ -1,4 +1,5 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { DetailDrawer, FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
@@ -15,7 +16,7 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, App, Button, Drawer, Form, Input, Modal, Select, Space, Tag, Tree } from 'antd';
+import { Alert, App, Button, Form, Input, Select, Space, Tag, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import type { Key } from 'react';
 import { useEffect, useMemo, useState } from 'react';
@@ -279,7 +280,7 @@ export default function RoleManagement({
           ) : null
         }
       />
-      <Modal
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -334,8 +335,8 @@ export default function RoleManagement({
             <Input.TextArea rows={4} showCount maxLength={4096} />
           </Form.Item>
         </Form>
-      </Modal>
-      <Drawer
+      </FormModal>
+      <DetailDrawer
         destroyOnHidden
         extra={
           <Button
@@ -348,7 +349,7 @@ export default function RoleManagement({
           </Button>
         }
         open={Boolean(authorizationRole)}
-        size="large"
+        size="lg"
         title={intl.formatMessage(
           { id: 'role.authorization.title' },
           { name: authorizationRole?.name ?? '' },
@@ -389,7 +390,7 @@ export default function RoleManagement({
           treeData={treeData}
           onCheck={(keys) => setCheckedPaths(Array.isArray(keys) ? keys : keys.checked)}
         />
-      </Drawer>
+      </DetailDrawer>
     </>
   );
 }

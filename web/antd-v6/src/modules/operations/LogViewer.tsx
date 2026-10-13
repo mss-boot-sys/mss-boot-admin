@@ -3,6 +3,12 @@ import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
 import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import {
   PageEmpty,
   PageError,
   PageForbidden,
@@ -19,11 +25,9 @@ import { useIntl } from '@umijs/max';
 import {
   Alert,
   Button,
-  Col,
   DatePicker,
   Form,
   Input,
-  Row,
   Select,
   Space,
   type TableColumnsType,
@@ -196,84 +200,87 @@ function LoginLogTable({ presentationRuntime }: { presentationRuntime: PagePrese
           type="warning"
         />
       ) : null}
-      <Form
-        form={form}
-        layout="inline"
-        onFinish={(values: { username?: string }) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            username: values.username?.trim() || undefined,
-          }))
-        }
-      >
-        {searchPresentation.expanded && usernameSearch ? (
-          <Form.Item
-            name="username"
-            label={usernameSearch.label}
-            extra={usernameSearch.help}
-            style={{ order: usernameSearch.order }}
-          >
-            <Input allowClear maxLength={255} placeholder={usernameSearch.placeholder} />
-          </Form.Item>
-        ) : null}
-        <Form.Item style={{ order: 10_000 }}>
-          <Space wrap>
-            {searchPresentation.expanded ? (
-              <>
-                <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form
+          className="mss-list-toolbar mss-list-filters"
+          form={form}
+          layout="inline"
+          onFinish={(values: { username?: string }) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              username: values.username?.trim() || undefined,
+            }))
+          }
+        >
+          {searchPresentation.expanded && usernameSearch ? (
+            <FilterSlot order={usernameSearch.order}>
+              <Form.Item name="username" label={usernameSearch.label} extra={usernameSearch.help}>
+                <Input allowClear maxLength={255} placeholder={filterPlaceholder(usernameSearch)} />
+              </Form.Item>
+            </FilterSlot>
+          ) : null}
+          <Form.Item className="mss-list-toolbar-end">
+            <Space wrap>
+              {searchPresentation.expanded ? (
+                <>
+                  <Button htmlType="submit" icon={<SearchOutlined />}>
+                    {intl.formatMessage({ id: 'actions.search' })}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                      setParams({
+                        ...initialLoginParams,
+                        pageSize: tablePresentation.pageSize,
+                      });
+                    }}
+                  >
+                    {intl.formatMessage({ id: 'actions.reset' })}
+                  </Button>
+                </>
+              ) : (
+                <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                   {intl.formatMessage({ id: 'actions.search' })}
                 </Button>
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                    setParams({
-                      ...initialLoginParams,
-                      pageSize: tablePresentation.pageSize,
-                    });
-                  }}
-                >
-                  {intl.formatMessage({ id: 'actions.reset' })}
-                </Button>
-              </>
-            ) : (
-              <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                {intl.formatMessage({ id: 'actions.search' })}
+              )}
+              <Button
+                icon={<ReloadOutlined />}
+                loading={logs.isFetching}
+                onClick={() => void logs.refetch()}
+              >
+                {intl.formatMessage({ id: 'actions.refresh' })}
               </Button>
-            )}
-            <Button
-              icon={<ReloadOutlined />}
-              loading={logs.isFetching}
-              onClick={() => void logs.refetch()}
-            >
-              {intl.formatMessage({ id: 'actions.refresh' })}
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-      <ResponsiveEntityTable<LoginLogEntry>
-        columns={tablePresentation.columns}
-        dataSource={logs.data?.data ?? []}
-        loading={logs.isFetching}
-        locale={{ emptyText: <PageEmpty description={intl.formatMessage({ id: 'log.empty' })} /> }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: logs.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="id"
-        scroll={{ x: 920 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
+            </Space>
+          </Form.Item>
+        </Form>
+        <ResponsiveEntityTable<LoginLogEntry>
+          columns={tablePresentation.columns}
+          dataSource={logs.data?.data ?? []}
+          loading={logs.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'log.empty' })} />,
+          }}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: logs.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="id"
+          scroll={{ x: 920 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
     </Space>
   );
 }
@@ -415,37 +422,31 @@ function AuditLogTable({ presentationRuntime }: { presentationRuntime: PagePrese
         }
       >
         {searchPresentation.expanded && usernameSearch ? (
-          <Form.Item
-            name="username"
-            label={usernameSearch.label}
-            extra={usernameSearch.help}
-            style={{ order: usernameSearch.order }}
-          >
-            <Input allowClear maxLength={255} placeholder={usernameSearch.placeholder} />
-          </Form.Item>
+          <FilterSlot order={usernameSearch.order}>
+            <Form.Item name="username" label={usernameSearch.label} extra={usernameSearch.help}>
+              <Input allowClear maxLength={255} placeholder={filterPlaceholder(usernameSearch)} />
+            </Form.Item>
+          </FilterSlot>
         ) : null}
         {searchPresentation.expanded && typeSearch ? (
-          <Form.Item
-            name="type"
-            label={typeSearch.label}
-            extra={typeSearch.help}
-            style={{ order: typeSearch.order }}
-          >
-            <Select
-              className="min-w-36"
-              placeholder={typeSearch.placeholder}
-              options={types.map((value) => ({
-                value,
-                label: intl.formatMessage({ id: `log.type.${value}` }),
-              }))}
-            />
-          </Form.Item>
+          <FilterSlot order={typeSearch.order}>
+            <Form.Item name="type" label={typeSearch.label} extra={typeSearch.help}>
+              <Select
+                className="min-w-36"
+                placeholder={filterPlaceholder(typeSearch)}
+                options={types.map((value) => ({
+                  value,
+                  label: intl.formatMessage({ id: `log.type.${value}` }),
+                }))}
+              />
+            </Form.Item>
+          </FilterSlot>
         ) : null}
-        <Form.Item style={{ order: 10_000 }}>
+        <Form.Item className="mss-list-toolbar-end">
           <Space wrap>
             {searchPresentation.expanded ? (
               <>
-                <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+                <Button htmlType="submit" icon={<SearchOutlined />}>
                   {intl.formatMessage({ id: 'actions.search' })}
                 </Button>
                 <Button
@@ -615,139 +616,152 @@ function RuntimeLogTable({
           type="warning"
         />
       ) : null}
-      <Form<RuntimeFilterValues>
-        form={form}
-        initialValues={{ level: '' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            level: values.level || undefined,
-            keyword: values.keyword?.trim() || undefined,
-            startTime: values.range?.[0].toISOString(),
-            endTime: values.range?.[1].toISOString(),
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchPresentation.expanded && levelSearch ? (
-            <Col xs={24} sm={12} lg={5} style={{ order: levelSearch.order }}>
-              <Form.Item name="level" label={levelSearch.label} extra={levelSearch.help}>
-                <Select
-                  placeholder={levelSearch.placeholder}
-                  options={['', 'trace', 'debug', 'info', 'warn', 'error', 'fatal'].map(
-                    (value) => ({
-                      value,
-                      label: value
-                        ? value.toUpperCase()
-                        : intl.formatMessage({ id: 'log.level.all' }),
-                    }),
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && keywordSearch ? (
-            <Col xs={24} sm={12} lg={7} style={{ order: keywordSearch.order }}>
-              <Form.Item name="keyword" label={keywordSearch.label} extra={keywordSearch.help}>
-                <Input allowClear maxLength={128} placeholder={keywordSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && timeRangeSearch ? (
-            <Col xs={24} lg={12} style={{ order: timeRangeSearch.order }}>
-              <Form.Item name="range" label={timeRangeSearch.label} extra={timeRangeSearch.help}>
-                <DatePicker.RangePicker
-                  className="w-full"
-                  placeholder={
-                    timeRangeSearch.placeholder
-                      ? [timeRangeSearch.placeholder, timeRangeSearch.placeholder]
-                      : undefined
-                  }
-                  showTime
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form<RuntimeFilterValues>
+          form={form}
+          initialValues={{ level: '' }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              level: values.level || undefined,
+              keyword: values.keyword?.trim() || undefined,
+              startTime: values.range?.[0].toISOString(),
+              endTime: values.range?.[1].toISOString(),
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && levelSearch ? (
+              <FilterSlot order={levelSearch.order}>
+                <Form.Item name="level" label={levelSearch.label} extra={levelSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(levelSearch)}
+                    options={['', 'trace', 'debug', 'info', 'warn', 'error', 'fatal'].map(
+                      (value) => ({
+                        value,
+                        label: value
+                          ? value.toUpperCase()
+                          : intl.formatMessage({ id: 'log.level.all' }),
+                      }),
+                    )}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && keywordSearch ? (
+              <FilterSlot order={keywordSearch.order}>
+                <Form.Item name="keyword" label={keywordSearch.label} extra={keywordSearch.help}>
+                  <Input
+                    allowClear
+                    maxLength={128}
+                    placeholder={filterPlaceholder(keywordSearch)}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && timeRangeSearch ? (
+              <FilterSlot order={timeRangeSearch.order}>
+                <Form.Item name="range" label={timeRangeSearch.label} extra={timeRangeSearch.help}>
+                  <DatePicker.RangePicker
+                    className="w-full"
+                    placeholder={
+                      timeRangeSearch.placeholder
+                        ? [timeRangeSearch.placeholder, timeRangeSearch.placeholder]
+                        : undefined
+                    }
+                    showTime
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          form.resetFields();
+                          setParams({
+                            ...initialRuntimeParams,
+                            pageSize: tablePresentation.pageSize,
+                          });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({
-                          ...initialRuntimeParams,
-                          pageSize: tablePresentation.pageSize,
-                        });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
+                  )}
+                  <Button
+                    icon={<ReloadOutlined />}
+                    loading={logs.isFetching}
+                    onClick={() => void logs.refetch()}
+                  >
+                    {intl.formatMessage({ id: 'actions.refresh' })}
+                  </Button>
+                  {canExport ? (
+                    <Button href={exportPath} icon={<DownloadOutlined />}>
+                      {intl.formatMessage({ id: 'log.export' })}
                     </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
-                  </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={logs.isFetching}
-                  onClick={() => void logs.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {canExport ? (
-                  <Button href={exportPath} icon={<DownloadOutlined />} type="primary">
-                    {intl.formatMessage({ id: 'log.export' })}
-                  </Button>
-                ) : null}
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      {files.data?.files.length ? (
-        <Typography.Text type="secondary">
-          {intl.formatMessage({ id: 'log.runtime.files' }, { files: files.data.files.join(', ') })}
-        </Typography.Text>
-      ) : null}
-      <ResponsiveEntityTable<RuntimeLogRow>
-        columns={tablePresentation.columns}
-        dataSource={(logs.data?.list ?? []).map((entry, index) => ({
-          ...entry,
-          rowKey: `${params.current}:${params.pageSize}:${index}`,
-        }))}
-        expandable={{
-          expandedRowRender: (row) => (
-            <pre className="m-0 whitespace-pre-wrap break-all text-xs">{row.raw}</pre>
-          ),
-        }}
-        loading={logs.isFetching}
-        locale={{ emptyText: <PageEmpty description={intl.formatMessage({ id: 'log.empty' })} /> }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: logs.data?.total ?? 0,
-          onChange: (page, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current: page,
-              pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="rowKey"
-        scroll={{ x: 760 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
+                  ) : null}
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        {files.data?.files.length ? (
+          <Typography.Text type="secondary">
+            {intl.formatMessage(
+              { id: 'log.runtime.files' },
+              { files: files.data.files.join(', ') },
+            )}
+          </Typography.Text>
+        ) : null}
+        <ResponsiveEntityTable<RuntimeLogRow>
+          columns={tablePresentation.columns}
+          dataSource={(logs.data?.list ?? []).map((entry, index) => ({
+            ...entry,
+            rowKey: `${params.current}:${params.pageSize}:${index}`,
+          }))}
+          expandable={{
+            expandedRowRender: (row) => (
+              <pre className="m-0 whitespace-pre-wrap break-all text-xs">{row.raw}</pre>
+            ),
+          }}
+          loading={logs.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'log.empty' })} />,
+          }}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: logs.data?.total ?? 0,
+            onChange: (page, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current: page,
+                pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="rowKey"
+          scroll={{ x: 760 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
     </Space>
   );
 }

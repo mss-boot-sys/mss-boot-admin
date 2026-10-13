@@ -1,11 +1,15 @@
-import DeleteOutlined from '@ant-design/icons/DeleteOutlined';
-import EditOutlined from '@ant-design/icons/EditOutlined';
-import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import LockOutlined from '@ant-design/icons/LockOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import { PageHeaderActions } from '@mss-admin-core/shared/design-system/PageShell';
 import {
   PageEmpty,
   PageError,
@@ -13,6 +17,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import type { PagePresentationRuntime } from '@mss-admin-core/shared/presentation/runtime';
 import {
   resolveTablePresentation,
@@ -26,11 +31,8 @@ import {
   Alert,
   App,
   Button,
-  Col,
   Form,
   Input,
-  Popconfirm,
-  Row,
   Select,
   Space,
   type TableColumnsType,
@@ -126,43 +128,46 @@ export default function OptionListView({
     </Tag>
   );
 
-  const renderActions = (row: OptionSummary) => (
-    <Space size="small" wrap>
-      <Button icon={<EyeOutlined />} size="small" type="link" onClick={() => setDetailID(row.id)}>
-        {intl.formatMessage({ id: 'actions.view' })}
-      </Button>
-      {canEdit ? (
-        <Button
-          icon={<EditOutlined />}
-          size="small"
-          type="link"
-          onClick={() => history.push(`/option/${encodeURIComponent(row.id)}`)}
-        >
-          {intl.formatMessage({ id: 'actions.edit' })}
-        </Button>
-      ) : null}
-      {row.builtIn ? (
-        <Tag icon={<LockOutlined />}>{intl.formatMessage({ id: 'option.builtIn' })}</Tag>
-      ) : canDelete ? (
-        <Popconfirm
-          description={intl.formatMessage({ id: 'option.delete.description' })}
-          title={intl.formatMessage({ id: 'option.delete.confirm' })}
-          onConfirm={() => remove.mutate(row)}
-        >
-          <Button
-            danger
-            disabled={remove.isPending && remove.variables?.id !== row.id}
-            icon={<DeleteOutlined />}
-            loading={remove.isPending && remove.variables?.id === row.id}
-            size="small"
-            type="link"
-          >
-            {intl.formatMessage({ id: 'actions.delete' })}
-          </Button>
-        </Popconfirm>
-      ) : null}
-    </Space>
-  );
+  const renderActions = (row: OptionSummary) => {
+    const view = {
+      key: 'view',
+      label: intl.formatMessage({ id: 'actions.view' }),
+      onClick: () => setDetailID(row.id),
+    };
+    return (
+      <span className="flex items-center gap-2">
+        <RowActions
+          primary={
+            canEdit
+              ? {
+                  key: 'edit',
+                  label: intl.formatMessage({ id: 'actions.edit' }),
+                  onClick: () => history.push(`/option/${encodeURIComponent(row.id)}`),
+                }
+              : view
+          }
+          more={[
+            canEdit && view,
+            !row.builtIn &&
+              canDelete && {
+                key: 'delete',
+                danger: true,
+                disabled: remove.isPending,
+                label: intl.formatMessage({ id: 'actions.delete' }),
+                confirm: {
+                  title: intl.formatMessage({ id: 'option.delete.confirm' }),
+                  description: intl.formatMessage({ id: 'option.delete.description' }),
+                },
+                onClick: () => remove.mutate(row),
+              },
+          ]}
+        />
+        {row.builtIn ? (
+          <Tag icon={<LockOutlined />}>{intl.formatMessage({ id: 'option.builtIn' })}</Tag>
+        ) : null}
+      </span>
+    );
+  };
 
   const displayName = (row: OptionSummary) => presentOptionSummary(row, intl).displayName || '—';
 
@@ -211,7 +216,7 @@ export default function OptionListView({
     {
       title: intl.formatMessage({ id: 'option.field.actions' }),
       key: 'actions',
-      width: 270,
+      width: 200,
       render: (_, row) => renderActions(row),
     },
   ];
@@ -260,116 +265,126 @@ export default function OptionListView({
           onClose={() => remove.reset()}
         />
       ) : null}
-      <Form<OptionFilterValues>
-        form={form}
-        initialValues={{ status: 'all' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            category: values.category?.trim() || undefined,
-            name: values.name?.trim() || undefined,
-            status: values.status,
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchPresentation.expanded && nameSearch ? (
-            <Col xs={24} sm={12} lg={6} style={{ order: nameSearch.order }}>
-              <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
-                <Input allowClear maxLength={255} placeholder={nameSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && categorySearch ? (
-            <Col xs={24} sm={12} lg={5} style={{ order: categorySearch.order }}>
-              <Form.Item name="category" label={categorySearch.label} extra={categorySearch.help}>
-                <Input allowClear maxLength={50} placeholder={categorySearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && statusSearch ? (
-            <Col xs={24} sm={12} lg={4} style={{ order: statusSearch.order }}>
-              <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
-                <Select
-                  placeholder={statusSearch.placeholder}
-                  options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `option.status.${value}` }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} lg={9} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form<OptionFilterValues>
+          form={form}
+          initialValues={{ status: 'all' }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              category: values.category?.trim() || undefined,
+              name: values.name?.trim() || undefined,
+              status: values.status,
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && nameSearch ? (
+              <FilterSlot order={nameSearch.order}>
+                <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
+                  <Input allowClear maxLength={255} placeholder={filterPlaceholder(nameSearch)} />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && categorySearch ? (
+              <FilterSlot order={categorySearch.order}>
+                <Form.Item name="category" label={categorySearch.label} extra={categorySearch.help}>
+                  <Input
+                    allowClear
+                    maxLength={50}
+                    placeholder={filterPlaceholder(categorySearch)}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && statusSearch ? (
+              <FilterSlot order={statusSearch.order}>
+                <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(statusSearch)}
+                    options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
+                      value,
+                      label: intl.formatMessage({ id: `option.status.${value}` }),
+                    }))}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          form.resetFields();
+                          setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
-                  </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={options.isFetching}
-                  onClick={() => void options.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {canCreate ? (
+                  )}
                   <Button
-                    icon={<PlusOutlined />}
-                    type="primary"
-                    onClick={() => history.push('/option/create')}
+                    icon={<ReloadOutlined />}
+                    loading={options.isFetching}
+                    onClick={() => void options.refetch()}
                   >
-                    {intl.formatMessage({ id: 'option.create.action' })}
+                    {intl.formatMessage({ id: 'actions.refresh' })}
                   </Button>
-                ) : null}
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<OptionSummary>
-        columns={tablePresentation.columns}
-        dataSource={options.data?.data ?? []}
-        loading={options.isFetching}
-        locale={{
-          emptyText: <PageEmpty description={intl.formatMessage({ id: 'option.empty' })} />,
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPTION_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: options.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isOptionPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        rowKey="id"
-        scroll={{ x: 980 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
+                  <PageHeaderActions>
+                    {canCreate ? (
+                      <Button
+                        icon={<PlusOutlined />}
+                        type="primary"
+                        onClick={() => history.push('/option/create')}
+                      >
+                        {intl.formatMessage({ id: 'option.create.action' })}
+                      </Button>
+                    ) : null}
+                  </PageHeaderActions>
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        <ResponsiveEntityTable<OptionSummary>
+          columns={tablePresentation.columns}
+          dataSource={options.data?.data ?? []}
+          loading={options.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'option.empty' })} />,
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: OPTION_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: options.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isOptionPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          rowKey="id"
+          scroll={{ x: 980 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
       <Typography.Text type="secondary">
         {intl.formatMessage({ id: 'option.summaryNotice' })}
       </Typography.Text>

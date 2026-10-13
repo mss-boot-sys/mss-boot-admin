@@ -5,7 +5,7 @@ import UserOutlined from '@ant-design/icons/UserOutlined';
 import { ProCard } from '@ant-design/pro-components';
 import { fetchCurrentUser } from '@mss-admin-core/shared/auth/session';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageError, PageLoading } from '@mss-admin-core/shared/design-system/PageState';
 import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useQuery } from '@tanstack/react-query';
@@ -42,7 +42,7 @@ export default function AccountCenterPage() {
     .join(' · ');
 
   return (
-    <PageContainer
+    <PageShell
       title={intl.formatMessage({ id: 'pages.accountCenter.title' })}
       extra={[
         <Link key="settings" to="/account/settings" prefetch>
@@ -139,6 +139,6 @@ export default function AccountCenterPage() {
           />
         </ProCard>
       </ProCard>
-    </PageContainer>
+    </PageShell>
   );
 }

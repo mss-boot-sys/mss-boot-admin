@@ -2,7 +2,7 @@ import { usePresentationIntl } from '@mss-admin-core/modules/presentation-config
 import PresentationConfigConsole from '@mss-admin-core/modules/presentation-config/PresentationConfigConsole';
 import { hasPermission } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import { useModel } from '@umijs/max';
 
@@ -14,7 +14,7 @@ export default function PresentationConfigPage() {
     return <PageForbidden message={intl.formatMessage({ id: 'presentation.forbidden' })} />;
   }
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'presentation.description' })}
       title={intl.formatMessage({ id: 'presentation.title' })}
     >
@@ -23,6 +23,6 @@ export default function PresentationConfigPage() {
         canPublish={hasPermission(user, '/presentation-config/publish')}
         canRollback={hasPermission(user, '/presentation-config/rollback')}
       />
-    </PageContainer>
+    </PageShell>
   );
 }

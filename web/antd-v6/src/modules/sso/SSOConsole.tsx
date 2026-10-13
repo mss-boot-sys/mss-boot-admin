@@ -1,4 +1,5 @@
 import { getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import {
   PageEmpty,
   PageError,
@@ -12,7 +13,6 @@ import {
   Button,
   Form,
   Input,
-  Modal,
   Popconfirm,
   Select,
   Space,
@@ -233,7 +233,7 @@ export default function SSOConsole({
             : []),
         ]}
       />
-      <Modal
+      <FormModal
         open={Boolean(editing)}
         title={t(editing === 'new' ? 'create' : 'edit')}
         destroyOnHidden
@@ -279,8 +279,8 @@ export default function SSOConsole({
           </Form.Item>
           <Alert type="warning" title={t('updateNotice')} />
         </Form>
-      </Modal>
-      <Modal
+      </FormModal>
+      <FormModal
         open={Boolean(secret)}
         title={t('oneTimeSecret')}
         destroyOnHidden
@@ -296,7 +296,7 @@ export default function SSOConsole({
         <Typography.Paragraph copyable code>
           {secret?.value}
         </Typography.Paragraph>
-      </Modal>
+      </FormModal>
     </Space>
   );
 }

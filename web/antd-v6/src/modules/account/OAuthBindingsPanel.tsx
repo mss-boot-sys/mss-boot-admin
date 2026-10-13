@@ -130,7 +130,7 @@ export default function OAuthBindingsPanel() {
       {visibleProviders.length === 0 ? (
         <Empty description={intl.formatMessage({ id: 'account.oauth.noneAvailable' })} />
       ) : (
-        <ul className="m-0 list-none divide-y divide-[var(--mss-color-split)] p-0">
+        <ul className="m-0 list-none divide-y divide-split p-0">
           {visibleProviders.map((provider) => {
             const binding = bindings.data?.find((item) => item.provider === provider);
             const enabled = isOAuthProviderEnabled(initialState?.applicationProfile, provider);

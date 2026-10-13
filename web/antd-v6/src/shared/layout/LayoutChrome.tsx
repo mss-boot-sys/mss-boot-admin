@@ -55,14 +55,7 @@ export function ApplicationBrand({
       to="/workplace"
     >
       <img alt="" className="h-7 w-7 shrink-0 object-contain" src={logo} />
-      {collapsed ? null : (
-        <span
-          className="truncate font-semibold"
-          style={{ color: 'var(--mss-color-text)', fontSize: 16 }}
-        >
-          {title}
-        </span>
-      )}
+      {collapsed ? null : <span className="mss-brand-title truncate font-semibold">{title}</span>}
     </Link>
   );
 }
@@ -111,14 +104,7 @@ export function AccessibleMobileHeader({
 /** Desktop header for the side layout: breadcrumb, search field, actions, avatar. */
 export function DesktopSideHeader({ initialState }: { initialState?: InitialState }) {
   return (
-    <div
-      className="sticky top-0 z-20 -mx-6 -mt-6 mb-6 hidden min-w-0 flex-col px-6 md:flex"
-      style={{
-        backdropFilter: 'blur(8px)',
-        background: 'color-mix(in srgb, var(--mss-color-bg-container) 80%, transparent)',
-        borderBottom: '1px solid var(--mss-color-border-secondary)',
-      }}
-    >
+    <div className="mss-side-header hidden md:flex">
       <div className="flex h-14 min-w-0 items-center gap-3">
         <LayoutBreadcrumb initialState={initialState} />
         <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -141,20 +127,12 @@ export function ApplicationFooter({ initialState }: { initialState?: InitialStat
     typeof base?.websiteRecordNumber === 'string' ? base.websiteRecordNumber.trim() : '';
 
   return (
-    <footer
-      className="mt-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-5 text-center text-xs"
-      style={{ color: 'var(--mss-color-text-quaternary)' }}
-    >
+    <footer className="mss-footer mt-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-5 text-center text-xs">
       <span>
         © {new Date().getFullYear()} {copyright}
       </span>
       {recordNumber ? (
-        <Typography.Link
-          href="https://beian.miit.gov.cn"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: 'inherit', fontSize: 'inherit' }}
-        >
+        <Typography.Link href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">
           {recordNumber}
         </Typography.Link>
       ) : null}
@@ -162,7 +140,6 @@ export function ApplicationFooter({ initialState }: { initialState?: InitialStat
         href="https://github.com/mss-boot-sys/mss-boot-admin"
         target="_blank"
         rel="noreferrer"
-        style={{ color: 'inherit', fontSize: 'inherit' }}
       >
         <GithubOutlined /> mss-boot-admin
       </Typography.Link>

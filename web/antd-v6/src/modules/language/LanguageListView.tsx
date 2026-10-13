@@ -1,10 +1,14 @@
-import DeleteOutlined from '@ant-design/icons/DeleteOutlined';
-import EditOutlined from '@ant-design/icons/EditOutlined';
-import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import { PageHeaderActions } from '@mss-admin-core/shared/design-system/PageShell';
 import {
   PageEmpty,
   PageError,
@@ -12,6 +16,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import type { PagePresentationRuntime } from '@mss-admin-core/shared/presentation/runtime';
 import {
   resolveTablePresentation,
@@ -25,11 +30,8 @@ import {
   Alert,
   App,
   Button,
-  Col,
   Form,
   Input,
-  Popconfirm,
-  Row,
   Select,
   Space,
   type TableColumnsType,
@@ -150,47 +152,41 @@ export default function LanguageListView({
     {
       title: intl.formatMessage({ id: 'language.field.actions' }),
       key: 'actions',
-      width: 250,
-      render: (_, row) => (
-        <Space size="small" wrap>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            type="link"
-            onClick={() => setDetailID(row.id)}
-          >
-            {intl.formatMessage({ id: 'actions.view' })}
-          </Button>
-          {canEdit ? (
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              type="link"
-              onClick={() => history.push(`/language/${encodeURIComponent(row.id)}`)}
-            >
-              {intl.formatMessage({ id: 'actions.edit' })}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              description={intl.formatMessage({ id: 'language.delete.description' })}
-              title={intl.formatMessage({ id: 'language.delete.confirm' })}
-              onConfirm={() => remove.mutate(row.id)}
-            >
-              <Button
-                danger
-                disabled={remove.isPending && remove.variables !== row.id}
-                icon={<DeleteOutlined />}
-                loading={remove.isPending && remove.variables === row.id}
-                size="small"
-                type="link"
-              >
-                {intl.formatMessage({ id: 'actions.delete' })}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
-      ),
+      width: 120,
+      render: (_, row) => {
+        const view = {
+          key: 'view',
+          label: intl.formatMessage({ id: 'actions.view' }),
+          onClick: () => setDetailID(row.id),
+        };
+        return (
+          <RowActions
+            primary={
+              canEdit
+                ? {
+                    key: 'edit',
+                    label: intl.formatMessage({ id: 'actions.edit' }),
+                    onClick: () => history.push(`/language/${encodeURIComponent(row.id)}`),
+                  }
+                : view
+            }
+            more={[
+              canEdit && view,
+              canDelete && {
+                key: 'delete',
+                danger: true,
+                disabled: remove.isPending,
+                label: intl.formatMessage({ id: 'actions.delete' }),
+                confirm: {
+                  title: intl.formatMessage({ id: 'language.delete.confirm' }),
+                  description: intl.formatMessage({ id: 'language.delete.description' }),
+                },
+                onClick: () => remove.mutate(row.id),
+              },
+            ]}
+          />
+        );
+      },
     },
   ];
   const tablePresentation = resolveTablePresentation({
@@ -237,108 +233,114 @@ export default function LanguageListView({
           onClose={() => remove.reset()}
         />
       ) : null}
-      <Form<LanguageFilterValues>
-        form={form}
-        initialValues={{ status: 'all' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            name: values.name?.trim() || undefined,
-            status: values.status,
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchPresentation.expanded && nameSearch ? (
-            <Col xs={24} sm={12} lg={7} style={{ order: nameSearch.order }}>
-              <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
-                <Input allowClear maxLength={255} placeholder={nameSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && statusSearch ? (
-            <Col xs={24} sm={12} lg={5} style={{ order: statusSearch.order }}>
-              <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
-                <Select
-                  placeholder={statusSearch.placeholder}
-                  options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `language.status.${value}` }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} lg={12} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form<LanguageFilterValues>
+          form={form}
+          initialValues={{ status: 'all' }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              name: values.name?.trim() || undefined,
+              status: values.status,
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && nameSearch ? (
+              <FilterSlot order={nameSearch.order}>
+                <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
+                  <Input allowClear maxLength={255} placeholder={filterPlaceholder(nameSearch)} />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && statusSearch ? (
+              <FilterSlot order={statusSearch.order}>
+                <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(statusSearch)}
+                    options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
+                      value,
+                      label: intl.formatMessage({ id: `language.status.${value}` }),
+                    }))}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          form.resetFields();
+                          setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
-                  </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={languages.isFetching}
-                  onClick={() => void languages.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {canCreate ? (
+                  )}
                   <Button
-                    icon={<PlusOutlined />}
-                    type="primary"
-                    onClick={() => history.push('/language/create')}
+                    icon={<ReloadOutlined />}
+                    loading={languages.isFetching}
+                    onClick={() => void languages.refetch()}
                   >
-                    {intl.formatMessage({ id: 'language.create.action' })}
+                    {intl.formatMessage({ id: 'actions.refresh' })}
                   </Button>
-                ) : null}
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<LanguageSummary>
-        columns={tablePresentation.columns}
-        dataSource={languages.data?.data ?? []}
-        loading={languages.isFetching}
-        locale={{
-          emptyText: <PageEmpty description={intl.formatMessage({ id: 'language.empty' })} />,
-        }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: LANGUAGE_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: languages.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isLanguagePageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="id"
-        scroll={{ x: 720 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
+                  <PageHeaderActions>
+                    {canCreate ? (
+                      <Button
+                        icon={<PlusOutlined />}
+                        type="primary"
+                        onClick={() => history.push('/language/create')}
+                      >
+                        {intl.formatMessage({ id: 'language.create.action' })}
+                      </Button>
+                    ) : null}
+                  </PageHeaderActions>
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        <ResponsiveEntityTable<LanguageSummary>
+          columns={tablePresentation.columns}
+          dataSource={languages.data?.data ?? []}
+          loading={languages.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'language.empty' })} />,
+          }}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: LANGUAGE_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: languages.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isLanguagePageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="id"
+          scroll={{ x: 720 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
       <Typography.Text type="secondary">
         {intl.formatMessage({ id: 'language.summaryNotice' })}
       </Typography.Text>

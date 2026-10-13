@@ -11,6 +11,7 @@ import {
 } from '@ant-design/pro-components';
 import { accountAPI } from '@mss-admin-core/modules/account/api';
 import type { OAuthProvider } from '@mss-admin-core/modules/account/contracts';
+import { AuthSplitLayout } from '@mss-admin-core/modules/auth/AuthSplitLayout';
 import { authAPI } from '@mss-admin-core/modules/auth/api';
 import {
   emailChallengeCapability,
@@ -26,7 +27,7 @@ import {
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
 import { isOAuthProviderEnabled } from '@mss-admin-core/shared/theme/contract';
 import { rotateThemeAuthSession } from '@mss-admin-core/shared/theme/snapshot';
-import { history, Link, SelectLang, useIntl, useModel } from '@umijs/max';
+import { history, Link, useIntl, useModel } from '@umijs/max';
 import { Alert, App, Button, Divider, Tabs } from 'antd';
 import { useState } from 'react';
 
@@ -97,269 +98,218 @@ export default function LoginPage() {
     }
   };
 
-  const heroFeatures = [
-    intl.formatMessage({ id: 'pages.login.heroFeature1' }),
-    intl.formatMessage({ id: 'pages.login.heroFeature2' }),
-    intl.formatMessage({ id: 'pages.login.heroFeature3' }),
-  ];
-
   return (
-    <div className="grid min-h-screen bg-[var(--mss-color-bg-container)] lg:grid-cols-[1.1fr_1fr]">
-      <aside
-        className="relative hidden flex-col justify-between overflow-hidden p-14 text-white lg:flex"
-        style={{
-          background:
-            'radial-gradient(1200px 600px at 20% 10%, #4f6bff 0%, #2a2f8f 45%, #0f1240 100%)',
+    <AuthSplitLayout
+      brandLogo={brandLogo}
+      brandTitle={brandTitle}
+      description={intl.formatMessage({ id: 'pages.login.welcomeSubtitle' })}
+      title={intl.formatMessage({ id: 'pages.login.welcome' })}
+    >
+      <LoginForm
+        containerStyle={{ padding: 0 }}
+        contentStyle={{ minWidth: 0, width: '100%', margin: 0 }}
+        initialValues={{ username: rememberedUsername, remember: Boolean(rememberedUsername) }}
+        layout="vertical"
+        requiredMark={false}
+        submitter={{
+          searchConfig: { submitText: intl.formatMessage({ id: 'pages.login.submit' }) },
+          submitButtonProps: { className: 'mss-auth-submit', size: 'large', block: true },
+        }}
+        onFinish={async (values) => {
+          setError(undefined);
+          try {
+            const result =
+              loginType === 'email'
+                ? await createBrowserSession({
+                    type: 'email',
+                    email: values.email,
+                    captcha: values.captcha,
+                  })
+                : await createBrowserSession({
+                    username: values.username,
+                    password: values.password,
+                  });
+            if (result.code && result.code !== 200) {
+              setError(intl.formatMessage({ id: 'pages.login.failure' }));
+              return false;
+            }
+            if (loginType === 'account') {
+              persistRememberedUsername(Boolean(values.remember), values.username);
+            }
+            const currentUser = await fetchCurrentUser();
+            if (!currentUser) throw new Error('Session identity was not established');
+            rotateThemeAuthSession(currentUser.id);
+            // Message thenables settle on dismissal, which must not delay navigation.
+            void message.success(intl.formatMessage({ id: 'pages.login.success' }));
+            const params = new URLSearchParams(history.location.search);
+            window.location.replace(resolveSafeRedirect(params.get('redirect')));
+            return true;
+          } catch {
+            setError(intl.formatMessage({ id: 'pages.login.failure' }));
+            return false;
+          }
         }}
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-            maskImage: 'radial-gradient(circle at 70% 60%, #000, transparent 70%)',
-          }}
-        />
-        <div className="relative flex items-center gap-3 text-lg font-bold">
-          <img alt="" className="h-8 w-8 rounded-lg bg-white/90 p-1" src={brandLogo} />
-          {brandTitle}
-        </div>
-        <div className="mss-page-enter relative">
-          <h2 className="m-0 mb-4 max-w-[380px] text-[36px] leading-tight font-bold">
-            {intl.formatMessage({ id: 'pages.login.heroTitle' })}
-          </h2>
-          <p className="m-0 max-w-[440px] text-base leading-7 opacity-75">
-            {intl.formatMessage({ id: 'pages.login.heroDescription' })}
-          </p>
-        </div>
-        <div className="relative flex gap-7 text-[13px] opacity-80">
-          {heroFeatures.map((feature) => (
-            <span key={feature}>● {feature}</span>
-          ))}
-        </div>
-      </aside>
-      <main className="relative flex items-center justify-center bg-[var(--mss-color-bg-layout)] px-4 py-10">
-        <div className="absolute right-4 top-4 z-10 rounded-lg bg-[var(--mss-color-bg-container)]">
-          <SelectLang />
-        </div>
-        <div className="mss-page-enter mss-login w-full max-w-[380px]">
-          <h1 className="m-0 text-[22px] font-semibold leading-snug text-[var(--mss-color-text)]">
-            {intl.formatMessage({ id: 'pages.login.welcome' })}
-          </h1>
-          <p className="mb-7 mt-1 text-[13px] text-[var(--mss-color-text-secondary)]">
-            {intl.formatMessage({ id: 'pages.login.welcomeSubtitle' })}
-          </p>
-          <LoginForm
-            containerStyle={{ padding: 0 }}
-            contentStyle={{ minWidth: 0, width: '100%', margin: 0 }}
-            initialValues={{ username: rememberedUsername, remember: Boolean(rememberedUsername) }}
-            layout="vertical"
-            requiredMark={false}
-            submitter={{
-              searchConfig: { submitText: intl.formatMessage({ id: 'pages.login.submit' }) },
-              submitButtonProps: { className: 'mss-login-submit', size: 'large', block: true },
-            }}
-            onFinish={async (values) => {
+        {error ? <Alert className="mb-4" type="error" showIcon title={error} /> : null}
+        {emailLoginAvailable ? (
+          <Tabs
+            className="mb-4"
+            activeKey={loginType}
+            onChange={(key) => {
               setError(undefined);
-              try {
-                const result =
-                  loginType === 'email'
-                    ? await createBrowserSession({
-                        type: 'email',
-                        email: values.email,
-                        captcha: values.captcha,
-                      })
-                    : await createBrowserSession({
-                        username: values.username,
-                        password: values.password,
-                      });
-                if (result.code && result.code !== 200) {
-                  setError(intl.formatMessage({ id: 'pages.login.failure' }));
-                  return false;
-                }
-                if (loginType === 'account') {
-                  persistRememberedUsername(Boolean(values.remember), values.username);
-                }
-                const currentUser = await fetchCurrentUser();
-                if (!currentUser) throw new Error('Session identity was not established');
-                rotateThemeAuthSession(currentUser.id);
-                // Message thenables settle on dismissal, which must not delay navigation.
-                void message.success(intl.formatMessage({ id: 'pages.login.success' }));
-                const params = new URLSearchParams(history.location.search);
-                window.location.replace(resolveSafeRedirect(params.get('redirect')));
-                return true;
-              } catch {
-                setError(intl.formatMessage({ id: 'pages.login.failure' }));
-                return false;
-              }
+              setLoginType(key as 'account' | 'email');
             }}
-          >
-            {error ? <Alert className="mb-4" type="error" showIcon title={error} /> : null}
+            items={[
+              {
+                key: 'account',
+                label: intl.formatMessage({ id: 'pages.login.accountTab' }),
+              },
+              ...(emailLoginAvailable
+                ? [
+                    {
+                      key: 'email',
+                      label: intl.formatMessage({ id: 'pages.login.emailTab' }),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        ) : null}
+        {emailCapability.emailEnabled && !emailCapability.ready ? (
+          <Alert
+            className="mb-4"
+            type="warning"
+            showIcon
+            title={intl.formatMessage({ id: 'pages.auth.emailUnavailable' })}
+          />
+        ) : null}
+        {loginType === 'account' ? (
+          <>
+            <ProFormText
+              name="username"
+              label={intl.formatMessage({ id: 'pages.login.username' })}
+              fieldProps={{ autoComplete: 'username', size: 'large', variant: 'outlined' }}
+              placeholder={intl.formatMessage({ id: 'pages.login.username' })}
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({ id: 'pages.login.usernameRequired' }),
+                },
+              ]}
+            />
+            <ProFormText.Password
+              name="password"
+              label={intl.formatMessage({ id: 'pages.login.password' })}
+              fieldProps={{
+                autoComplete: 'current-password',
+                size: 'large',
+                variant: 'outlined',
+              }}
+              placeholder={intl.formatMessage({ id: 'pages.login.password' })}
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({ id: 'pages.login.passwordRequired' }),
+                },
+              ]}
+            />
+          </>
+        ) : (
+          <>
+            <ProFormText
+              name="email"
+              fieldProps={{ autoComplete: 'email', prefix: <MailOutlined /> }}
+              placeholder={intl.formatMessage({ id: 'pages.auth.email' })}
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({ id: 'pages.auth.emailRequired' }),
+                },
+                {
+                  type: 'email',
+                  message: intl.formatMessage({ id: 'pages.auth.emailInvalid' }),
+                },
+              ]}
+            />
+            <ProFormCaptcha
+              name="captcha"
+              phoneName="email"
+              fieldProps={{ autoComplete: 'one-time-code', prefix: <LockOutlined /> }}
+              placeholder={intl.formatMessage({ id: 'pages.auth.captcha' })}
+              captchaTextRender={(timing, count) =>
+                timing
+                  ? intl.formatMessage({ id: 'pages.auth.captchaCountdown' }, { count })
+                  : intl.formatMessage({ id: 'pages.auth.sendCaptcha' })
+              }
+              rules={[
+                {
+                  required: true,
+                  message: intl.formatMessage({ id: 'pages.auth.captchaRequired' }),
+                },
+              ]}
+              onGetCaptcha={async (email) => {
+                await authAPI.sendEmailChallenge({ email, useBy: 'login' });
+                void message.success(intl.formatMessage({ id: 'pages.auth.captchaSent' }));
+              }}
+            />
+          </>
+        )}
+        <div className="mb-5 flex items-center justify-between gap-4 text-[13px]">
+          {loginType === 'account' ? (
+            <ProFormCheckbox noStyle name="remember">
+              {intl.formatMessage({ id: 'pages.login.rememberMe' })}
+            </ProFormCheckbox>
+          ) : (
+            <span />
+          )}
+          <span className="flex gap-4">
+            {registrationAvailable ? (
+              <Link to="/user/register">{intl.formatMessage({ id: 'pages.login.register' })}</Link>
+            ) : null}
             {emailLoginAvailable ? (
-              <Tabs
-                className="mb-4"
-                activeKey={loginType}
-                onChange={(key) => {
-                  setError(undefined);
-                  setLoginType(key as 'account' | 'email');
-                }}
-                items={[
-                  {
-                    key: 'account',
-                    label: intl.formatMessage({ id: 'pages.login.accountTab' }),
-                  },
-                  ...(emailLoginAvailable
-                    ? [
-                        {
-                          key: 'email',
-                          label: intl.formatMessage({ id: 'pages.login.emailTab' }),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
+              <Link to="/user/forget">{intl.formatMessage({ id: 'pages.login.forgot' })}</Link>
             ) : null}
-            {emailCapability.emailEnabled && !emailCapability.ready ? (
-              <Alert
-                className="mb-4"
-                type="warning"
-                showIcon
-                title={intl.formatMessage({ id: 'pages.auth.emailUnavailable' })}
-              />
-            ) : null}
-            {loginType === 'account' ? (
-              <>
-                <ProFormText
-                  name="username"
-                  label={intl.formatMessage({ id: 'pages.login.username' })}
-                  fieldProps={{ autoComplete: 'username', size: 'large', variant: 'outlined' }}
-                  placeholder={intl.formatMessage({ id: 'pages.login.username' })}
-                  rules={[
-                    {
-                      required: true,
-                      message: intl.formatMessage({ id: 'pages.login.usernameRequired' }),
-                    },
-                  ]}
-                />
-                <ProFormText.Password
-                  name="password"
-                  label={intl.formatMessage({ id: 'pages.login.password' })}
-                  fieldProps={{
-                    autoComplete: 'current-password',
-                    size: 'large',
-                    variant: 'outlined',
-                  }}
-                  placeholder={intl.formatMessage({ id: 'pages.login.password' })}
-                  rules={[
-                    {
-                      required: true,
-                      message: intl.formatMessage({ id: 'pages.login.passwordRequired' }),
-                    },
-                  ]}
-                />
-              </>
-            ) : (
-              <>
-                <ProFormText
-                  name="email"
-                  fieldProps={{ autoComplete: 'email', prefix: <MailOutlined /> }}
-                  placeholder={intl.formatMessage({ id: 'pages.auth.email' })}
-                  rules={[
-                    {
-                      required: true,
-                      message: intl.formatMessage({ id: 'pages.auth.emailRequired' }),
-                    },
-                    {
-                      type: 'email',
-                      message: intl.formatMessage({ id: 'pages.auth.emailInvalid' }),
-                    },
-                  ]}
-                />
-                <ProFormCaptcha
-                  name="captcha"
-                  phoneName="email"
-                  fieldProps={{ autoComplete: 'one-time-code', prefix: <LockOutlined /> }}
-                  placeholder={intl.formatMessage({ id: 'pages.auth.captcha' })}
-                  captchaTextRender={(timing, count) =>
-                    timing
-                      ? intl.formatMessage({ id: 'pages.auth.captchaCountdown' }, { count })
-                      : intl.formatMessage({ id: 'pages.auth.sendCaptcha' })
-                  }
-                  rules={[
-                    {
-                      required: true,
-                      message: intl.formatMessage({ id: 'pages.auth.captchaRequired' }),
-                    },
-                  ]}
-                  onGetCaptcha={async (email) => {
-                    await authAPI.sendEmailChallenge({ email, useBy: 'login' });
-                    void message.success(intl.formatMessage({ id: 'pages.auth.captchaSent' }));
-                  }}
-                />
-              </>
-            )}
-            <div className="mb-5 flex items-center justify-between gap-4 text-[13px]">
-              {loginType === 'account' ? (
-                <ProFormCheckbox noStyle name="remember">
-                  {intl.formatMessage({ id: 'pages.login.rememberMe' })}
-                </ProFormCheckbox>
-              ) : (
-                <span />
-              )}
-              <span className="flex gap-4">
-                {registrationAvailable ? (
-                  <Link to="/user/register">
-                    {intl.formatMessage({ id: 'pages.login.register' })}
-                  </Link>
-                ) : null}
-                {emailLoginAvailable ? (
-                  <Link to="/user/forget">{intl.formatMessage({ id: 'pages.login.forgot' })}</Link>
-                ) : null}
-              </span>
-            </div>
-          </LoginForm>
-          {githubEnabled || larkEnabled ? (
-            <>
-              <Divider plain className="text-xs">
-                {intl.formatMessage({ id: 'pages.login.oauthDivider' })}
-              </Divider>
-              <div className={`grid gap-3 ${githubEnabled && larkEnabled ? 'grid-cols-2' : ''}`}>
-                {githubEnabled ? (
-                  <Button
-                    block
-                    icon={<GithubOutlined />}
-                    loading={oauthProvider === 'github'}
-                    disabled={Boolean(oauthProvider && oauthProvider !== 'github')}
-                    onClick={() => void startOAuthLogin('github')}
-                  >
-                    {intl.formatMessage({ id: 'pages.login.github' })}
-                  </Button>
-                ) : null}
-                {larkEnabled ? (
-                  <Button
-                    block
-                    icon={<ApiOutlined />}
-                    loading={oauthProvider === 'lark'}
-                    disabled={Boolean(oauthProvider && oauthProvider !== 'lark')}
-                    onClick={() => void startOAuthLogin('lark')}
-                  >
-                    {intl.formatMessage({ id: 'pages.login.lark' })}
-                  </Button>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-          <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-[var(--mss-color-text-tertiary)]">
-            <SafetyCertificateOutlined />
-            <span>
-              {intl.formatMessage({ id: 'pages.login.sessionNotice' })}
-              {intl.formatMessage({ id: 'pages.login.cookieSecurity' })}
-            </span>
-          </p>
+          </span>
         </div>
-      </main>
-    </div>
+      </LoginForm>
+      {githubEnabled || larkEnabled ? (
+        <>
+          <Divider plain className="text-xs">
+            {intl.formatMessage({ id: 'pages.login.oauthDivider' })}
+          </Divider>
+          <div className={`grid gap-3 ${githubEnabled && larkEnabled ? 'grid-cols-2' : ''}`}>
+            {githubEnabled ? (
+              <Button
+                block
+                icon={<GithubOutlined />}
+                loading={oauthProvider === 'github'}
+                disabled={Boolean(oauthProvider && oauthProvider !== 'github')}
+                onClick={() => void startOAuthLogin('github')}
+              >
+                {intl.formatMessage({ id: 'pages.login.github' })}
+              </Button>
+            ) : null}
+            {larkEnabled ? (
+              <Button
+                block
+                icon={<ApiOutlined />}
+                loading={oauthProvider === 'lark'}
+                disabled={Boolean(oauthProvider && oauthProvider !== 'lark')}
+                onClick={() => void startOAuthLogin('lark')}
+              >
+                {intl.formatMessage({ id: 'pages.login.lark' })}
+              </Button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+      <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-fg-tertiary">
+        <SafetyCertificateOutlined />
+        <span>
+          {intl.formatMessage({ id: 'pages.login.sessionNotice' })}
+          {intl.formatMessage({ id: 'pages.login.cookieSecurity' })}
+        </span>
+      </p>
+    </AuthSplitLayout>
   );
 }

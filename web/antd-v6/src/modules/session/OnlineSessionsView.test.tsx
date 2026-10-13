@@ -182,6 +182,13 @@ function activeRuntime() {
   });
 }
 
+async function chooseRowAction(name: string, rowIndex = 0) {
+  fireEvent.click(screen.getAllByRole('button', { name: 'actions.more' })[rowIndex] as HTMLElement);
+  fireEvent.click(await screen.findByRole('menuitem', { name }));
+  const confirmButtons = await screen.findAllByRole('button', { name: /OK/ });
+  fireEvent.click(confirmButtons[confirmButtons.length - 1] as HTMLElement);
+}
+
 function renderView(presentationRuntime = compiledRuntime()) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -270,13 +277,11 @@ describe('online sessions view', () => {
     sessionQuery.current = { ...sessionQuery.current, data: page() };
     renderView();
 
-    fireEvent.click(screen.getByRole('button', { name: 'sessions.action.revoke' }));
+    await chooseRowAction('sessions.action.revoke');
     await waitFor(() => expect(api.revokeOne).toHaveBeenCalledWith('session-1'));
     await waitFor(() => expect(invalidateQueries).toHaveBeenCalled());
 
-    const revokeUser = screen.getByRole('button', { name: 'sessions.action.revokeUser' });
-    await waitFor(() => expect((revokeUser as HTMLButtonElement).disabled).toBe(false));
-    fireEvent.click(revokeUser);
+    await chooseRowAction('sessions.action.revokeUser');
     await waitFor(() => expect(api.revokeUser).toHaveBeenCalledWith('user-1'));
     await waitFor(() => expect(invalidateQueries).toHaveBeenCalledTimes(2));
   });
@@ -286,13 +291,13 @@ describe('online sessions view', () => {
     sessionQuery.current = { ...sessionQuery.current, data: page() };
     renderView();
 
-    fireEvent.click(screen.getByRole('button', { name: 'sessions.action.revoke' }));
+    await chooseRowAction('sessions.action.revoke');
 
     expect(await screen.findByText('403')).toBeTruthy();
     expect(screen.queryByText('alice')).toBeNull();
   });
 
-  it('applies active list and search presentation without changing protected revoke actions', () => {
+  it('applies active list and search presentation without changing protected revoke actions', async () => {
     sessionQuery.current = { ...sessionQuery.current, data: page() };
     renderView(activeRuntime());
 
@@ -311,7 +316,8 @@ describe('online sessions view', () => {
     expect(screen.queryByText('Session user')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /actions\.search/ }));
     expect(screen.getByText('Session user')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'sessions.action.revoke' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'sessions.action.revokeUser' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    expect(await screen.findByRole('menuitem', { name: 'sessions.action.revoke' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: 'sessions.action.revokeUser' })).toBeTruthy();
   });
 });

@@ -154,6 +154,13 @@ function activeRuntime() {
   });
 }
 
+async function chooseRowAction(name: RegExp) {
+  fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+  fireEvent.click(await screen.findByRole('menuitem', { name }));
+  const confirmButtons = await screen.findAllByRole('button', { name: /OK/ });
+  fireEvent.click(confirmButtons[confirmButtons.length - 1] as HTMLElement);
+}
+
 function renderView(presentationRuntime = compiledRuntime()) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -234,7 +241,7 @@ describe('option list view', () => {
   it('deletes the row-bound revision and invalidates option data', async () => {
     optionQuery.current = { ...optionQuery.current, data: page() };
     const { invalidate } = renderView();
-    fireEvent.click(screen.getByRole('button', { name: /actions\.delete/ }));
+    await chooseRowAction(/actions\.delete/);
     await waitFor(() => expect(api.remove).toHaveBeenCalledWith(option()));
     await waitFor(() => expect(invalidate).toHaveBeenCalled());
   });
@@ -243,10 +250,11 @@ describe('option list view', () => {
     optionQuery.current = { ...optionQuery.current, data: page([option(true)]) };
     renderView();
     expect(screen.queryByRole('button', { name: /actions\.delete/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'actions.more' })).toBeNull();
     expect(screen.getByText('option.builtIn')).toBeTruthy();
   });
 
-  it('applies active list and search presentation without changing protected actions', () => {
+  it('applies active list and search presentation without changing protected actions', async () => {
     optionQuery.current = { ...optionQuery.current, data: page() };
     renderView(activeRuntime());
 
@@ -266,6 +274,7 @@ describe('option list view', () => {
     expect(screen.queryByText('Dictionary query')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /actions\.search/ }));
     expect(screen.getByText('Dictionary query')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /actions\.delete/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    expect(await screen.findByRole('menuitem', { name: /actions\.delete/ })).toBeTruthy();
   });
 });

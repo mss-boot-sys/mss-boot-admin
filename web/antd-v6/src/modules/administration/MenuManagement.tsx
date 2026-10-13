@@ -1,4 +1,5 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { DetailDrawer, FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
@@ -20,11 +21,9 @@ import {
   App,
   Button,
   Checkbox,
-  Drawer,
   Form,
   Input,
   InputNumber,
-  Modal,
   Select,
   Tag,
   Transfer,
@@ -302,7 +301,7 @@ export default function MenuManagement({
           ) : null
         }
       />
-      <Modal
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -311,7 +310,7 @@ export default function MenuManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'menu.create.title' : 'menu.edit.title',
         })}
-        width={720}
+        size="md"
         onCancel={() => {
           setEditing(undefined);
           form.resetFields();
@@ -440,15 +439,15 @@ export default function MenuManagement({
             <Checkbox>{intl.formatMessage({ id: 'menu.field.hideInMenu' })}</Checkbox>
           </Form.Item>
         </Form>
-      </Modal>
-      <Drawer
+      </FormModal>
+      <DetailDrawer
         destroyOnHidden
         open={Boolean(bindingMenu)}
         title={intl.formatMessage(
           { id: 'menu.apiBinding.title' },
           { name: bindingMenu ? formatMenuLabel(intl, bindingMenu.name) : '' },
         )}
-        size={760}
+        size="lg"
         extra={
           <Button
             type="primary"
@@ -500,7 +499,7 @@ export default function MenuManagement({
           ]}
           onChange={(keys) => setBoundAPIKeys(keys.map(String))}
         />
-      </Drawer>
+      </DetailDrawer>
     </>
   );
 }

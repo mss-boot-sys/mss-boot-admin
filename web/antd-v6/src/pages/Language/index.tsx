@@ -2,7 +2,7 @@ import LanguageListView from '@mss-admin-core/modules/language/LanguageListView'
 import { languagePresentationRegistryEntry } from '@mss-admin-core/modules/language/tablePresentation';
 import { hasPermission } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import { usePagePresentation } from '@mss-admin-core/shared/presentation/runtime';
 import { useIntl, useModel } from '@umijs/max';
@@ -27,7 +27,7 @@ function LanguagePresentationPage({
   );
 
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'language.description' })}
       title={presentationRuntime.model.title}
     >
@@ -37,7 +37,7 @@ function LanguagePresentationPage({
         canEdit={canEdit}
         presentationRuntime={presentationRuntime}
       />
-    </PageContainer>
+    </PageShell>
   );
 }
 

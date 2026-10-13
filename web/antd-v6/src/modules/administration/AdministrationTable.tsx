@@ -2,7 +2,12 @@ import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
 import { FilterChipSelect } from '@mss-admin-core/shared/design-system/FilterChipSelect';
-import { usePageHeaderActionsSlot } from '@mss-admin-core/shared/design-system/PageContainer';
+import {
+  BulkBar,
+  ListSurface,
+  ListToolbar,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import { PageHeaderActions } from '@mss-admin-core/shared/design-system/PageShell';
 import {
   PageEmpty,
   PageError,
@@ -10,10 +15,12 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { StatusBadge, type StatusTone } from '@mss-admin-core/shared/design-system/StatusBadge';
 import {
   type TableDensity,
   TableSettings,
 } from '@mss-admin-core/shared/design-system/TableSettings';
+import { useTablePreferences } from '@mss-admin-core/shared/design-system/useTablePreferences';
 import type {
   PageRenderField,
   PresentationDensity,
@@ -31,7 +38,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 import {
   ADMIN_PAGE_SIZES,
   type AdministrationListParams,
@@ -71,54 +77,28 @@ interface AdministrationTableProps<T extends { id: string }> {
   settingsKey?: string;
 }
 
-interface TablePreferences {
-  hidden: string[];
-  density?: TableDensity;
-}
-
-function readPreferences(key?: string): TablePreferences {
-  if (!key) return { hidden: [] };
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(`mss-admin.table.${key}`) ?? '{}');
-    return {
-      hidden: Array.isArray(parsed.hidden)
-        ? parsed.hidden.filter((item: unknown) => typeof item === 'string')
-        : [],
-      density: ['small', 'middle', 'large'].includes(parsed.density) ? parsed.density : undefined,
-    };
-  } catch {
-    return { hidden: [] };
-  }
-}
-
-function writePreferences(key: string | undefined, value: TablePreferences) {
-  if (!key) return;
-  try {
-    window.localStorage.setItem(`mss-admin.table.${key}`, JSON.stringify(value));
-  } catch {
-    // Preferences are best effort.
-  }
-}
-
 function columnKeyOf(column: object): string | undefined {
   if ('key' in column && typeof column.key === 'string') return column.key;
   if ('dataIndex' in column && typeof column.dataIndex === 'string') return column.dataIndex;
   return undefined;
 }
 
+const STATUS_TONES: Partial<Record<AdministrationStatus, StatusTone>> = {
+  enabled: 'success',
+  disabled: 'error',
+  locked: 'warning',
+};
+
 export function AdministrationStatusTag({ status }: { status: AdministrationStatus }) {
   const intl = useIntl();
-  const tone =
-    status === 'enabled' || status === 'disabled' || status === 'locked' ? status : 'unknown';
   return (
-    <span className={`mss-status mss-status-${tone}`}>
+    <StatusBadge tone={STATUS_TONES[status] ?? 'default'}>
       {intl.formatMessage({ id: `administration.status.${status || 'unknown'}` })}
-    </span>
+    </StatusBadge>
   );
 }
 
 const STATUS_FILTERS = ['all', 'enabled', 'disabled', 'locked'] as const;
-const ROW_STAGGER_LIMIT = 10;
 
 export default function AdministrationTable<T extends { id: string }>({
   columns,
@@ -138,18 +118,11 @@ export default function AdministrationTable<T extends { id: string }>({
   settingsKey,
 }: AdministrationTableProps<T>) {
   const intl = useIntl();
-  const headerSlot = usePageHeaderActionsSlot();
   const [form] = Form.useForm<FilterValues>();
   const [searchExpanded, setSearchExpanded] = useState(() => !searchCollapsedByDefault);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const searchExpansionWasChanged = useRef(false);
-  const [preferences, setPreferences] = useState<TablePreferences>(() =>
-    readPreferences(settingsKey),
-  );
-  const updatePreferences = (next: TablePreferences) => {
-    setPreferences(next);
-    writePreferences(settingsKey, next);
-  };
+  const [preferences, updatePreferences] = useTablePreferences(settingsKey);
   const status = getRequestStatus(query.error);
   const nameSearchField: PageRenderField | null =
     nameSearch === undefined
@@ -225,13 +198,6 @@ export default function AdministrationTable<T extends { id: string }>({
   const applyStatus = (value: AdministrationStatusFilter) =>
     setParams((current) => ({ ...current, current: 1, status: value }));
   const clearSelection = () => setSelectedKeys([]);
-  const headerActions = toolbar ? (
-    headerSlot ? (
-      createPortal(toolbar, headerSlot)
-    ) : (
-      <div className="flex items-center gap-2">{toolbar}</div>
-    )
-  ) : null;
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -242,7 +208,8 @@ export default function AdministrationTable<T extends { id: string }>({
           type="warning"
         />
       ) : null}
-      <section className="mss-surface overflow-hidden">
+      {toolbar ? <PageHeaderActions>{toolbar}</PageHeaderActions> : null}
+      <ListSurface>
         <Form<FilterValues>
           form={form}
           initialValues={{ status: 'all' }}
@@ -254,12 +221,43 @@ export default function AdministrationTable<T extends { id: string }>({
             }))
           }
         >
-          <div
-            className="flex flex-wrap items-center gap-2 px-4 py-3"
-            style={{ borderBottom: '1px solid var(--mss-color-border-secondary)' }}
+          <ListToolbar
+            total={intl.formatMessage(
+              { id: 'administration.total' },
+              { total: query.data?.total ?? 0 },
+            )}
+            end={
+              <>
+                {settingsKey ? (
+                  <TableSettings
+                    columns={settingsColumns}
+                    density={effectiveDensity}
+                    hidden={preferences.hidden}
+                    onDensityChange={(value) =>
+                      updatePreferences({ ...preferences, density: value })
+                    }
+                    onHiddenChange={(hidden) => updatePreferences({ ...preferences, hidden })}
+                    onReset={() => updatePreferences({ hidden: [] })}
+                  />
+                ) : null}
+                <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
+                  <Button
+                    aria-label={intl.formatMessage({ id: 'actions.refresh' })}
+                    icon={<ReloadOutlined />}
+                    loading={query.isFetching}
+                    type="text"
+                    onClick={() => void query.refetch()}
+                  />
+                </Tooltip>
+              </>
+            }
           >
             {searchExpanded && nameSearchField ? (
-              <div className="flex items-center gap-1" style={{ order: nameSearchField.order }}>
+              <div
+                className="flex items-center gap-1"
+                // style-guardrail-ignore: order comes from the presentation registry.
+                style={{ order: nameSearchField.order }}
+              >
                 <label className="sr-only" htmlFor="mss-admin-name-filter">
                   {nameSearchField.label}
                 </label>
@@ -275,10 +273,8 @@ export default function AdministrationTable<T extends { id: string }>({
                             typeof nameSearchField.label === 'string' ? nameSearchField.label : ''
                           }`.trim()
                     }
-                    prefix={
-                      <SearchOutlined style={{ color: 'var(--mss-color-text-quaternary)' }} />
-                    }
-                    style={{ width: 260 }}
+                    className="mss-search-field"
+                    prefix={<SearchOutlined className="mss-search-field-icon" />}
                   />
                 </Form.Item>
                 <Button
@@ -308,6 +304,7 @@ export default function AdministrationTable<T extends { id: string }>({
                   typeof statusSearchField.label === 'string' ? statusSearchField.label : undefined
                 }
                 className="m-0 flex flex-wrap items-center gap-2 border-0 p-0"
+                // style-guardrail-ignore: order comes from the presentation registry.
                 style={{ order: statusSearchField.order }}
               >
                 <FilterChipSelect
@@ -326,16 +323,14 @@ export default function AdministrationTable<T extends { id: string }>({
               </fieldset>
             ) : null}
             {searchExpanded && extraFilters ? (
-              <div className="flex flex-wrap items-center gap-2" style={{ order: 30 }}>
-                {extraFilters}
-              </div>
+              <div className="order-[30] flex flex-wrap items-center gap-2">{extraFilters}</div>
             ) : null}
             {searchExpanded &&
             (params.name || activeStatus !== 'all' || params.roleID || params.departmentID) ? (
               <Button
                 size="small"
                 type="link"
-                style={{ order: 9_000 }}
+                className="order-[9000]"
                 onClick={() => {
                   form.resetFields();
                   setParams({ current: 1, pageSize: resetPageSize, status: 'all' });
@@ -344,40 +339,8 @@ export default function AdministrationTable<T extends { id: string }>({
                 {intl.formatMessage({ id: 'actions.reset' })}
               </Button>
             ) : null}
-            <div className="ml-auto flex items-center gap-1" style={{ order: 10_000 }}>
-              <span
-                className="mss-tabular mr-2 text-xs"
-                style={{ color: 'var(--mss-color-text-tertiary)' }}
-              >
-                {intl.formatMessage(
-                  { id: 'administration.total' },
-                  { total: query.data?.total ?? 0 },
-                )}
-              </span>
-              {settingsKey ? (
-                <TableSettings
-                  columns={settingsColumns}
-                  density={effectiveDensity}
-                  hidden={preferences.hidden}
-                  onDensityChange={(value) => updatePreferences({ ...preferences, density: value })}
-                  onHiddenChange={(hidden) => updatePreferences({ ...preferences, hidden })}
-                  onReset={() => updatePreferences({ hidden: [] })}
-                />
-              ) : null}
-              <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
-                <Button
-                  aria-label={intl.formatMessage({ id: 'actions.refresh' })}
-                  icon={<ReloadOutlined />}
-                  loading={query.isFetching}
-                  type="text"
-                  onClick={() => void query.refetch()}
-                />
-              </Tooltip>
-              {headerSlot ? null : headerActions}
-            </div>
-          </div>
+          </ListToolbar>
         </Form>
-        {headerSlot ? headerActions : null}
         <ResponsiveEntityTable<T>
           columns={visibleColumns}
           dataSource={rows}
@@ -386,9 +349,6 @@ export default function AdministrationTable<T extends { id: string }>({
           mobileColumnKeys={mobileColumnKeys}
           size={effectiveDensity}
           rowClassName={() => 'mss-row-enter'}
-          onRow={(_, index = 0) => ({
-            style: index < ROW_STAGGER_LIMIT ? { animationDelay: `${index * 20}ms` } : undefined,
-          })}
           rowSelection={
             bulkActions
               ? {
@@ -402,7 +362,7 @@ export default function AdministrationTable<T extends { id: string }>({
             pageSize: params.pageSize,
             pageSizeOptions: ADMIN_PAGE_SIZES.map(String),
             showSizeChanger: true,
-            style: { margin: 0, padding: '12px 16px' },
+            className: 'mss-table-pagination',
             total: query.data?.total ?? 0,
             onChange: (current, pageSize) =>
               setParams((previous) => ({
@@ -414,25 +374,20 @@ export default function AdministrationTable<T extends { id: string }>({
           rowKey="id"
           scroll={{ x: 960 }}
         />
-      </section>
-      {bulkActions && selectedRows.length > 0 ? (
-        <div
-          className="mss-bulk-bar fixed bottom-7 left-1/2 z-50 flex items-center gap-3 rounded-xl py-2 pr-2 pl-4 text-[13px] text-white"
-          role="toolbar"
-          aria-label={intl.formatMessage({ id: 'administration.bulk.label' })}
-          style={{ background: '#111827', boxShadow: '0 12px 32px rgb(0 0 0 / 0.28)' }}
+      </ListSurface>
+      {bulkActions ? (
+        <BulkBar
+          ariaLabel={intl.formatMessage({ id: 'administration.bulk.label' })}
+          clearLabel={intl.formatMessage({ id: 'administration.bulk.clear' })}
+          count={selectedRows.length}
+          label={intl.formatMessage(
+            { id: 'administration.bulk.selected' },
+            { count: selectedRows.length },
+          )}
+          onClear={clearSelection}
         >
-          <span className="mss-tabular">
-            {intl.formatMessage(
-              { id: 'administration.bulk.selected' },
-              { count: selectedRows.length },
-            )}
-          </span>
           {bulkActions(selectedRows, clearSelection)}
-          <Button size="small" type="text" style={{ color: '#9ca3af' }} onClick={clearSelection}>
-            {intl.formatMessage({ id: 'administration.bulk.clear' })}
-          </Button>
-        </div>
+        </BulkBar>
       ) : null}
     </div>
   );

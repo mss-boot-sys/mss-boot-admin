@@ -29,12 +29,12 @@ export function LayoutBreadcrumb({ initialState }: { initialState?: InitialState
   return (
     <nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-1 text-sm">
       {trail.map((label) => (
-        <span key={label} style={{ color: 'var(--mss-color-text-tertiary)' }}>
+        <span key={label} className="mss-breadcrumb-trail">
           {label}
           <span className="mx-1">/</span>
         </span>
       ))}
-      <Link to={match.path} style={{ color: 'var(--mss-color-text)', fontWeight: 500 }}>
+      <Link className="mss-breadcrumb-current" to={match.path}>
         {current}
       </Link>
     </nav>
