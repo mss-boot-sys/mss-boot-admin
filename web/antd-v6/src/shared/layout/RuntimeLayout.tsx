@@ -1,6 +1,7 @@
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import { isPublicPath, redirectToLogin } from '../auth/session';
+import { PageForbidden } from '../design-system/PageState';
 import { layoutMetrics, layoutTokens } from '../design-system/tokens';
 import { resolveMenuIcons } from '../navigation/menuIcons';
 import { AvatarMenu, desktopHeaderActions } from './HeaderActions';
@@ -9,7 +10,7 @@ import {
   AccessibleMobileHeader,
   ApplicationBrand,
   ApplicationFooter,
-  DesktopSideHeader,
+  SideLayoutFrame,
   StartupFailureView,
 } from './LayoutChrome';
 
@@ -34,13 +35,19 @@ export const runtimeLayout: RunTimeLayoutConfig = ({ initialState }) => {
       initialState?.startupFailure ? (
         <StartupFailureView failure={initialState.startupFailure} />
       ) : sideLayout ? (
-        <>
-          <DesktopSideHeader initialState={initialState} />
-          {children}
-        </>
+        <SideLayoutFrame initialState={initialState}>{children}</SideLayoutFrame>
       ) : (
         children
       ),
+    // Umi renders route-level 403 outside childrenRender; keep the layout
+    // chrome (and host header contributions) on forbidden pages.
+    unAccessible: sideLayout ? (
+      <SideLayoutFrame initialState={initialState}>
+        <PageForbidden />
+      </SideLayoutFrame>
+    ) : (
+      <PageForbidden />
+    ),
     footerRender: () => <ApplicationFooter initialState={initialState} />,
     headerRender: (props, defaultDom) =>
       props.isMobile ? (

@@ -1,7 +1,8 @@
 import GithubOutlined from '@ant-design/icons/GithubOutlined';
 import MenuOutlined from '@ant-design/icons/MenuOutlined';
 import { Link, useIntl } from '@umijs/max';
-import { Button, Typography } from 'antd';
+import { Button, Grid, Typography } from 'antd';
+import type { ReactNode } from 'react';
 import type { InitialState, StartupFailure } from '../auth/types';
 import { PageError } from '../design-system/PageState';
 import { AvatarMenu, HeaderActions } from './HeaderActions';
@@ -104,7 +105,7 @@ export function AccessibleMobileHeader({
 /** Desktop header for the side layout: breadcrumb, search field, actions, avatar. */
 export function DesktopSideHeader({ initialState }: { initialState?: InitialState }) {
   return (
-    <div className="mss-side-header hidden md:flex">
+    <div className="mss-side-header flex" data-testid="mss-desktop-side-header">
       <div className="flex h-14 min-w-0 items-center gap-3">
         <LayoutBreadcrumb initialState={initialState} />
         <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -114,6 +115,29 @@ export function DesktopSideHeader({ initialState }: { initialState?: InitialStat
       </div>
       <RouteTabs initialState={initialState} />
     </div>
+  );
+}
+
+/**
+ * Side-layout content frame. The desktop header is mounted only at the `md`
+ * breakpoint and above (the same boundary ProLayout uses for its mobile
+ * header), so host header contributions exist exactly once in the DOM instead
+ * of a CSS-hidden duplicate. It is also used for route-level 403 pages, which
+ * Umi renders outside `childrenRender`.
+ */
+export function SideLayoutFrame({
+  children,
+  initialState,
+}: {
+  children: ReactNode;
+  initialState?: InitialState;
+}) {
+  const screens = Grid.useBreakpoint();
+  return (
+    <>
+      {screens.md ? <DesktopSideHeader initialState={initialState} /> : null}
+      {children}
+    </>
   );
 }
 
