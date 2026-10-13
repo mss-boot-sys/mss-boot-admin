@@ -6,7 +6,7 @@ import {
   type PresentationRegistryEntry,
   resolveEffectivePagePresentation,
 } from '@mss-admin-core/shared/presentation/runtime';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { App } from 'antd';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -321,6 +321,7 @@ describe('user management presentation consumption', () => {
     expect(actionView.queryByRole('button', { name: 'actions.edit' })).toBeNull();
     expect(actionView.queryByRole('button', { name: 'user.passwordReset.action' })).toBeNull();
     expect(actionView.queryByRole('button', { name: 'actions.delete' })).toBeNull();
+    expect(actionView.queryByRole('button', { name: 'actions.more' })).toBeNull();
   });
 
   it('tracks runtime page-size fallback until the user changes the query', async () => {
@@ -376,7 +377,7 @@ describe('user management presentation consumption', () => {
     );
   });
 
-  it('keeps edit and delete disabled for a root target after presentation resolution', () => {
+  it('keeps edit and delete disabled for a root target after presentation resolution', async () => {
     renderManagement(activeRuntime());
     const props = tableRuntime.props as { columns: Record<string, unknown>[] };
     const actionColumn = props.columns.find((column) => columnKey(column) === 'actions');
@@ -402,12 +403,11 @@ describe('user management presentation consumption', () => {
     expect(screen.getByRole('button', { name: 'actions.edit' }).hasAttribute('disabled')).toBe(
       true,
     );
-    expect(screen.getByRole('button', { name: 'actions.delete' }).hasAttribute('disabled')).toBe(
-      true,
-    );
-    expect(
-      screen.getByRole('button', { name: 'user.passwordReset.action' }).hasAttribute('disabled'),
-    ).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    const deleteItem = await screen.findByRole('menuitem', { name: 'actions.delete' });
+    expect(deleteItem.getAttribute('aria-disabled')).toBe('true');
+    const resetItem = screen.getByRole('menuitem', { name: 'user.passwordReset.action' });
+    expect(resetItem.getAttribute('aria-disabled')).not.toBe('true');
   });
 });
 

@@ -245,3 +245,59 @@ body {
     transform: translate(-50%, 0);
   }
 }
+
+/* Login form — mockup treatment: compact labels, 40px inputs, gradient CTA. */
+.mss-login .ant-form-item {
+  margin-bottom: 18px;
+}
+.mss-login .ant-form-item-label {
+  padding-bottom: 6px;
+}
+.mss-login .ant-form-item-label > label {
+  color: var(--mss-color-text);
+  font-size: 13px;
+  height: auto;
+}
+.mss-login .ant-input-affix-wrapper-lg,
+.mss-login .ant-input-lg {
+  border-radius: 8px;
+  min-height: 40px;
+}
+.mss-login .mss-login-submit.ant-btn {
+  background: linear-gradient(90deg, #3b5bfd 0%, #6a5cff 100%);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px -8px rgb(59 91 253 / 0.65);
+  font-weight: 600;
+  height: 44px;
+  letter-spacing: 0.3em;
+  transition:
+    transform var(--mss-motion-fast) var(--mss-ease-out),
+    box-shadow var(--mss-motion-fast) var(--mss-ease-out);
+}
+.mss-login .mss-login-submit.ant-btn:not(:disabled):hover {
+  box-shadow: 0 12px 24px -10px rgb(59 91 253 / 0.8);
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mss-login .mss-login-submit.ant-btn:not(:disabled):hover {
+    transform: none;
+  }
+}
+.mss-login .ant-input-affix-wrapper,
+.mss-login .ant-input-outlined {
+  background: var(--mss-color-bg-container);
+}
+
+/* Sidebar group titles (menu.type = group): quiet uppercase-style labels. */
+.ant-pro-sider .ant-menu-item-group-title {
+  color: var(--mss-color-text-tertiary);
+  font-size: 12px;
+  padding-top: 14px;
+}
+.ant-pro-sider .ant-menu-item-group-title .anticon {
+  display: none;
+}
+.ant-pro-sider .ant-menu-item-divider {
+  display: none;
+}

@@ -1,4 +1,5 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -13,18 +14,7 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import {
-  Alert,
-  App,
-  Button,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Popconfirm,
-  Select,
-  Space,
-} from 'antd';
+import { Alert, App, Button, Form, Input, InputNumber, Modal, Select } from 'antd';
 import { useMemo, useState } from 'react';
 import AdministrationTable, { AdministrationStatusTag } from './AdministrationTable';
 import { administrationAPI } from './api';
@@ -187,24 +177,29 @@ export default function PostManagement({
       width: 190,
       fixed: 'right',
       render: (_, post) => (
-        <Space size="small">
-          {canEdit ? (
-            <Button size="small" type="link" onClick={() => openEditor(post)}>
-              {intl.formatMessage({ id: 'actions.edit' })}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              description={intl.formatMessage({ id: 'post.delete.description' })}
-              title={intl.formatMessage({ id: 'post.delete.confirm' })}
-              onConfirm={() => remove.mutate(post)}
-            >
-              <Button danger size="small" type="link">
-                {intl.formatMessage({ id: 'actions.delete' })}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <RowActions
+          primary={
+            canEdit && {
+              key: 'edit',
+              label: intl.formatMessage({ id: 'actions.edit' }),
+
+              onClick: () => openEditor(post),
+            }
+          }
+          more={[
+            canDelete && {
+              key: 'delete',
+              label: intl.formatMessage({ id: 'actions.delete' }),
+              danger: true,
+
+              confirm: {
+                title: intl.formatMessage({ id: 'post.delete.confirm' }),
+                description: intl.formatMessage({ id: 'post.delete.description' }),
+              },
+              onClick: () => remove.mutate(post),
+            },
+          ]}
+        />
       ),
     },
   ];

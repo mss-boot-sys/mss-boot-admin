@@ -1,5 +1,6 @@
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -28,6 +29,7 @@ import {
   type UserWriteValues,
 } from './contract';
 import { useAdministrationCatalog, useAdministrationPage } from './query';
+import { UserStatCards } from './UserStatCards';
 import {
   userPresentationListComponents,
   userPresentationMobileFields,
@@ -259,42 +261,37 @@ export default function UserManagement({
       render: (_, user) => {
         const rootTarget = (user.role ?? rolesByID.get(user.roleID))?.root === true;
         return (
-          <Space size="small" wrap>
-            {canEdit ? (
-              <Button
-                disabled={rootTarget}
-                size="small"
-                type="link"
-                onClick={() => openEditor(user)}
-              >
-                {intl.formatMessage({ id: 'actions.edit' })}
-              </Button>
-            ) : null}
-            {canResetPassword ? (
-              <Button
-                size="small"
-                type="link"
-                onClick={() => {
+          <RowActions
+            primary={
+              canEdit && {
+                key: 'edit',
+                label: intl.formatMessage({ id: 'actions.edit' }),
+                disabled: rootTarget,
+                onClick: () => openEditor(user),
+              }
+            }
+            more={[
+              canResetPassword && {
+                key: 'password',
+                label: intl.formatMessage({ id: 'user.passwordReset.action' }),
+                onClick: () => {
                   passwordForm.resetFields();
                   setPasswordTarget(user);
-                }}
-              >
-                {intl.formatMessage({ id: 'user.passwordReset.action' })}
-              </Button>
-            ) : null}
-            {canDelete ? (
-              <Popconfirm
-                description={intl.formatMessage({ id: 'user.delete.description' })}
-                disabled={rootTarget}
-                title={intl.formatMessage({ id: 'user.delete.confirm' })}
-                onConfirm={() => remove.mutate(user)}
-              >
-                <Button danger disabled={rootTarget} size="small" type="link">
-                  {intl.formatMessage({ id: 'actions.delete' })}
-                </Button>
-              </Popconfirm>
-            ) : null}
-          </Space>
+                },
+              },
+              canDelete && {
+                key: 'delete',
+                label: intl.formatMessage({ id: 'actions.delete' }),
+                danger: true,
+                disabled: rootTarget,
+                confirm: {
+                  title: intl.formatMessage({ id: 'user.delete.confirm' }),
+                  description: intl.formatMessage({ id: 'user.delete.description' }),
+                },
+                onClick: () => remove.mutate(user),
+              },
+            ]}
+          />
         );
       },
     },
@@ -317,6 +314,7 @@ export default function UserManagement({
 
   return (
     <>
+      <UserStatCards />
       <AdministrationTable
         columns={tablePresentation.columns}
         density={tablePresentation.density}

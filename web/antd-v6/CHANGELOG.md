@@ -6,6 +6,11 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+- Admin lists: action column is now a primary `编辑` link plus a `⋯` overflow menu (`RowActions`); permission hide/disable rules preserved, danger actions confirm via modal.
+- Login: mockup-style left-aligned title (no duplicate logo), labelled 40px inputs, gradient submit, `记住我` (persists only the username in localStorage; passwords/session never stored).
+- Side layout: top-level menu directories render as group titles (`menu.type = 'group'`), still backend-driven.
+- Users page: stat cards (total / enabled / disabled / locked) read from the existing paged list `total`; no fabricated trends.
+
 ### Changed
 
 - Visual refresh (P0): indigo `#3b5bfd` brand color, three-layer light and dark

@@ -1,4 +1,5 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -24,9 +25,7 @@ import {
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
   Select,
-  Space,
   Tag,
   Transfer,
 } from 'antd';
@@ -233,37 +232,40 @@ export default function MenuManagement({
       width: 280,
       fixed: 'right',
       render: (_, menu) => (
-        <Space size="small">
-          {canEdit ? (
-            <Button size="small" type="link" onClick={() => openEditor(menu)}>
-              {intl.formatMessage({ id: 'actions.edit' })}
-            </Button>
-          ) : null}
-          {canBindAPI && menu.type !== 'DIRECTORY' && menu.type !== 'API' ? (
-            <Button
-              size="small"
-              type="link"
-              onClick={() => {
-                bindAPIs.reset();
-                setBoundAPIKeys([]);
-                setBindingMenu(menu);
-              }}
-            >
-              {intl.formatMessage({ id: 'menu.apiBinding.action' })}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              description={intl.formatMessage({ id: 'menu.delete.description' })}
-              title={intl.formatMessage({ id: 'menu.delete.confirm' })}
-              onConfirm={() => remove.mutate(menu)}
-            >
-              <Button danger size="small" type="link">
-                {intl.formatMessage({ id: 'actions.delete' })}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <RowActions
+          primary={
+            canEdit && {
+              key: 'edit',
+              label: intl.formatMessage({ id: 'actions.edit' }),
+
+              onClick: () => openEditor(menu),
+            }
+          }
+          more={[
+            canBindAPI &&
+              menu.type !== 'DIRECTORY' &&
+              menu.type !== 'API' && {
+                key: 'bind',
+                label: intl.formatMessage({ id: 'menu.apiBinding.action' }),
+                onClick: () => {
+                  bindAPIs.reset();
+                  setBoundAPIKeys([]);
+                  setBindingMenu(menu);
+                },
+              },
+            canDelete && {
+              key: 'delete',
+              label: intl.formatMessage({ id: 'actions.delete' }),
+              danger: true,
+
+              confirm: {
+                title: intl.formatMessage({ id: 'menu.delete.confirm' }),
+                description: intl.formatMessage({ id: 'menu.delete.description' }),
+              },
+              onClick: () => remove.mutate(menu),
+            },
+          ]}
+        />
       ),
     },
   ];

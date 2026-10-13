@@ -97,6 +97,9 @@ export const runtimeLayout: RunTimeLayoutConfig = ({ initialState }) => {
       <ApplicationBrand collapsed={props?.collapsed} initialState={initialState} />
     ),
     menu: {
+      // Side layout renders top-level directories as group titles (mockup
+      // treatment); the menu tree itself stays backend-driven.
+      type: sideLayout ? 'group' : 'sub',
       params: { authorizationVersion: initialState?.authorizationVersion ?? 0 },
       request: async () => initialState?.authorizedMenu ?? [],
     },
