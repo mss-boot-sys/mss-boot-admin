@@ -27,9 +27,9 @@ export function TableSettings({
   const intl = useIntl();
   const visible = columns.filter((column) => !hidden.includes(column.key));
   const content = (
-    <div className="flex w-56 flex-col gap-3">
+    <div className="mss-table-settings">
       <div>
-        <div className="mb-1.5 text-xs" style={{ color: 'var(--mss-color-text-tertiary)' }}>
+        <div className="mss-table-settings-label">
           {intl.formatMessage({ id: 'administration.settings.density' })}
         </div>
         <Segmented<TableDensity>
@@ -44,7 +44,7 @@ export function TableSettings({
         />
       </div>
       <div>
-        <div className="mb-1.5 text-xs" style={{ color: 'var(--mss-color-text-tertiary)' }}>
+        <div className="mss-table-settings-label">
           {intl.formatMessage({ id: 'administration.settings.columns' })}
         </div>
         <div className="flex flex-col gap-1">
@@ -79,11 +79,10 @@ export function TableSettings({
     <Popover content={content} placement="bottomRight" trigger="click">
       <Button
         aria-label={intl.formatMessage({ id: 'administration.settings.label' })}
-        className="mss-tabular"
+        className="mss-tabular mss-toolbar-quiet"
         icon={<SettingOutlined />}
         size="small"
         type="text"
-        style={{ color: 'var(--mss-color-text-tertiary)' }}
       >
         {intl.formatMessage({ id: 'administration.settings.label' })}
       </Button>

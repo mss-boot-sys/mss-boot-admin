@@ -1,0 +1,171 @@
+/* Surfaces, page shell, stat cards and semantic badges. */
+.mss-surface {
+  background: var(--mss-color-bg-container);
+  border: 1px solid var(--mss-color-border-secondary);
+  border-radius: var(--mss-radius-surface);
+  box-shadow: var(--mss-box-shadow-tertiary);
+}
+
+.mss-surface-padded {
+  padding: 20px;
+}
+
+.mss-surface-title {
+  margin: 0 0 16px;
+  color: var(--mss-color-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mss-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.mss-page-title {
+  margin: 0;
+  color: var(--mss-color-text);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.mss-page-description {
+  margin-top: 4px;
+  color: var(--mss-color-text-secondary);
+  font-size: 13px;
+}
+
+.mss-stat-card {
+  padding: 16px 20px;
+}
+
+.mss-stat-card-label {
+  color: var(--mss-color-text-tertiary);
+  font-size: 12px;
+}
+
+.mss-stat-card-value {
+  margin-top: 4px;
+  color: var(--mss-color-text);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.mss-stat-card-value[data-tone="success"] {
+  color: var(--mss-color-success);
+}
+
+.mss-stat-card-value[data-tone="primary"] {
+  color: var(--mss-color-primary);
+}
+
+.mss-stat-card-value[data-tone="warning"] {
+  color: var(--mss-color-warning);
+}
+
+.mss-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mss-color-primary) 10%, transparent);
+  color: var(--mss-color-primary);
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.mss-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.mss-status::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.mss-status[data-tone="success"] {
+  background: var(--mss-color-success-bg);
+  color: var(--mss-color-success-text);
+}
+
+.mss-status[data-tone="error"] {
+  background: var(--mss-color-error-bg);
+  color: var(--mss-color-error-text);
+}
+
+.mss-status[data-tone="warning"] {
+  background: var(--mss-color-warning-bg);
+  color: var(--mss-color-warning-text);
+}
+
+.mss-status[data-tone="processing"] {
+  background: var(--mss-color-primary-bg);
+  color: var(--mss-color-primary-text);
+}
+
+.mss-status[data-tone="default"] {
+  background: var(--mss-color-fill-tertiary);
+  color: var(--mss-color-text-secondary);
+}
+
+.mss-muted {
+  color: var(--mss-color-text-quaternary);
+}
+
+.mss-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--mss-color-border-secondary);
+  border-radius: var(--mss-radius-surface);
+  color: var(--mss-color-text);
+}
+
+.mss-quick-link-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mss-color-primary) 10%, transparent);
+  color: var(--mss-color-primary);
+  font-size: 16px;
+}
+
+/* Deterministic avatar tints from Ant Design preset palettes. */
+.mss-avatar {
+  font-weight: 600;
+}
+.mss-avatar[data-tone="0"] {
+  background: var(--mss-color-primary);
+}
+.mss-avatar[data-tone="1"] {
+  background: var(--mss-color-success);
+}
+.mss-avatar[data-tone="2"] {
+  background: var(--mss-color-warning);
+}
+.mss-avatar[data-tone="3"] {
+  background: var(--mss-color-error);
+}
+.mss-avatar[data-tone="4"] {
+  background: var(--mss-brand-accent);
+}
+.mss-avatar[data-tone="5"] {
+  background: var(--mss-cyan-6, var(--mss-color-info));
+}

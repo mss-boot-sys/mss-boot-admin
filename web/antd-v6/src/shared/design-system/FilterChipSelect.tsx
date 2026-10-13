@@ -47,7 +47,7 @@ export function FilterChipSelect({
       menu={{
         items: options.map((option) => ({ key: option.value, label: option.label })),
         onClick: ({ key }) => onChange(key),
-        style: { maxHeight: 320, overflowY: 'auto' },
+        className: 'mss-chip-menu',
       }}
     >
       <button className="mss-filter-chip mss-filter-chip-add" type="button">

@@ -1,6 +1,7 @@
 import type { ThemeConfig } from 'antd';
 import { theme } from 'antd';
 import type { ThemeSettings } from '../theme/contract';
+import { brand, motion, type PaletteMode, palette } from './tokens';
 
 /**
  * Latin glyphs use Inter; CJK glyphs fall through to the platform's modern
@@ -29,66 +30,60 @@ const sharedToken: Token = {
   controlHeight: 34,
   controlHeightSM: 26,
   controlHeightLG: 40,
-  colorSuccess: '#12b76a',
-  colorWarning: '#f79009',
-  colorError: '#f04438',
-  colorInfo: '#3b5bfd',
-  motionDurationFast: '0.12s',
-  motionDurationMid: '0.18s',
-  motionDurationSlow: '0.24s',
-  motionEaseOut: 'cubic-bezier(0.22, 1, 0.36, 1)',
-  motionEaseInOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
+  colorSuccess: brand.success,
+  colorWarning: brand.warning,
+  colorError: brand.error,
+  colorInfo: brand.primary,
+  motionDurationFast: motion.fast,
+  motionDurationMid: motion.mid,
+  motionDurationSlow: motion.slow,
+  motionEaseOut: motion.easeOut,
+  motionEaseInOut: motion.easeInOut,
   wireframe: false,
 };
 
-/** Three surfaces: layout (page) < container (cards) < elevated (popups). */
-const lightToken: Token = {
-  colorBgLayout: '#f5f7fb',
-  colorBgContainer: '#ffffff',
-  colorBgElevated: '#ffffff',
-  colorBorder: '#e4e7ee',
-  colorBorderSecondary: '#eef0f5',
-  colorText: '#111827',
-  colorTextSecondary: '#4b5563',
-  colorTextTertiary: '#6b7280',
-  colorTextQuaternary: '#9ca3af',
-  boxShadow: '0 8px 24px -6px rgba(16, 24, 40, 0.10), 0 2px 6px rgba(16, 24, 40, 0.04)',
-  boxShadowSecondary: '0 8px 24px -6px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.05)',
-  boxShadowTertiary: '0 1px 2px rgba(16, 24, 40, 0.05)',
-};
-
-const darkToken: Token = {
-  colorBgLayout: '#0b0d12',
-  colorBgContainer: '#12151c',
-  colorBgElevated: '#191d26',
-  colorBorder: '#2a2f3b',
-  colorBorderSecondary: '#20242e',
-  colorText: '#e8eaf0',
-  colorTextSecondary: '#a3a9b8',
-  colorTextTertiary: '#8a91a0',
-  colorTextQuaternary: '#6b7280',
-  boxShadow: '0 12px 32px -8px rgba(0, 0, 0, 0.6)',
-  boxShadowSecondary: '0 12px 32px -8px rgba(0, 0, 0, 0.65)',
-  boxShadowTertiary: '0 1px 2px rgba(0, 0, 0, 0.4)',
-};
+function surfaceToken(mode: PaletteMode): Token {
+  const colors = palette[mode];
+  const dark = mode === 'dark';
+  return {
+    colorBgLayout: colors.bgLayout,
+    colorBgContainer: colors.bgContainer,
+    colorBgElevated: colors.bgElevated,
+    colorBorder: colors.border,
+    colorBorderSecondary: colors.borderSecondary,
+    colorText: colors.text,
+    colorTextSecondary: colors.textSecondary,
+    colorTextTertiary: colors.textTertiary,
+    colorTextQuaternary: colors.textQuaternary,
+    boxShadow: dark
+      ? '0 12px 32px -8px rgba(0, 0, 0, 0.6)'
+      : '0 8px 24px -6px rgba(16, 24, 40, 0.10), 0 2px 6px rgba(16, 24, 40, 0.04)',
+    boxShadowSecondary: dark
+      ? '0 12px 32px -8px rgba(0, 0, 0, 0.65)'
+      : '0 8px 24px -6px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.05)',
+    boxShadowTertiary: dark ? '0 1px 2px rgba(0, 0, 0, 0.4)' : '0 1px 2px rgba(16, 24, 40, 0.05)',
+  };
+}
 
 export function createThemeConfig(settings: ThemeSettings): ThemeConfig {
   const dark = settings.navTheme === 'realDark';
-  const selectedBg = dark ? 'rgba(59, 91, 253, 0.18)' : 'rgba(59, 91, 253, 0.08)';
-  const selectedColor = dark ? '#8ea2ff' : settings.colorPrimary;
+  const mode: PaletteMode = dark ? 'dark' : 'light';
+  const colors = palette[mode];
+  const selectedBg = colors.selectedBg;
+  const selectedColor = dark ? colors.selectedText : settings.colorPrimary;
   return {
     algorithm: dark ? theme.darkAlgorithm : theme.defaultAlgorithm,
     cssVar: { prefix: 'mss' },
     token: {
       ...sharedToken,
-      ...(dark ? darkToken : lightToken),
+      ...surfaceToken(mode),
       colorPrimary: settings.colorPrimary,
     },
     components: {
       Layout: {
-        bodyBg: dark ? darkToken.colorBgLayout : lightToken.colorBgLayout,
-        headerBg: dark ? '#12151c' : '#ffffff',
-        siderBg: dark ? '#0f1218' : '#ffffff',
+        bodyBg: colors.bgLayout,
+        headerBg: colors.bgContainer,
+        siderBg: colors.bgSider,
       },
       Menu: {
         itemHeight: 38,
@@ -113,15 +108,15 @@ export function createThemeConfig(settings: ThemeSettings): ThemeConfig {
       },
       Card: { headerFontSize: 15 },
       Table: {
-        headerBg: dark ? '#151922' : '#f8fafc',
-        headerColor: dark ? '#8a91a0' : '#6b7280',
+        headerBg: colors.bgTableHeader,
+        headerColor: colors.textTertiary,
         headerSplitColor: 'transparent',
         rowHoverBg: dark ? 'rgba(59, 91, 253, 0.06)' : 'rgba(59, 91, 253, 0.03)',
         cellPaddingBlock: 12,
         cellPaddingInline: 16,
       },
       Input: { activeShadow: '0 0 0 3px rgba(59, 91, 253, 0.14)' },
-      Select: { optionSelectedBg: dark ? 'rgba(59, 91, 253, 0.18)' : '#eef2ff' },
+      Select: { optionSelectedBg: colors.selectedBg },
       Modal: { titleFontSize: 17 },
       Result: { titleFontSize: 22 },
     },
