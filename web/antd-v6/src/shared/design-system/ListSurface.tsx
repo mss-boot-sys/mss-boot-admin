@@ -1,4 +1,4 @@
-import { SearchOutlined } from '@ant-design/icons';
+import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { Button, Input } from 'antd';
 import type { ComponentProps, ReactNode } from 'react';
 

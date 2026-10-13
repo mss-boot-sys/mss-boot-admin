@@ -1,4 +1,4 @@
-import { MoreOutlined } from '@ant-design/icons';
+import MoreOutlined from '@ant-design/icons/MoreOutlined';
 import { useIntl } from '@umijs/max';
 import { App, Button, Dropdown } from 'antd';
 import type { ReactNode } from 'react';
