@@ -20,11 +20,14 @@ import {
   postPresentationRegistryEntry,
   rolePresentationRegistryEntry,
 } from './tablePresentation';
-import UserManagement from './UserManagement';
+import UserManagement, { formatRelativeTime } from './UserManagement';
 import { userPresentationRegistryEntry } from './userPresentation';
 
 const tableRuntime = vi.hoisted(() => ({
   props: undefined as Record<string, unknown> | undefined,
+  overview: undefined as
+    | { weekNew: number; onlineSessions: number; lastLogin: Record<string, string> }
+    | undefined,
 }));
 
 vi.mock('./AdministrationTable', () => ({
@@ -51,6 +54,9 @@ vi.mock('./query', () => {
     isPending: false,
   });
   return {
+    MAX_ADMIN_EXPORT_ROWS: 10_000,
+    collectAdministrationRows: vi.fn(async () => []),
+    useUserOverview: () => ({ data: tableRuntime.overview }),
     useAdministrationAPICatalog: emptyCatalog,
     useAdministrationCatalog: emptyCatalog,
     useAdministrationPage: emptyList,
@@ -409,6 +415,32 @@ describe('user management presentation consumption', () => {
     const resetItem = screen.getByRole('menuitem', { name: 'user.passwordReset.action' });
     expect(resetItem.getAttribute('aria-disabled')).not.toBe('true');
   });
+
+  it('adds the root-only last-login column only when the overview is available', () => {
+    tableRuntime.overview = {
+      weekNew: 1,
+      onlineSessions: 2,
+      lastLogin: { 'user-1': new Date(Date.now() - 2 * 60_000).toISOString() },
+    };
+    try {
+      renderManagement(activeRuntime());
+      const props = tableRuntime.props as { columns: Record<string, unknown>[] };
+      const keys = props.columns.map(columnKey);
+      expect(keys.slice(-2)).toEqual(['lastLogin', 'actions']);
+      const render = props.columns.find((column) => columnKey(column) === 'lastLogin')?.render as (
+        value: unknown,
+        record: Record<string, unknown>,
+        index: number,
+      ) => ReactNode;
+      const seen = renderView(render(undefined, { id: 'user-1' }, 0));
+      expect(seen.container.querySelector('time')).not.toBeNull();
+      seen.unmount();
+      const never = renderView(render(undefined, { id: 'user-2' }, 0));
+      expect(never.container.textContent).toBe('user.lastLogin.never');
+    } finally {
+      tableRuntime.overview = undefined;
+    }
+  });
 });
 
 describe('remaining administration page presentation consumption', () => {
@@ -519,3 +551,15 @@ describe('remaining administration page presentation consumption', () => {
     },
   );
 });
+
+describe('formatRelativeTime', () => {
+  it('formats past instants relative to now', () => {
+    const now = Date.parse('2026-10-13T12:00:00Z');
+    expect(formatRelativeTime('2026-10-13T11:58:00Z', 'en-US', now)).toBe('2 minutes ago');
+    expect(formatRelativeTime('2026-10-12T12:00:00Z', 'en-US', now)).toBe('yesterday');
+  });
+});
+
+function renderView(node: ReactNode) {
+  return render(<App>{node}</App>);
+}

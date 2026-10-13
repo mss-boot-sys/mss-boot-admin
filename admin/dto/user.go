@@ -47,6 +47,10 @@ type UserSearch struct {
 	ID                 string      `query:"id" form:"id" search:"type:contains;column:id"`
 	Name               string      `query:"name" form:"name" search:"type:contains;column:name"`
 	Status             enum.Status `query:"status" form:"status" binding:"omitempty,oneof=enabled disabled locked" search:"type:exact;column:status"`
+	// RoleID and DepartmentID are optional exact filters used by the list
+	// filter chips. Empty values build no predicate.
+	RoleID       string `query:"roleID" form:"roleID" binding:"omitempty,max=64" search:"type:exact;column:role_id"`
+	DepartmentID string `query:"departmentID" form:"departmentID" binding:"omitempty,max=64" search:"type:exact;column:department_id"`
 }
 
 // BrowserSessionResponse intentionally omits the Admin JWT. The browser owns

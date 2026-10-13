@@ -6,7 +6,20 @@ tag namespaces.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+### Admin API
+
+- Add root-only `GET /admin/api/user/overview?ids=` (route contract
+  `session:read`, RootOnly) returning `weekNew`, `onlineSessions` and per-user
+  `lastLogin`, derived from existing `mss_boot_users` and
+  `mss_boot_user_sessions` columns; no schema migration.
+- `GET /admin/api/users` accepts optional exact `roleID` / `departmentID`
+  filters (max 64 chars); omitted values keep the previous behaviour.
+
+### Admin Web
+
+- UI refresh to match the concept mockups: route tabs, list export (CSV),
+  additive filter chips, column/density settings, last-login column, user stat
+  cards, compact footer and sidebar. See `web/antd-v6/CHANGELOG.md`.
 
 ## [v1.3.9] - 2026-10-11
 

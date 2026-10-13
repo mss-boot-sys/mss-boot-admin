@@ -83,8 +83,11 @@ export const queryKeys = {
       pageSize: number;
       name?: string;
       status?: string;
+      roleID?: string;
+      departmentID?: string;
     }>,
   ) => ['administration', resource, 'list', params] as const,
+  userOverview: (ids: readonly string[]) => ['administration', 'users', 'overview', ids] as const,
   administrationDetail: (
     resource: 'departments' | 'menus' | 'posts' | 'roles' | 'users',
     id: string,

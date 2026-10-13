@@ -1,6 +1,9 @@
+import DownloadOutlined from '@ant-design/icons/DownloadOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
+import { FilterChipSelect } from '@mss-admin-core/shared/design-system/FilterChipSelect';
 import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
+import { buildCsv, downloadCsv } from '@mss-admin-core/shared/export/csv';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -28,7 +31,13 @@ import {
   type UserSummary,
   type UserWriteValues,
 } from './contract';
-import { useAdministrationCatalog, useAdministrationPage } from './query';
+import {
+  collectAdministrationRows,
+  MAX_ADMIN_EXPORT_ROWS,
+  useAdministrationCatalog,
+  useAdministrationPage,
+  useUserOverview,
+} from './query';
 import { UserStatCards } from './UserStatCards';
 import {
   userPresentationListComponents,
@@ -37,6 +46,23 @@ import {
 } from './userPresentation';
 
 const AVATAR_COLORS = ['#3b5bfd', '#12b76a', '#f79009', '#ef4444', '#6b4dff', '#0ea5e9'];
+
+export function formatRelativeTime(iso: string, locale: string, now = Date.now()): string {
+  const seconds = Math.round((Date.parse(iso) - now) / 1000);
+  const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['year', 31_536_000],
+    ['month', 2_592_000],
+    ['week', 604_800],
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
+  }
+  return format.format(0, 'minute');
+}
 
 function avatarColor(seed: string) {
   let hash = 0;
@@ -76,6 +102,11 @@ export default function UserManagement({
     : initialParams.pageSize;
   const [params, setParams] = usePresentationPageParams(initialParams, configuredPageSize);
   const users = useAdministrationPage('users', params);
+  const pageIDs = useMemo(() => (users.data?.data ?? []).map((user) => user.id), [users.data]);
+  // Root-only aggregate (week-new, online sessions, last login). Non-root
+  // operators get 403 and the optional cards/column simply stay hidden.
+  const overview = useUserOverview(pageIDs, users.isSuccess);
+  const [exporting, setExporting] = useState(false);
   const roles = useAdministrationCatalog('roles');
   const departments = useAdministrationCatalog('departments');
   const posts = useAdministrationCatalog('posts');
@@ -253,10 +284,32 @@ export default function UserManagement({
       width: 120,
       render: (_, user) => <AdministrationStatusTag status={user.status} />,
     },
+    ...(overview.data
+      ? ([
+          {
+            title: intl.formatMessage({ id: 'user.field.lastLogin' }),
+            key: 'lastLogin',
+            width: 130,
+            responsive: ['md'],
+            render: (_: unknown, user: UserSummary) => {
+              const at = overview.data?.lastLogin[user.id];
+              return at ? (
+                <time dateTime={at} title={new Date(at).toLocaleString(intl.locale)}>
+                  {formatRelativeTime(at, intl.locale)}
+                </time>
+              ) : (
+                <span style={{ color: 'var(--mss-color-text-quaternary)' }}>
+                  {intl.formatMessage({ id: 'user.lastLogin.never' })}
+                </span>
+              );
+            },
+          },
+        ] satisfies TableColumnsType<UserSummary>)
+      : []),
     {
       title: intl.formatMessage({ id: 'administration.field.actions' }),
       key: 'actions',
-      width: 300,
+      width: 120,
       fixed: 'right',
       render: (_, user) => {
         const rootTarget = (user.role ?? rolesByID.get(user.roleID))?.root === true;
@@ -304,7 +357,7 @@ export default function UserManagement({
     listComponents: userPresentationListComponents,
     mobileColumnKeys: [...userPresentationMobileFields, 'actions'],
     model: presentation,
-    protectedColumnKeys: ['actions'],
+    protectedColumnKeys: ['lastLogin', 'actions'],
     searchComponents: userPresentationSearchComponents,
   });
   const nameSearch = tablePresentation.searchFields.get('name') ?? null;
@@ -312,9 +365,80 @@ export default function UserManagement({
 
   const dependencyError = roles.error || departments.error || posts.error;
 
+  const exportUsers = async () => {
+    setExporting(true);
+    try {
+      const rows = await collectAdministrationRows('users', params);
+      const lastLogin = overview.data
+        ? (
+            await administrationAPI.users
+              .overview(rows.slice(0, 100).map((row) => row.id))
+              .catch(() => undefined)
+          )?.lastLogin
+        : undefined;
+      const csv = buildCsv<UserSummary>(
+        [
+          { header: intl.formatMessage({ id: 'user.field.username' }), value: (u) => u.username },
+          { header: intl.formatMessage({ id: 'administration.field.name' }), value: (u) => u.name },
+          { header: intl.formatMessage({ id: 'user.field.email' }), value: (u) => u.email },
+          {
+            header: intl.formatMessage({ id: 'user.field.role' }),
+            value: (u) => administrationReferenceName(u.role, u.roleID, roleNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'user.field.department' }),
+            value: (u) =>
+              administrationReferenceName(u.department, u.departmentID, departmentNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'user.field.post' }),
+            value: (u) => administrationReferenceName(u.post, u.postID, postNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'administration.field.status' }),
+            value: (u) =>
+              intl.formatMessage({ id: `administration.status.${u.status || 'unknown'}` }),
+          },
+          ...(lastLogin && rows.length <= 100
+            ? [
+                {
+                  header: intl.formatMessage({ id: 'user.field.lastLogin' }),
+                  value: (u: UserSummary) => lastLogin[u.id] ?? '',
+                },
+              ]
+            : []),
+        ],
+        rows,
+      );
+      downloadCsv(`users-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      void message.success(
+        intl.formatMessage({ id: 'administration.export.done' }, { count: rows.length }),
+      );
+    } catch (error) {
+      void message.error(
+        error instanceof Error && error.message.includes('limit')
+          ? intl.formatMessage(
+              { id: 'administration.export.tooMany' },
+              { max: MAX_ADMIN_EXPORT_ROWS },
+            )
+          : intl.formatMessage({ id: 'administration.export.failed' }),
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const roleFilterOptions = (roles.data ?? []).map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+  const departmentFilterOptions = flattenAdministrationTree(departments.data ?? []).map(
+    (department) => ({ value: department.id, label: department.name }),
+  );
+
   return (
     <>
-      <UserStatCards />
+      <UserStatCards overview={overview.data} />
       <AdministrationTable
         columns={tablePresentation.columns}
         density={tablePresentation.density}
@@ -327,6 +451,25 @@ export default function UserManagement({
         setParams={setParams}
         statusSearch={statusSearch}
         mobileColumnKeys={tablePresentation.mobileColumnKeys}
+        settingsKey="users"
+        extraFilters={
+          <>
+            <FilterChipSelect
+              label={intl.formatMessage({ id: 'user.filter.role' })}
+              options={roleFilterOptions}
+              value={params.roleID}
+              onChange={(roleID) => setParams((current) => ({ ...current, current: 1, roleID }))}
+            />
+            <FilterChipSelect
+              label={intl.formatMessage({ id: 'user.filter.department' })}
+              options={departmentFilterOptions}
+              value={params.departmentID}
+              onChange={(departmentID) =>
+                setParams((current) => ({ ...current, current: 1, departmentID }))
+              }
+            />
+          </>
+        }
         bulkActions={
           canDelete
             ? (selected, clear) => (
@@ -352,15 +495,24 @@ export default function UserManagement({
             : undefined
         }
         toolbar={
-          canCreate ? (
+          <>
             <Button
-              icon={<PlusOutlined aria-hidden />}
-              type="primary"
-              onClick={() => openEditor('create')}
+              icon={<DownloadOutlined aria-hidden />}
+              loading={exporting}
+              onClick={() => void exportUsers()}
             >
-              {intl.formatMessage({ id: 'user.create.action' })}
+              {intl.formatMessage({ id: 'actions.export' })}
             </Button>
-          ) : null
+            {canCreate ? (
+              <Button
+                icon={<PlusOutlined aria-hidden />}
+                type="primary"
+                onClick={() => openEditor('create')}
+              >
+                {intl.formatMessage({ id: 'user.create.action' })}
+              </Button>
+            ) : null}
+          </>
         }
       />
       <Modal

@@ -1,6 +1,7 @@
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { FilterChipSelect } from '@mss-admin-core/shared/design-system/FilterChipSelect';
 import { usePageHeaderActionsSlot } from '@mss-admin-core/shared/design-system/PageContainer';
 import {
   PageEmpty,
@@ -9,6 +10,10 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import {
+  type TableDensity,
+  TableSettings,
+} from '@mss-admin-core/shared/design-system/TableSettings';
 import type {
   PageRenderField,
   PresentationDensity,
@@ -60,6 +65,45 @@ interface AdministrationTableProps<T extends { id: string }> {
    * renders the floating batch-action bar content.
    */
   bulkActions?: (selected: T[], clear: () => void) => ReactNode;
+  /** Additional filter chips (e.g. "+ 角色 / + 部门"), rendered after status. */
+  extraFilters?: ReactNode;
+  /** Persists column visibility / density per operator in this browser. */
+  settingsKey?: string;
+}
+
+interface TablePreferences {
+  hidden: string[];
+  density?: TableDensity;
+}
+
+function readPreferences(key?: string): TablePreferences {
+  if (!key) return { hidden: [] };
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(`mss-admin.table.${key}`) ?? '{}');
+    return {
+      hidden: Array.isArray(parsed.hidden)
+        ? parsed.hidden.filter((item: unknown) => typeof item === 'string')
+        : [],
+      density: ['small', 'middle', 'large'].includes(parsed.density) ? parsed.density : undefined,
+    };
+  } catch {
+    return { hidden: [] };
+  }
+}
+
+function writePreferences(key: string | undefined, value: TablePreferences) {
+  if (!key) return;
+  try {
+    window.localStorage.setItem(`mss-admin.table.${key}`, JSON.stringify(value));
+  } catch {
+    // Preferences are best effort.
+  }
+}
+
+function columnKeyOf(column: object): string | undefined {
+  if ('key' in column && typeof column.key === 'string') return column.key;
+  if ('dataIndex' in column && typeof column.dataIndex === 'string') return column.dataIndex;
+  return undefined;
 }
 
 export function AdministrationStatusTag({ status }: { status: AdministrationStatus }) {
@@ -90,6 +134,8 @@ export default function AdministrationTable<T extends { id: string }>({
   searchCollapsedByDefault = false,
   toolbar,
   bulkActions,
+  extraFilters,
+  settingsKey,
 }: AdministrationTableProps<T>) {
   const intl = useIntl();
   const headerSlot = usePageHeaderActionsSlot();
@@ -97,6 +143,13 @@ export default function AdministrationTable<T extends { id: string }>({
   const [searchExpanded, setSearchExpanded] = useState(() => !searchCollapsedByDefault);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const searchExpansionWasChanged = useRef(false);
+  const [preferences, setPreferences] = useState<TablePreferences>(() =>
+    readPreferences(settingsKey),
+  );
+  const updatePreferences = (next: TablePreferences) => {
+    setPreferences(next);
+    writePreferences(settingsKey, next);
+  };
   const status = getRequestStatus(query.error);
   const nameSearchField: PageRenderField | null =
     nameSearch === undefined
@@ -152,6 +205,23 @@ export default function AdministrationTable<T extends { id: string }>({
   }
 
   const activeStatus = params.status ?? 'all';
+  const presentationDensity: TableDensity = density === 'compact' ? 'small' : (density ?? 'large');
+  const effectiveDensity = preferences.density ?? presentationDensity;
+  const settingsColumns = columns.flatMap((column) => {
+    const key = columnKeyOf(column);
+    if (!key || key === 'actions') return [];
+    const title = 'title' in column && typeof column.title === 'string' ? column.title : key;
+    return [{ key, title }];
+  });
+  const hiddenKeys = new Set(
+    settingsKey
+      ? preferences.hidden.filter((key) => settingsColumns.some((column) => column.key === key))
+      : [],
+  );
+  const visibleColumns =
+    hiddenKeys.size >= settingsColumns.length
+      ? columns
+      : columns.filter((column) => !hiddenKeys.has(columnKeyOf(column) ?? ''));
   const applyStatus = (value: AdministrationStatusFilter) =>
     setParams((current) => ({ ...current, current: 1, status: value }));
   const clearSelection = () => setSelectedKeys([]);
@@ -240,26 +310,28 @@ export default function AdministrationTable<T extends { id: string }>({
                 className="m-0 flex flex-wrap items-center gap-2 border-0 p-0"
                 style={{ order: statusSearchField.order }}
               >
-                {STATUS_FILTERS.map((value) => (
-                  <button
-                    aria-pressed={activeStatus === value}
-                    className="mss-filter-chip"
-                    key={value}
-                    type="button"
-                    onClick={() => applyStatus(value)}
-                  >
-                    {value === 'all'
-                      ? intl.formatMessage({ id: 'administration.status.all' })
-                      : `${
-                          typeof statusSearchField.label === 'string'
-                            ? `${statusSearchField.label}：`
-                            : ''
-                        }${intl.formatMessage({ id: `administration.status.${value}` })}`}
-                  </button>
-                ))}
+                <FilterChipSelect
+                  label={
+                    typeof statusSearchField.label === 'string'
+                      ? statusSearchField.label
+                      : intl.formatMessage({ id: 'administration.field.status' })
+                  }
+                  options={STATUS_FILTERS.filter((value) => value !== 'all').map((value) => ({
+                    value,
+                    label: intl.formatMessage({ id: `administration.status.${value}` }),
+                  }))}
+                  value={activeStatus === 'all' ? undefined : activeStatus}
+                  onChange={(value) => applyStatus((value as AdministrationStatusFilter) ?? 'all')}
+                />
               </fieldset>
             ) : null}
-            {searchExpanded && (params.name || activeStatus !== 'all') ? (
+            {searchExpanded && extraFilters ? (
+              <div className="flex flex-wrap items-center gap-2" style={{ order: 30 }}>
+                {extraFilters}
+              </div>
+            ) : null}
+            {searchExpanded &&
+            (params.name || activeStatus !== 'all' || params.roleID || params.departmentID) ? (
               <Button
                 size="small"
                 type="link"
@@ -282,6 +354,16 @@ export default function AdministrationTable<T extends { id: string }>({
                   { total: query.data?.total ?? 0 },
                 )}
               </span>
+              {settingsKey ? (
+                <TableSettings
+                  columns={settingsColumns}
+                  density={effectiveDensity}
+                  hidden={preferences.hidden}
+                  onDensityChange={(value) => updatePreferences({ ...preferences, density: value })}
+                  onHiddenChange={(hidden) => updatePreferences({ ...preferences, hidden })}
+                  onReset={() => updatePreferences({ hidden: [] })}
+                />
+              ) : null}
               <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
                 <Button
                   aria-label={intl.formatMessage({ id: 'actions.refresh' })}
@@ -297,12 +379,12 @@ export default function AdministrationTable<T extends { id: string }>({
         </Form>
         {headerSlot ? headerActions : null}
         <ResponsiveEntityTable<T>
-          columns={columns}
+          columns={visibleColumns}
           dataSource={rows}
           loading={query.isFetching}
           locale={{ emptyText: <PageEmpty description={emptyText} /> }}
           mobileColumnKeys={mobileColumnKeys}
-          size={density === 'compact' ? 'small' : density}
+          size={effectiveDensity}
           rowClassName={() => 'mss-row-enter'}
           onRow={(_, index = 0) => ({
             style: index < ROW_STAGGER_LIMIT ? { animationDelay: `${index * 20}ms` } : undefined,

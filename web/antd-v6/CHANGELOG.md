@@ -6,6 +6,13 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+- Route tabs under the side-layout header: one closable tab per visited authorized menu page (workplace pinned, cap 12, sessionStorage), right-click menu (close / others / right / all), middle-click close.
+- Users list: `导出` downloads the current filtered list as CSV (UTF-8 BOM, formula-injection safe, max 10,000 rows) via the existing list API.
+- Admin lists: status filter becomes a `+ 状态` chip; users add `+ 角色` / `+ 部门` chips (new backend `roleID`/`departmentID` filters).
+- Admin lists: `密度 · 列设置` popover (density + visible columns, persisted per browser; actions column always kept, at least one business column stays visible).
+- Users list: `最近登录` column and `本周新增` / `在线会话` stat cards from the new root-only `/user/overview` endpoint; non-root operators fall back to disabled/locked counts and no column.
+- Compact single-line footer (keeps ICP record and footer contributions); tighter sidebar rows and group titles.
+
 - Admin lists: action column is now a primary `编辑` link plus a `⋯` overflow menu (`RowActions`); permission hide/disable rules preserved, danger actions confirm via modal.
 - Login: mockup-style left-aligned title (no duplicate logo), labelled 40px inputs, gradient submit, `记住我` (persists only the username in localStorage; passwords/session never stored).
 - Side layout: top-level menu directories render as group titles (`menu.type = 'group'`), still backend-driven.

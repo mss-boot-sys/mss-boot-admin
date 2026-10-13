@@ -246,7 +246,11 @@ export default function LoginPage() {
                 <ProFormText.Password
                   name="password"
                   label={intl.formatMessage({ id: 'pages.login.password' })}
-                  fieldProps={{ autoComplete: 'current-password', size: 'large', variant: 'outlined' }}
+                  fieldProps={{
+                    autoComplete: 'current-password',
+                    size: 'large',
+                    variant: 'outlined',
+                  }}
                   placeholder={intl.formatMessage({ id: 'pages.login.password' })}
                   rules={[
                     {

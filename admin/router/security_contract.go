@@ -110,6 +110,7 @@ var customRouteContracts = []CustomRouteContract{
 	{Method: http.MethodGet, Path: "/admin/api/user-configs/profile", Class: RouteOptionalAuthenticated},
 
 	// Session and websocket operations.
+	{Method: http.MethodGet, Path: "/admin/api/user/overview", Class: RouteAuthorized, Permission: "session:read", RootOnly: true},
 	{Method: http.MethodGet, Path: "/admin/api/online-sessions", Class: RouteAuthorized, Permission: "session:read", RootOnly: true},
 	{Method: http.MethodGet, Path: "/admin/api/online-sessions/:id", Class: RouteAuthorized, Permission: "session:read", RootOnly: true},
 	{Method: http.MethodDelete, Path: "/admin/api/online-sessions/:id", Class: RouteAuthorized, Permission: "session:revoke", RootOnly: true, Mutation: true},

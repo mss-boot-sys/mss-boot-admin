@@ -50,6 +50,31 @@ function pageParams(params: AdministrationListParams) {
     pageSize: params.pageSize,
     name: params.name?.trim() || undefined,
     status: !params.status || params.status === 'all' ? undefined : params.status,
+    roleID: params.roleID || undefined,
+    departmentID: params.departmentID || undefined,
+  };
+}
+
+export interface UserOverview {
+  weekNew: number;
+  onlineSessions: number;
+  lastLogin: Record<string, string>;
+}
+
+export function parseUserOverview(value: unknown): UserOverview {
+  const record = (value ?? {}) as Record<string, unknown>;
+  const count = (input: unknown) =>
+    typeof input === 'number' && Number.isFinite(input) && input >= 0 ? Math.floor(input) : 0;
+  const lastLogin: Record<string, string> = {};
+  if (record.lastLogin && typeof record.lastLogin === 'object') {
+    for (const [id, at] of Object.entries(record.lastLogin as Record<string, unknown>)) {
+      if (typeof at === 'string' && !Number.isNaN(Date.parse(at))) lastLogin[id] = at;
+    }
+  }
+  return {
+    weekNew: count(record.weekNew),
+    onlineSessions: count(record.onlineSessions),
+    lastLogin,
   };
 }
 
@@ -180,6 +205,14 @@ export function createAdministrationAPI(client: AdministrationRequestClient) {
     remove: async (id: string): Promise<void> => {
       await client(entityPath('users', id), { method: 'DELETE', skipErrorHandler: true });
     },
+    overview: async (ids: readonly string[]): Promise<UserOverview> =>
+      parseUserOverview(
+        await client('/user/overview', {
+          method: 'GET',
+          params: { ids: ids.join(',') || undefined },
+          skipErrorHandler: true,
+        }),
+      ),
     resetPassword: async (id: string, password: string): Promise<void> => {
       await client(`/user/${encodeURIComponent(id)}/password-reset`, {
         method: 'PUT',
