@@ -25,7 +25,8 @@ class ReleasePolicyTest(unittest.TestCase):
 
     def test_first_sys_release_is_direct_and_legacy_identity_remains_historical(self):
         self.assertEqual(self.policy["publicationMode"], "direct")
-        self.assertEqual(self.policy["nextPublicVersion"], "v1.3.9")
+        self.assertEqual(self.policy["currentStableVersion"], "v1.3.9")
+        self.assertEqual(self.policy["nextPublicVersion"], "v1.4.0")
         self.assertEqual(self.policy["legacyRepository"], "mss-boot-io/mss-boot-admin")
         self.assertEqual(self.policy["legacyStableVersion"], "v1.3.8")
         self.assertNotIn("stablePromotionReady", self.policy)
@@ -37,9 +38,9 @@ class ReleasePolicyTest(unittest.TestCase):
 
     def test_canonical_components_publish_only_reviewed_version(self):
         for component in POLICY.COMPONENT_TEMPLATE_KEYS:
-            ref = POLICY.release_ref(self.policy, component, "v1.3.9")
-            POLICY.check_public_ref(self.policy, component, "v1.3.9", ref)
-            for version in ("v1.3.8", "v1.3.7", "v1.4.0", "v1.3.9-rc.1", "v01.3.9"):
+            ref = POLICY.release_ref(self.policy, component, "v1.4.0")
+            POLICY.check_public_ref(self.policy, component, "v1.4.0", ref)
+            for version in ("v1.3.9", "v1.3.8", "v1.4.1", "v1.4.0-rc.1", "v01.4.0"):
                 with self.assertRaises(POLICY.PolicyError):
                     POLICY.check_public_ref(
                         self.policy,
@@ -49,24 +50,24 @@ class ReleasePolicyTest(unittest.TestCase):
                     )
             with self.assertRaises(POLICY.PolicyError):
                 POLICY.check_public_ref(
-                    self.policy, component, "v1.3.9", "wrong/v1.3.9"
+                    self.policy, component, "v1.4.0", "wrong/v1.4.0"
                 )
 
     def test_publication_switch_fails_closed_for_every_surface(self):
         self.policy["publicationWorkflowsReady"] = False
         for component in POLICY.COMPONENT_TEMPLATE_KEYS:
-            ref = POLICY.release_ref(self.policy, component, "v1.3.9")
+            ref = POLICY.release_ref(self.policy, component, "v1.4.0")
             POLICY.check_public_ref(
-                self.policy, component, "v1.3.9", ref, intent="qualify"
+                self.policy, component, "v1.4.0", ref, intent="qualify"
             )
             with self.assertRaises(POLICY.PolicyError):
-                POLICY.check_public_ref(self.policy, component, "v1.3.9", ref)
+                POLICY.check_public_ref(self.policy, component, "v1.4.0", ref)
 
     def test_unknown_duplicate_or_weakened_contract_is_rejected(self):
         original = POLICY_PATH.read_text()
         candidates = [
             original + "  unknownField: true\n",
-            original + "  nextPublicVersion: v1.3.9\n",
+            original + "  nextPublicVersion: v1.4.0\n",
         ]
         for old, new in [
             (
@@ -74,7 +75,7 @@ class ReleasePolicyTest(unittest.TestCase):
                 "requireMergedPullRequestSource: false",
             ),
             ("releaseBranch: main", "releaseBranch: topic"),
-            ("distributionVersion: v1.3.9", "distributionVersion: v1.3.8"),
+            ("distributionVersion: v1.4.0", "distributionVersion: v1.3.9"),
             ("publicPrereleases: false", "publicPrereleases: true"),
             (
                 f'currentStableCommit: {self.policy["currentStableCommit"]}',

@@ -20,10 +20,10 @@ SPEC.loader.exec_module(CHECKSUM)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_FRAMEWORK_SUM = "h1:U3AwHpaj3sL/16IAOxpr2Nw6G/GJOrIM7C3NmOYsOm0="
+EXPECTED_FRAMEWORK_SUM = "h1:uiXd3jaDvWwNH8bTXdr6zwkMnVOQ2E3aYY2ApT9+L1w="
 EXPECTED_FRAMEWORK_GO_MOD_SUM = "h1:8zdG8z5Iiq1I/3+tlEauatjrJhhXRXQzfWm0E0CEZ/c="
-EXPECTED_ADMIN_SUM = "h1:Y2lcNdWpG6OyjW4Ql/QTXtYy+3BRWS4g2OnnADRUmOQ="
-EXPECTED_ADMIN_GO_MOD_SUM = "h1:g+eMGcVtkW67wuSD55Fa03V37Vuf28PZv+0QGIncXJk="
+EXPECTED_ADMIN_SUM = "h1:C7ZkgszEU7hY9F0oqc5/JoaXrDt9Lufs4oSypCAmfAk="
+EXPECTED_ADMIN_GO_MOD_SUM = "h1:shPrJbhPnZmksCnd1hWc5JDKen849OwyckN+ARkrnqg="
 
 
 class FrameworkAdminChecksumTest(unittest.TestCase):
@@ -38,6 +38,13 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
             flags=re.MULTILINE,
         )
         self.assertEqual(replacements, 1, "fixture must set its own stable identity")
+        # These fixtures model the v1.3.9 first direct release, independent of
+        # the repository's current reviewed target.
+        for field in ("nextPublicVersion", "distributionVersion"):
+            policy, replacements = re.subn(
+                rf"^  {field}: .+$", f"  {field}: v1.3.9", policy, flags=re.MULTILINE
+            )
+            self.assertEqual(replacements, 1, f"fixture must set {field}")
         return policy
 
     def _git(self, root: Path, *argv: str) -> subprocess.CompletedProcess[str]:

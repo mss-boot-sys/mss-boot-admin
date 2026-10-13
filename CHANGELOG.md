@@ -6,40 +6,64 @@ tag namespaces.
 
 ## [Unreleased]
 
-### CI
+No unreleased changes are recorded.
 
-- Bump SHA-pinned `actions/setup-node` to v7.1.0 and
-  `actions/download-artifact` to v8.0.2 in CI and release workflows (#19).
+## [v1.4.0] - 2026-10-14
 
-### Module generator
-
-- Generated v6 pages use `RowActions` (Edit + ⋯ menu) with config-driven
-  labels/order; templates bumped to `1.3.0-frontend-v6.8` / `1.3.0-e2e-v6.10`
-  and generated e2e opens the ⋯ menu for secondary actions.
+Release scope: coordinated minor release of Root, Framework, Admin and
+`@mss-boot-sys/admin-web` from one merged-main commit. Publication results are
+recorded by the corresponding tags, Releases and registry assets. No database
+schema migration and no removed or renamed API.
 
 ### Admin API
 
 - Add root-only `GET /admin/api/user/overview?ids=` (route contract
   `session:read`, RootOnly) returning `weekNew`, `onlineSessions` and per-user
   `lastLogin`, derived from existing `mss_boot_users` and
-  `mss_boot_user_sessions` columns; no schema migration.
+  `mss_boot_user_sessions` columns; no schema migration (#23).
 - `GET /admin/api/users` accepts optional exact `roleID` / `departmentID`
-  filters (max 64 chars); omitted values keep the previous behaviour.
+  filters (max 64 chars); omitted values keep the previous behaviour (#23).
 
 ### Admin Web
 
 - UI refresh to match the concept mockups: route tabs, list export (CSV),
   additive filter chips, column/density settings, last-login column, user stat
-  cards, compact footer and sidebar. See `web/antd-v6/CHANGELOG.md`.
+  cards, compact footer and sidebar group titles (#23). See
+  `web/antd-v6/CHANGELOG.md`.
+- **Default theme is now light** (previously dark). Users with a saved personal
+  theme keep it; set `navTheme: realDark` in application or personal theme
+  settings to restore dark by default (#23).
 - Unified page architecture: a single design-token source, consolidated
   design-system styles, shared page and list primitives exported from the
-  runtime package, and style guardrails that run in lint.
+  runtime package, and style guardrails that run in lint (#23).
+- Side-layout desktop header is rendered by breakpoint in code, so host header
+  contributions mount exactly once; route-level 403 pages keep the layout
+  header and render `PageForbidden` instead of Umi's default result (#24).
 
 ### Module generator
 
-- antd-v6 page template `1.3.0-frontend-v6.7` uses the design-system
-  primitives (`PageShell`, `ListSurface` inline filters, header actions,
-  `FormModal`/`DetailDrawer`); regenerated `example-supplier`.
+- antd-v6 page templates use the design-system primitives (`PageShell`,
+  `ListSurface` inline filters, header actions, `FormModal`/`DetailDrawer`) and
+  row actions become `RowActions` (primary Edit + `⋯` menu) with config-driven
+  labels and order. Templates `1.3.0-frontend-v6.8` / `1.3.0-e2e-v6.10`;
+  generated e2e opens the `⋯` menu for secondary actions; `example-supplier`
+  regenerated (#23).
+
+### CI
+
+- Bump SHA-pinned `actions/setup-node` to v7.1.0 and
+  `actions/download-artifact` to v8.0.2 in CI and release workflows (#19).
+
+### Upgrade notes
+
+- Run the standard `mss upgrade admin v1.4.0` plan → apply → verify → empty
+  plan sequence. Regenerated module pages and generated e2e change (row actions
+  move into the `⋯` menu); business-owned e2e that clicked inline Details or
+  Delete buttons must open `More actions` first.
+- Host header contributions (`LayoutContributions` position `header`) now
+  render once on desktop and once (compact) on mobile; tests relying on the
+  hidden duplicate must be updated.
+- Expect the light theme by default; review custom CSS that assumed dark.
 
 ## [v1.3.9] - 2026-10-11
 

@@ -1,13 +1,13 @@
 ---
 title: Agent-native Foundation
 order: 1
-description: v1.3.9 发行版人机协作、机器合同、确定性工具与运行时产品架构
+description: v1.4.0 发行版人机协作、机器合同、确定性工具与运行时产品架构
 ---
 
 # Agent-native Foundation
 
 :::warning
-版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 安装、创建或升级从[快速开始](/getting-started)进入。Docs 网站可异步候补，不阻断组件、
 稳定别名或采用。
 :::
@@ -55,7 +55,7 @@ Foundation 发布或文档发布技能。
 
 ### 执行平面
 
-源码执行平面包含 CLI、MCP 适配、Skills、generator、verifier 和 upgrader。v1.3.9
+源码执行平面包含 CLI、MCP 适配、Skills、generator、verifier 和 upgrader。v1.4.0
 Root Release 以 `mss` 与 `mss-mcp` 作为公共工具；二者复用相同实现和权限边界，写操作
 默认 dry-run、路径受限、拒绝未知覆盖、输出稳定且不发送遥测。v1.3.5 没有发布这些公共
 工具，历史源码能力不能替代 Release 二进制。
@@ -82,7 +82,7 @@ Agent 工具不进入 Admin 运行时。Framework 只提供领域无关基础设
         └── npm: 同版本 Admin Web
 ```
 
-v1.3.9 采用者不需要 Foundation checkout、`go.work` 或本地 `replace`。发布验证需要
+v1.4.0 采用者不需要 Foundation checkout、`go.work` 或本地 `replace`。发布验证需要
 覆盖独立外部消费者、`GOWORK=off` 和带只读认证的 GitHub Packages 安装。
 
 ## 变更闭环
@@ -113,7 +113,7 @@ v1.3.9 采用者不需要 Foundation checkout、`go.work` 或本地 `replace`。
 Admin Web（含 GitHub Packages 包和前端镜像）、Root（含工具和后端镜像）。流水线校验
 来源并构建发布，不要求托管预演或单独稳定晋升。Root Release 标记 GitHub Latest。
 
-Docs 继续使用原域名，由 `docs/v1.3.9` 发布，并核对公开 `/release.json`、首页与嵌套
+Docs 继续使用原域名，由 `docs/v1.4.0` 发布，并核对公开 `/release.json`、首页与嵌套
 路由。核心不可变身份不能移动；发布后组件修复使用下一未占用版本。纯文档修订先通过
 PR 合入 `main`，再按受控 Docs 更新流程部署。
 

@@ -1,11 +1,11 @@
 ---
 name: mss-add-module
-description: Add a simple generated CRUD module to this MSS v1.3.9 Thin Host. Trigger for a new management resource using string, enum, or boolean fields. Do not use for relations, imports, workflows, or row-scoped ownership.
+description: Add a simple generated CRUD module to this MSS v1.4.0 Thin Host. Trigger for a new management resource using string, enum, or boolean fields. Do not use for relations, imports, workflows, or row-scoped ownership.
 ---
 
 # Add a Thin Host module
 
-Use the installed `mss` v1.3.9 binary and keep the specification as the source of truth.
+Use the installed `mss` v1.4.0 binary and keep the specification as the source of truth.
 
 ## Supported profile
 

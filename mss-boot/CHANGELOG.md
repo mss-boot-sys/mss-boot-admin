@@ -8,6 +8,11 @@ and the project uses semantic versioning for nested-module releases.
 
 No unreleased changes are recorded.
 
+## [mss-boot/v1.4.0] - 2026-10-14
+
+Coordinated version with the v1.4.0 Admin Distribution. No Framework API or
+behaviour changes.
+
 ## [mss-boot/v1.3.9] - 2026-10-11
 
 Release scope: first coordinated release under `mss-boot-sys/mss-boot-admin`.
