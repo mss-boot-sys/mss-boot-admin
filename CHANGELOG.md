@@ -20,6 +20,15 @@ tag namespaces.
 - UI refresh to match the concept mockups: route tabs, list export (CSV),
   additive filter chips, column/density settings, last-login column, user stat
   cards, compact footer and sidebar. See `web/antd-v6/CHANGELOG.md`.
+- Unified page architecture: a single design-token source, consolidated
+  design-system styles, shared page and list primitives exported from the
+  runtime package, and style guardrails that run in lint.
+
+### Module generator
+
+- antd-v6 page template `1.3.0-frontend-v6.7` uses the design-system
+  primitives (`PageShell`, `ListSurface` inline filters, header actions,
+  `FormModal`/`DetailDrawer`); regenerated `example-supplier`.
 
 ## [v1.3.9] - 2026-10-11
 

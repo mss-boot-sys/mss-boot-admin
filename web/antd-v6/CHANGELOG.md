@@ -6,6 +6,23 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+- Consistency pass ("所有页面风格要统一"):
+  - `tokens.ts` is now the single token source.
+  - The CSS is split into `shared/design-system/styles/*.css`. It has no raw
+    hex colors, no duplicate rules and no dark-mode status overrides.
+  - New primitives: `PageShell`/`PageHeaderActions`,
+    `ListSurface`/`ListToolbar`/`FilterSlot`/`SearchField`/`BulkBar`,
+    `StatCard`, `StatusBadge`, `FormModal` (sm/md/lg), `DetailDrawer` (md/lg)
+    and `useTablePreferences`. `PageContainer` stays as a deprecated alias.
+    All of them are exported from `/runtime`.
+- Every list page shares the card surface, the inline toolbar filters, the
+  header primary action and `RowActions`. This covers Language, Option,
+  Online sessions, Logs, Notices, Tasks, System config and generated modules.
+  Login, register and recovery share `AuthSplitLayout`.
+- Guardrails: `scripts/check-style-guardrails.mjs` runs in `lint` and vitest.
+  It rejects inline styles unless they carry a reason, raw hex colors and
+  arbitrary `--mss-*` classes. The conventions are documented in `AGENTS.md`.
+
 - Route tabs under the side-layout header: one closable tab per visited authorized menu page (workplace pinned, cap 12, sessionStorage), right-click menu (close / others / right / all), middle-click close.
 - Users list: `导出` downloads the current filtered list as CSV (UTF-8 BOM, formula-injection safe, max 10,000 rows) via the existing list API.
 - Admin lists: status filter becomes a `+ 状态` chip; users add `+ 角色` / `+ 部门` chips (new backend `roleID`/`departmentID` filters).
