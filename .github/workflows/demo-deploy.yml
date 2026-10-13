@@ -1,0 +1,113 @@
+name: Deploy Demo
+
+'on':
+  # Root is the single release-train boundary. A workflow_run event also works
+  # when the Root GitHub Release was created with GITHUB_TOKEN.
+  workflow_run:
+    workflows: [Root Release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing official Root release, for example v1.3.9
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: demo-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.repository == 'mss-boot-sys/mss-boot-admin' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository) ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    environment: demo
+    env:
+      CI: 'true'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Require the release operator
+        env:
+          ACTOR: ${{ github.actor }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+        run: |
+          test "$ACTOR" = mss-boot-sys
+          test "$TRIGGERING_ACTOR" = mss-boot-sys
+      - name: Checkout reviewed maintenance scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve the complete immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          event = json.load(open(os.environ['GITHUB_EVENT_PATH']))
+          run = event.get('workflow_run')
+          version = run['head_branch'] if run else os.environ['INPUT_VERSION']
+          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+', version):
+              raise SystemExit('Only an official stable Root version may deploy the demo')
+          command = ['python3', 'tools/demo/resolve_release.py', '--version', version,
+                     '--output', '.mss/run/demo/release.json', '--assets-dir', '.mss/run/demo/assets',
+                     '--wait-seconds', '1800', '--write']
+          if run:
+              command += ['--source-run', str(run['id'])]
+          subprocess.run(command, check=True)
+          PY
+      - name: Setup Node for the pinned Worker uploader
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tools/demo/package-lock.json
+      - name: Install the pinned Worker uploader
+        run: npm ci --prefix tools/demo --ignore-scripts --no-audit --no-fund
+      - name: Deploy and verify both demo components
+        timeout-minutes: 40
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          DEMO_SSH_KEY: ${{ secrets.DEMO_SSH_KEY }}
+          DEMO_SSH_HOST: ${{ vars.DEMO_SSH_HOST }}
+          DEMO_SSH_USER: ${{ vars.DEMO_SSH_USER }}
+          DEMO_SSH_KNOWN_HOSTS: ${{ vars.DEMO_SSH_KNOWN_HOSTS }}
+          DEMO_ADMIN_PASSWORD: ${{ secrets.DEMO_ADMIN_PASSWORD }}
+        run: >-
+          python3 tools/demo/deploy.py --release .mss/run/demo/release.json
+          --state-dir .mss/run/demo/transaction
+          --transaction "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --apply
+      - name: Recover an interrupted transaction
+        if: ${{ always() && (failure() || cancelled()) }}
+        timeout-minutes: 20
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          DEMO_SSH_KEY: ${{ secrets.DEMO_SSH_KEY }}
+          DEMO_SSH_HOST: ${{ vars.DEMO_SSH_HOST }}
+          DEMO_SSH_USER: ${{ vars.DEMO_SSH_USER }}
+          DEMO_SSH_KNOWN_HOSTS: ${{ vars.DEMO_SSH_KNOWN_HOSTS }}
+          DEMO_ADMIN_PASSWORD: ${{ secrets.DEMO_ADMIN_PASSWORD }}
+        run: python3 tools/demo/deploy.py --state-dir .mss/run/demo/transaction --rollback --apply
+      - name: Retain non-secret deployment receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: demo-deployment-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .mss/run/demo/release.json
+            .mss/run/demo/transaction/receipt.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 90

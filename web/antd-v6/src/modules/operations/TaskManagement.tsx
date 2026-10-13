@@ -1,11 +1,15 @@
-import DeleteOutlined from '@ant-design/icons/DeleteOutlined';
-import EditOutlined from '@ant-design/icons/EditOutlined';
-import PauseCircleOutlined from '@ant-design/icons/PauseCircleOutlined';
-import PlayCircleOutlined from '@ant-design/icons/PlayCircleOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
+import { PageHeaderActions } from '@mss-admin-core/shared/design-system/PageShell';
 import {
   PageEmpty,
   PageError,
@@ -13,6 +17,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -36,8 +41,6 @@ import {
   Grid,
   Input,
   InputNumber,
-  Modal,
-  Popconfirm,
   Row,
   Select,
   Space,
@@ -260,58 +263,45 @@ export default function TaskManagement({
           {
             title: intl.formatMessage({ id: 'task.field.actions' }),
             key: 'actions',
-            width: 300,
+            width: 120,
             fixed: screens.md ? 'right' : undefined,
             render: (_: unknown, task: TaskSummary) => {
               const operation = task.status === 'enabled' ? 'stop' : 'start';
               const pendingOperation = operate.isPending && operate.variables?.id === task.id;
               return (
-                <Space size="small" wrap>
-                  <Button
-                    icon={operation === 'start' ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
-                    loading={pendingOperation}
-                    size="small"
-                    type="link"
-                    onClick={() => operate.mutate({ id: task.id, operation })}
-                  >
-                    {intl.formatMessage({ id: `task.operation.${operation}` })}
-                  </Button>
-                  <Button
-                    icon={<EditOutlined />}
-                    size="small"
-                    type="link"
-                    onClick={() => openEdit(task)}
-                  >
-                    {intl.formatMessage({ id: 'actions.edit' })}
-                  </Button>
-                  <Tooltip
-                    title={
-                      task.status === 'enabled'
-                        ? intl.formatMessage({ id: 'task.delete.stopFirst' })
-                        : undefined
-                    }
-                  >
-                    <span>
-                      <Popconfirm
-                        description={intl.formatMessage({ id: 'task.delete.description' })}
-                        disabled={task.status === 'enabled'}
-                        title={intl.formatMessage({ id: 'task.delete.confirm' })}
-                        onConfirm={() => remove.mutate(task.id)}
-                      >
-                        <Button
-                          danger
-                          disabled={task.status === 'enabled'}
-                          icon={<DeleteOutlined />}
-                          loading={remove.isPending && remove.variables === task.id}
-                          size="small"
-                          type="link"
-                        >
-                          {intl.formatMessage({ id: 'actions.delete' })}
-                        </Button>
-                      </Popconfirm>
-                    </span>
-                  </Tooltip>
-                </Space>
+                <RowActions
+                  primary={{
+                    key: 'edit',
+                    label: intl.formatMessage({ id: 'actions.edit' }),
+                    onClick: () => openEdit(task),
+                  }}
+                  more={[
+                    {
+                      key: operation,
+                      disabled: pendingOperation,
+                      label: intl.formatMessage({ id: `task.operation.${operation}` }),
+                      onClick: () => operate.mutate({ id: task.id, operation }),
+                    },
+                    {
+                      key: 'delete',
+                      danger: true,
+                      disabled: task.status === 'enabled' || remove.isPending,
+                      label:
+                        task.status === 'enabled' ? (
+                          <Tooltip title={intl.formatMessage({ id: 'task.delete.stopFirst' })}>
+                            {intl.formatMessage({ id: 'actions.delete' })}
+                          </Tooltip>
+                        ) : (
+                          intl.formatMessage({ id: 'actions.delete' })
+                        ),
+                      confirm: {
+                        title: intl.formatMessage({ id: 'task.delete.confirm' }),
+                        description: intl.formatMessage({ id: 'task.delete.description' }),
+                      },
+                      onClick: () => remove.mutate(task.id),
+                    },
+                  ]}
+                />
               );
             },
           },
@@ -380,103 +370,111 @@ export default function TaskManagement({
           }}
         />
       ) : null}
-      <Form<TaskFilterValues>
-        form={filterForm}
-        initialValues={{ status: 'all' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            name: values.name?.trim() || undefined,
-            status: values.status,
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchPresentation.expanded && nameSearch ? (
-            <Col xs={24} sm={12} lg={8} style={{ order: nameSearch.order }}>
-              <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
-                <Input allowClear maxLength={255} placeholder={nameSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && statusSearch ? (
-            <Col xs={24} sm={12} lg={6} style={{ order: statusSearch.order }}>
-              <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
-                <Select
-                  placeholder={statusSearch.placeholder}
-                  options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `task.status.${value}` }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} lg={10} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form<TaskFilterValues>
+          form={filterForm}
+          initialValues={{ status: 'all' }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              name: values.name?.trim() || undefined,
+              status: values.status,
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && nameSearch ? (
+              <FilterSlot order={nameSearch.order}>
+                <Form.Item name="name" label={nameSearch.label} extra={nameSearch.help}>
+                  <Input allowClear maxLength={255} placeholder={filterPlaceholder(nameSearch)} />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && statusSearch ? (
+              <FilterSlot order={statusSearch.order}>
+                <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(statusSearch)}
+                    options={(['all', 'enabled', 'disabled'] as const).map((value) => ({
+                      value,
+                      label: intl.formatMessage({ id: `task.status.${value}` }),
+                    }))}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          filterForm.resetFields();
+                          setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        filterForm.resetFields();
-                        setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
+                  )}
+                  <Button
+                    icon={<ReloadOutlined />}
+                    loading={tasks.isFetching}
+                    onClick={() => void tasks.refetch()}
+                  >
+                    {intl.formatMessage({ id: 'actions.refresh' })}
                   </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={tasks.isFetching}
-                  onClick={() => void tasks.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {root ? (
-                  <Button icon={<PlusOutlined />} type="primary" onClick={openCreate}>
-                    {intl.formatMessage({ id: 'task.create.action' })}
-                  </Button>
-                ) : null}
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<TaskSummary>
-        columns={tablePresentation.columns}
-        dataSource={tasks.data?.data ?? []}
-        loading={tasks.isFetching}
-        locale={{ emptyText: <PageEmpty description={intl.formatMessage({ id: 'task.empty' })} /> }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: tasks.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="id"
-        scroll={{ x: root ? 1_080 : 760 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
-      <Modal
+                  <PageHeaderActions>
+                    {root ? (
+                      <Button icon={<PlusOutlined />} type="primary" onClick={openCreate}>
+                        {intl.formatMessage({ id: 'task.create.action' })}
+                      </Button>
+                    ) : null}
+                  </PageHeaderActions>
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        <ResponsiveEntityTable<TaskSummary>
+          columns={tablePresentation.columns}
+          dataSource={tasks.data?.data ?? []}
+          loading={tasks.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'task.empty' })} />,
+          }}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: tasks.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="id"
+          scroll={{ x: root ? 1_080 : 760 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -485,7 +483,7 @@ export default function TaskManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'task.create.title' : 'task.edit.title',
         })}
-        width={760}
+        size="md"
         onCancel={closeEditor}
         onOk={() => editorForm.submit()}
       >
@@ -684,7 +682,7 @@ export default function TaskManagement({
             </Form.Item>
           </Form>
         ) : null}
-      </Modal>
+      </FormModal>
     </Space>
   );
 }

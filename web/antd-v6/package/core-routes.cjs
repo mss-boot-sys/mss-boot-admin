@@ -339,7 +339,6 @@ const coreRoutes = [
 const fallbackRoutes = [
   {
     path: '/403',
-    layout: false,
     component: './Exception/403',
   },
   {
@@ -348,7 +347,6 @@ const fallbackRoutes = [
   },
   {
     path: '/*',
-    layout: false,
     component: './Exception/404',
   },
 ];

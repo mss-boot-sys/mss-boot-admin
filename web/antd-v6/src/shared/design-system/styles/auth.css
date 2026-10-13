@@ -1,0 +1,66 @@
+/* Public auth pages (login / register / recovery). */
+.mss-auth-hero {
+  background: radial-gradient(
+    1200px 600px at 20% 10%,
+    var(--mss-hero-from) 0%,
+    var(--mss-hero-via) 45%,
+    var(--mss-hero-to) 100%
+  );
+}
+
+.mss-auth-hero-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, white 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, white 6%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at 70% 60%, black, transparent 70%);
+}
+
+.mss-auth-form .ant-form-item {
+  margin-bottom: 18px;
+}
+
+.mss-auth-form .ant-form-item-label {
+  padding-bottom: 6px;
+}
+
+.mss-auth-form .ant-form-item-label > label {
+  height: auto;
+  color: var(--mss-color-text);
+  font-size: 13px;
+}
+
+.mss-auth-form .ant-input-affix-wrapper,
+.mss-auth-form .ant-input-outlined {
+  background: var(--mss-color-bg-container);
+}
+
+.mss-auth-form .ant-input-affix-wrapper-lg,
+.mss-auth-form .ant-input-lg {
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+.mss-auth-submit.ant-btn {
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--mss-brand-gradient);
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mss-color-primary) 65%, transparent);
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  transition:
+    transform var(--mss-motion-fast) var(--mss-ease-out),
+    box-shadow var(--mss-motion-fast) var(--mss-ease-out);
+}
+
+.mss-auth-submit.ant-btn:not(:disabled):hover {
+  box-shadow: 0 12px 24px -10px color-mix(in srgb, var(--mss-color-primary) 80%, transparent);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mss-auth-submit.ant-btn:not(:disabled):hover {
+    transform: none;
+  }
+}

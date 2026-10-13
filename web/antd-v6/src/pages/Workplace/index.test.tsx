@@ -23,8 +23,8 @@ vi.mock('@ant-design/pro-components', () => ({
   ),
 }));
 
-vi.mock('@mss-admin-core/shared/design-system/PageContainer', () => ({
-  PageContainer: ({ children, title }: { children: ReactNode; title: ReactNode }) => (
+vi.mock('@mss-admin-core/shared/design-system/PageShell', () => ({
+  PageShell: ({ children, title }: { children: ReactNode; title: ReactNode }) => (
     <main>
       <h1>{title}</h1>
       {children}

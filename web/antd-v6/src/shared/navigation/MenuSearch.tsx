@@ -52,7 +52,14 @@ export function buildAuthorizedMenuSearchItems(
   return result;
 }
 
-export default function MenuSearch({ items }: { items: readonly AuthorizedMenuItem[] }) {
+export default function MenuSearch({
+  items,
+  variant = 'icon',
+}: {
+  items: readonly AuthorizedMenuItem[];
+  /** `field` renders a search-box shaped trigger with the ⌘K hint (desktop header). */
+  variant?: 'icon' | 'field';
+}) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -137,11 +144,23 @@ export default function MenuSearch({ items }: { items: readonly AuthorizedMenuIt
         if (!next) setQuery('');
       }}
     >
-      <Button
-        type="text"
-        icon={<SearchOutlined />}
-        aria-label={intl.formatMessage({ id: 'navigation.search.open' })}
-      />
+      {variant === 'field' ? (
+        <button
+          aria-label={intl.formatMessage({ id: 'navigation.search.open' })}
+          className="mss-search-trigger"
+          type="button"
+        >
+          <SearchOutlined aria-hidden />
+          <span>{intl.formatMessage({ id: 'navigation.search.trigger' })}</span>
+          <kbd className="mss-kbd">⌘ K</kbd>
+        </button>
+      ) : (
+        <Button
+          type="text"
+          icon={<SearchOutlined />}
+          aria-label={intl.formatMessage({ id: 'navigation.search.open' })}
+        />
+      )}
     </Popover>
   );
 }

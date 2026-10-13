@@ -130,6 +130,20 @@ const UPDATE_VALUE =
 const UPDATE_VALUE = BASE_UPDATE_VALUE;
 {{- end }}
 
+// Row actions render as one primary link plus a "More actions" overflow menu
+// (RowActions); the primary is Edit when present, otherwise the first action.
+async function clickRowAction(page: Page, row: Locator, name: string) {
+  const inline = row.getByRole('button', { name, exact: true });
+  if (await inline.count()) {
+    await inline.click();
+    return;
+  }
+  await row.getByRole('button', { name: 'More actions', exact: true }).click();
+  const item = page.getByRole('menuitem', { name, exact: true });
+  await expect(item).toBeVisible();
+  await item.click();
+}
+
 async function json(response: JsonResponse): Promise<Record<string, unknown>> {
   if (!response.ok()) {
     throw new Error(`${response.url()} returned ${response.status()}: ${await response.text()}`);
@@ -197,9 +211,17 @@ async function navigateFromAuthorizedMenu(page: Page) {
     await mobileNavigationToggle.click();
   }
   if (PARENT_MENU_NAME) {
+    // Top-level directories render as sidebar group titles; nested or
+    // collapsed layouts render them as expandable submenu items.
     const parentMenu = page.getByRole('menuitem', { name: PARENT_MENU_NAME, exact: true });
-    await expect(parentMenu).toBeVisible({ timeout: 15_000 });
-    if ((await parentMenu.getAttribute('aria-expanded')) !== 'true') await parentMenu.click();
+    const parentGroup = page.getByText(PARENT_MENU_NAME, { exact: true });
+    await expect(parentMenu.or(parentGroup).first()).toBeVisible({ timeout: 15_000 });
+    if (
+      (await parentMenu.count()) > 0 &&
+      (await parentMenu.first().getAttribute('aria-expanded')) !== 'true'
+    ) {
+      await parentMenu.first().click();
+    }
   }
   const menuLink = page.locator(`a[href="${PAGE_PATH}"]`).first();
   await expect(menuLink).toBeVisible({ timeout: 15_000 });
@@ -357,14 +379,14 @@ test.describe('{{ .Menu.DisplayNameEn }} generated V6 critical path', () => {
       await expect(row).toBeVisible();
 
 {{- if and .HasGet .UIDetail }}
-      await row.getByRole('button', { name: 'Details', exact: true }).click();
+      await clickRowAction(page, row, 'Details');
       const drawer = page.getByRole('dialog');
       await expect(drawer).toContainText(rowMarker);
       await drawer.getByRole('button', { name: 'Close' }).click();
 {{- end }}
 
 {{- if and .HasUpdate .UIForm .HasV6E2EUpdateField }}
-      await row.getByRole('button', { name: 'Edit', exact: true }).click();
+      await clickRowAction(page, row, 'Edit');
       const editDialog = page.getByRole('dialog');
       await expectEditorValues(page, editDialog, CREATE_VALUES);
       await fillEditor(page, editDialog, { [UPDATE_FIELD]: UPDATE_VALUE as FixtureValue });
@@ -385,7 +407,7 @@ test.describe('{{ .Menu.DisplayNameEn }} generated V6 critical path', () => {
 {{- end }}
 
 {{- if .HasDelete }}
-      await row.getByRole('button', { name: 'Delete', exact: true }).click();
+      await clickRowAction(page, row, 'Delete');
       const deleteResponse = waitForResource(page, 'DELETE', `/${createdID}`);
       await page.getByRole('button', { name: 'OK', exact: true }).last().click();
       expect((await deleteResponse).status()).toBe(204);

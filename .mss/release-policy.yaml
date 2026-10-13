@@ -8,7 +8,7 @@ spec:
   releaseBranch: main
   requireMergedPullRequestSource: true
   currentStableVersion: v1.3.9
-  currentStableCommit: pending
+  currentStableCommit: 0df458a1a89ad53fac9554685a6b83557c761629
   nextPublicVersion: v1.3.9
   distributionVersion: v1.3.9
   distributionComponents: "root,framework,admin,frontend"

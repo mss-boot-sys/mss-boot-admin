@@ -158,7 +158,7 @@ EXACT_SECTION_CONTENT = {
     },
     Path("docs/docs/guide"): {"index.md", "faq.md"},
     Path("docs/docs/coding"): {"first-contribution.md", "pull-request-checks.md"},
-    Path("docs/docs/devops"): {"security-policy-faq.md"},
+    Path("docs/docs/devops"): {"security-policy-faq.md", "demo-maintenance.md"},
     Path("docs/docs/operations"): set(),
 }
 

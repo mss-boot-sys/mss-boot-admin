@@ -11,7 +11,35 @@ tag namespaces.
 - Bump SHA-pinned `actions/setup-node` to v7.1.0 and
   `actions/download-artifact` to v8.0.2 in CI and release workflows (#19).
 
-No unreleased changes are recorded.
+### Module generator
+
+- Generated v6 pages use `RowActions` (Edit + ⋯ menu) with config-driven
+  labels/order; templates bumped to `1.3.0-frontend-v6.8` / `1.3.0-e2e-v6.10`
+  and generated e2e opens the ⋯ menu for secondary actions.
+
+### Admin API
+
+- Add root-only `GET /admin/api/user/overview?ids=` (route contract
+  `session:read`, RootOnly) returning `weekNew`, `onlineSessions` and per-user
+  `lastLogin`, derived from existing `mss_boot_users` and
+  `mss_boot_user_sessions` columns; no schema migration.
+- `GET /admin/api/users` accepts optional exact `roleID` / `departmentID`
+  filters (max 64 chars); omitted values keep the previous behaviour.
+
+### Admin Web
+
+- UI refresh to match the concept mockups: route tabs, list export (CSV),
+  additive filter chips, column/density settings, last-login column, user stat
+  cards, compact footer and sidebar. See `web/antd-v6/CHANGELOG.md`.
+- Unified page architecture: a single design-token source, consolidated
+  design-system styles, shared page and list primitives exported from the
+  runtime package, and style guardrails that run in lint.
+
+### Module generator
+
+- antd-v6 page template `1.3.0-frontend-v6.7` uses the design-system
+  primitives (`PageShell`, `ListSurface` inline filters, header actions,
+  `FormModal`/`DetailDrawer`); regenerated `example-supplier`.
 
 ## [v1.3.9] - 2026-10-11
 

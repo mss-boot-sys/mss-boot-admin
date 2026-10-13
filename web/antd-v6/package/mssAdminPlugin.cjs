@@ -130,6 +130,11 @@ module.exports = function mssAdminPlugin(api) {
         ? relativeStyles
         : `./${relativeStyles}`;
       const content = template
+        // Design-system partials are imported relative to src/; pin them to the core package.
+        .replace(
+          /@import "\.\/([^"]+\.css)";/g,
+          (_match, file) => `@import "${sourcePath(resolve(coreSource, file))}";`,
+        )
         .replace(importDirective, `@import "${styleSpecifier}" source(none);`)
         .replace(
           sourceDirective,

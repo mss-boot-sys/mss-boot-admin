@@ -166,9 +166,10 @@ test('@operations bounded operational pages work through the browser contract', 
         response.request().method() === 'PUT' &&
         new URL(response.url()).pathname === `/admin/api/notice/read/${created.notice}`,
     );
-    await noticeRecord.getByRole('button', { name: /Mark read$/ }).click();
+    await noticeRecord.getByRole('button', { name: 'More actions' }).click();
+    await page.getByRole('menuitem', { name: /Mark read$/ }).click();
     expect((await markRead).ok()).toBe(true);
-    await expect(noticeRecord.getByRole('button', { name: /Mark read$/ })).toHaveCount(0);
+    await expect(noticeRecord.getByRole('button', { name: 'More actions' })).toHaveCount(0);
     await expectNoDocumentOverflow(page);
 
     const loginLogs = page.waitForResponse(
@@ -178,7 +179,7 @@ test('@operations bounded operational pages work through the browser contract', 
     );
     await page.goto('/log');
     expect((await loginLogs).ok()).toBe(true);
-    await expect(page.getByText('Logs', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Logs', exact: true })).toBeVisible();
     const runtimeLogs = page.waitForResponse(
       (response) =>
         response.request().method() === 'GET' &&

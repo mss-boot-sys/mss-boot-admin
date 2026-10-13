@@ -6,7 +6,7 @@ import {
   type PresentationRegistryEntry,
   resolveEffectivePagePresentation,
 } from '@mss-admin-core/shared/presentation/runtime';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { App } from 'antd';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -20,11 +20,14 @@ import {
   postPresentationRegistryEntry,
   rolePresentationRegistryEntry,
 } from './tablePresentation';
-import UserManagement from './UserManagement';
+import UserManagement, { formatRelativeTime } from './UserManagement';
 import { userPresentationRegistryEntry } from './userPresentation';
 
 const tableRuntime = vi.hoisted(() => ({
   props: undefined as Record<string, unknown> | undefined,
+  overview: undefined as
+    | { weekNew: number; onlineSessions: number; lastLogin: Record<string, string> }
+    | undefined,
 }));
 
 vi.mock('./AdministrationTable', () => ({
@@ -51,6 +54,9 @@ vi.mock('./query', () => {
     isPending: false,
   });
   return {
+    MAX_ADMIN_EXPORT_ROWS: 10_000,
+    collectAdministrationRows: vi.fn(async () => []),
+    useUserOverview: () => ({ data: tableRuntime.overview }),
     useAdministrationAPICatalog: emptyCatalog,
     useAdministrationCatalog: emptyCatalog,
     useAdministrationPage: emptyList,
@@ -321,6 +327,7 @@ describe('user management presentation consumption', () => {
     expect(actionView.queryByRole('button', { name: 'actions.edit' })).toBeNull();
     expect(actionView.queryByRole('button', { name: 'user.passwordReset.action' })).toBeNull();
     expect(actionView.queryByRole('button', { name: 'actions.delete' })).toBeNull();
+    expect(actionView.queryByRole('button', { name: 'actions.more' })).toBeNull();
   });
 
   it('tracks runtime page-size fallback until the user changes the query', async () => {
@@ -376,7 +383,7 @@ describe('user management presentation consumption', () => {
     );
   });
 
-  it('keeps edit and delete disabled for a root target after presentation resolution', () => {
+  it('keeps edit and delete disabled for a root target after presentation resolution', async () => {
     renderManagement(activeRuntime());
     const props = tableRuntime.props as { columns: Record<string, unknown>[] };
     const actionColumn = props.columns.find((column) => columnKey(column) === 'actions');
@@ -402,12 +409,37 @@ describe('user management presentation consumption', () => {
     expect(screen.getByRole('button', { name: 'actions.edit' }).hasAttribute('disabled')).toBe(
       true,
     );
-    expect(screen.getByRole('button', { name: 'actions.delete' }).hasAttribute('disabled')).toBe(
-      true,
-    );
-    expect(
-      screen.getByRole('button', { name: 'user.passwordReset.action' }).hasAttribute('disabled'),
-    ).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    const deleteItem = await screen.findByRole('menuitem', { name: 'actions.delete' });
+    expect(deleteItem.getAttribute('aria-disabled')).toBe('true');
+    const resetItem = screen.getByRole('menuitem', { name: 'user.passwordReset.action' });
+    expect(resetItem.getAttribute('aria-disabled')).not.toBe('true');
+  });
+
+  it('adds the root-only last-login column only when the overview is available', () => {
+    tableRuntime.overview = {
+      weekNew: 1,
+      onlineSessions: 2,
+      lastLogin: { 'user-1': new Date(Date.now() - 2 * 60_000).toISOString() },
+    };
+    try {
+      renderManagement(activeRuntime());
+      const props = tableRuntime.props as { columns: Record<string, unknown>[] };
+      const keys = props.columns.map(columnKey);
+      expect(keys.slice(-2)).toEqual(['lastLogin', 'actions']);
+      const render = props.columns.find((column) => columnKey(column) === 'lastLogin')?.render as (
+        value: unknown,
+        record: Record<string, unknown>,
+        index: number,
+      ) => ReactNode;
+      const seen = renderView(render(undefined, { id: 'user-1' }, 0));
+      expect(seen.container.querySelector('time')).not.toBeNull();
+      seen.unmount();
+      const never = renderView(render(undefined, { id: 'user-2' }, 0));
+      expect(never.container.textContent).toBe('user.lastLogin.never');
+    } finally {
+      tableRuntime.overview = undefined;
+    }
   });
 });
 
@@ -519,3 +551,15 @@ describe('remaining administration page presentation consumption', () => {
     },
   );
 });
+
+describe('formatRelativeTime', () => {
+  it('formats past instants relative to now', () => {
+    const now = Date.parse('2026-10-13T12:00:00Z');
+    expect(formatRelativeTime('2026-10-13T11:58:00Z', 'en-US', now)).toBe('2 minutes ago');
+    expect(formatRelativeTime('2026-10-12T12:00:00Z', 'en-US', now)).toBe('yesterday');
+  });
+});
+
+function renderView(node: ReactNode) {
+  return render(<App>{node}</App>);
+}

@@ -1,10 +1,10 @@
-import DeleteOutlined from '@ant-design/icons/DeleteOutlined';
-import EditOutlined from '@ant-design/icons/EditOutlined';
-import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import LockOutlined from '@ant-design/icons/LockOutlined';
 import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { ListSurface, ListToolbar } from '@mss-admin-core/shared/design-system/ListSurface';
+import { DetailDrawer, FormModal } from '@mss-admin-core/shared/design-system/Overlay';
+import { PageHeaderActions } from '@mss-admin-core/shared/design-system/PageShell';
 import {
   PageEmpty,
   PageError,
@@ -12,6 +12,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -30,12 +31,9 @@ import {
   App,
   Button,
   Descriptions,
-  Drawer,
   Form,
   Grid,
   Input,
-  Modal,
-  Popconfirm,
   Select,
   Space,
   type TableColumnsType,
@@ -207,39 +205,34 @@ export default function SystemConfigManagement({
     {
       title: intl.formatMessage({ id: 'systemConfig.field.actions' }),
       key: 'actions',
-      width: 260,
+      width: 120,
       fixed: screens.md ? 'right' : undefined,
       render: (_: unknown, config) => (
-        <Space size="small" wrap>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            type="link"
-            onClick={() => setViewing(config.id)}
-          >
-            {intl.formatMessage({ id: 'actions.view' })}
-          </Button>
-          <Button icon={<EditOutlined />} size="small" type="link" onClick={() => openEdit(config)}>
-            {intl.formatMessage({ id: 'actions.edit' })}
-          </Button>
-          <Popconfirm
-            description={intl.formatMessage({ id: 'systemConfig.delete.description' })}
-            disabled={config.builtIn}
-            title={intl.formatMessage({ id: 'systemConfig.delete.confirm' })}
-            onConfirm={() => remove.mutate(config.id)}
-          >
-            <Button
-              danger
-              disabled={config.builtIn}
-              icon={<DeleteOutlined />}
-              loading={remove.isPending && remove.variables === config.id}
-              size="small"
-              type="link"
-            >
-              {intl.formatMessage({ id: 'actions.delete' })}
-            </Button>
-          </Popconfirm>
-        </Space>
+        <RowActions
+          primary={{
+            key: 'edit',
+            label: intl.formatMessage({ id: 'actions.edit' }),
+            onClick: () => openEdit(config),
+          }}
+          more={[
+            {
+              key: 'view',
+              label: intl.formatMessage({ id: 'actions.view' }),
+              onClick: () => setViewing(config.id),
+            },
+            {
+              key: 'delete',
+              danger: true,
+              disabled: config.builtIn || remove.isPending,
+              label: intl.formatMessage({ id: 'actions.delete' }),
+              confirm: {
+                title: intl.formatMessage({ id: 'systemConfig.delete.confirm' }),
+                description: intl.formatMessage({ id: 'systemConfig.delete.description' }),
+              },
+              onClick: () => remove.mutate(config.id),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -296,46 +289,58 @@ export default function SystemConfigManagement({
           onClose={() => remove.reset()}
         />
       ) : null}
-      <Space wrap>
-        <Button
-          icon={<ReloadOutlined />}
-          loading={configs.isFetching}
-          onClick={() => void configs.refetch()}
-        >
-          {intl.formatMessage({ id: 'actions.refresh' })}
-        </Button>
+      <PageHeaderActions>
         <Button icon={<PlusOutlined />} type="primary" onClick={openCreate}>
           {intl.formatMessage({ id: 'systemConfig.create.action' })}
         </Button>
-      </Space>
-      <ResponsiveEntityTable<SystemConfigSummary>
-        columns={tablePresentation.columns}
-        dataSource={configs.data?.data ?? []}
-        loading={configs.isFetching}
-        locale={{
-          emptyText: <PageEmpty description={intl.formatMessage({ id: 'systemConfig.empty' })} />,
-        }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: configs.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              current,
-              pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="id"
-        scroll={{ x: 820 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
-      <Drawer
+      </PageHeaderActions>
+      <ListSurface>
+        <ListToolbar
+          total={intl.formatMessage(
+            { id: 'administration.total' },
+            { total: configs.data?.total ?? 0 },
+          )}
+          end={
+            <Button
+              icon={<ReloadOutlined />}
+              loading={configs.isFetching}
+              type="text"
+              onClick={() => void configs.refetch()}
+            >
+              {intl.formatMessage({ id: 'actions.refresh' })}
+            </Button>
+          }
+        />
+        <ResponsiveEntityTable<SystemConfigSummary>
+          columns={tablePresentation.columns}
+          dataSource={configs.data?.data ?? []}
+          loading={configs.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'systemConfig.empty' })} />,
+          }}
+          pagination={{
+            current: params.current,
+            pageSize: params.pageSize,
+            className: 'mss-table-pagination',
+            pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: configs.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                current,
+                pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="id"
+          scroll={{ x: 820 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
+      <DetailDrawer
         destroyOnHidden
         open={Boolean(viewing)}
-        size={screens.md ? 720 : '100%'}
+        size="lg"
         title={detail.data?.name ?? intl.formatMessage({ id: 'systemConfig.detail.title' })}
         onClose={closeView}
       >
@@ -377,8 +382,8 @@ export default function SystemConfigManagement({
             </pre>
           </Space>
         ) : null}
-      </Drawer>
-      <Modal
+      </DetailDrawer>
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -387,7 +392,7 @@ export default function SystemConfigManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'systemConfig.create.title' : 'systemConfig.edit.title',
         })}
-        width={760}
+        size="md"
         onCancel={closeEditor}
         onOk={() => form.submit()}
       >
@@ -448,7 +453,7 @@ export default function SystemConfigManagement({
             </Form.Item>
           </Form>
         ) : null}
-      </Modal>
+      </FormModal>
     </Space>
   );
 }

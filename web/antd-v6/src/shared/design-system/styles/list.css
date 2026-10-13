@@ -1,0 +1,190 @@
+/* List page: toolbar, search, filter chips, bulk bar. */
+.mss-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mss-color-border-secondary);
+}
+
+.mss-list-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.mss-list-total {
+  margin-right: 8px;
+  color: var(--mss-color-text-tertiary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mss-list-footnote {
+  color: var(--mss-color-text-tertiary);
+  font-size: 12px;
+}
+
+.mss-search-field {
+  width: 260px;
+}
+
+.mss-search-field-icon,
+.mss-toolbar-quiet {
+  color: var(--mss-color-text-tertiary);
+}
+
+.mss-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px dashed var(--mss-color-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mss-color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--mss-motion-fast) var(--mss-ease-out);
+}
+
+.mss-filter-chip:hover {
+  border-color: var(--mss-color-primary);
+  color: var(--mss-color-primary);
+}
+
+.mss-filter-chip[data-active="true"] {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--mss-color-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--mss-color-primary) 8%, transparent);
+  color: var(--mss-color-primary);
+}
+
+.mss-filter-chip-clear {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.mss-filter-chip-clear:hover {
+  opacity: 1;
+}
+
+.mss-bulk-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border-radius: 12px;
+  background: var(--mss-color-text);
+  box-shadow: var(--mss-box-shadow-secondary);
+  color: var(--mss-color-bg-container);
+  font-size: 13px;
+  animation: mss-rise var(--mss-motion-slow) var(--mss-ease-out) both;
+}
+
+.mss-bulk-bar-clear {
+  color: var(--mss-color-text-quaternary);
+}
+
+.mss-table-settings {
+  display: flex;
+  width: 224px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mss-table-settings-label {
+  margin-bottom: 6px;
+  color: var(--mss-color-text-tertiary);
+  font-size: 12px;
+}
+
+.mss-filter-chip-add {
+  font-weight: 500;
+}
+
+.mss-chip-menu {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* Repeated class out-ranks the table's built-in pagination margin without .ant-* selectors. */
+.mss-table-pagination.mss-table-pagination.mss-table-pagination {
+  margin: 0;
+  padding: 12px 16px;
+}
+
+/* Staggered row entrance for the first rows of a freshly loaded page. */
+.mss-row-enter:nth-child(2) {
+  animation-delay: 20ms;
+}
+.mss-row-enter:nth-child(3) {
+  animation-delay: 40ms;
+}
+.mss-row-enter:nth-child(4) {
+  animation-delay: 60ms;
+}
+.mss-row-enter:nth-child(5) {
+  animation-delay: 80ms;
+}
+.mss-row-enter:nth-child(6) {
+  animation-delay: 100ms;
+}
+.mss-row-enter:nth-child(7) {
+  animation-delay: 120ms;
+}
+.mss-row-enter:nth-child(8) {
+  animation-delay: 140ms;
+}
+.mss-row-enter:nth-child(9) {
+  animation-delay: 160ms;
+}
+.mss-row-enter:nth-child(10) {
+  animation-delay: 180ms;
+}
+
+/* Legacy-form filters rendered inside a list toolbar: compact, label-less. */
+.mss-list-filters .ant-form-item {
+  margin: 0;
+}
+
+.mss-list-filters .ant-form-item-label,
+.mss-list-filters .ant-form-item-extra {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mss-filter-slot {
+  min-width: 180px;
+}
+
+.mss-filter-slot .ant-select {
+  min-width: 140px;
+}
+
+.mss-list-toolbar-end {
+  order: 10000;
+}
+
+.mss-list-filters > .mss-list-toolbar {
+  flex: 1 1 100%;
+}

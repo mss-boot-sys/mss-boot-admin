@@ -1,47 +1,25 @@
 @import "tailwindcss" source(none);
+@import "./shared/design-system/styles/base.css";
+@import "./shared/design-system/styles/motion.css";
+@import "./shared/design-system/styles/surfaces.css";
+@import "./shared/design-system/styles/list.css";
+@import "./shared/design-system/styles/layout.css";
+@import "./shared/design-system/styles/auth.css";
 
 @source "./**/*.{ts,tsx}";
 
-:root {
-  color-scheme: light;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-:root[data-mss-theme="dark"] {
-  color-scheme: dark;
-}
-
-html,
-body,
-#root {
-  min-height: 100%;
-  margin: 0;
-}
-
-body {
-  min-width: 320px;
-  background: var(--mss-color-bg-layout);
-}
-
-*:focus-visible {
-  outline: 2px solid var(--mss-color-primary);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component transitions. */
-    scroll-behavior: auto !important;
-    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component transitions. */
-    transition-duration: 0.01ms !important;
-    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations. */
-    animation-duration: 0.01ms !important;
-    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations. */
-    animation-iteration-count: 1 !important;
-  }
+/*
+ * Semantic Tailwind colors backed by Ant Design CSS variables. Use these
+ * (`text-fg-tertiary`, `bg-surface`, `border-line`) instead of raw colors.
+ */
+@theme inline {
+  --color-fg: var(--mss-color-text);
+  --color-fg-secondary: var(--mss-color-text-secondary);
+  --color-fg-tertiary: var(--mss-color-text-tertiary);
+  --color-fg-quaternary: var(--mss-color-text-quaternary);
+  --color-surface: var(--mss-color-bg-container);
+  --color-canvas: var(--mss-color-bg-layout);
+  --color-line: var(--mss-color-border-secondary);
+  --color-brand: var(--mss-color-primary);
+  --color-split: var(--mss-color-split);
 }

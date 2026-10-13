@@ -2,12 +2,19 @@ import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
 import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import {
   PageEmpty,
   PageError,
   PageForbidden,
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import type { PagePresentationRuntime } from '@mss-admin-core/shared/presentation/runtime';
 import {
   resolveTablePresentation,
@@ -21,11 +28,8 @@ import {
   Alert,
   App,
   Button,
-  Col,
   Form,
   Input,
-  Popconfirm,
-  Row,
   Select,
   Space,
   type TableColumnsType,
@@ -144,52 +148,42 @@ export default function OnlineSessionsView({
     const userPending =
       revoke.isPending && revoke.variables?.kind === 'user' && revoke.variables.id === row.userID;
     return (
-      <Space size="small" wrap>
-        <Button type="link" size="small" onClick={() => setDetailID(row.id)}>
-          {intl.formatMessage({ id: 'sessions.action.detail' })}
-        </Button>
-        {active ? (
-          <Popconfirm
-            description={
-              row.current
+      <RowActions
+        primary={{
+          key: 'detail',
+          label: intl.formatMessage({ id: 'sessions.action.detail' }),
+          onClick: () => setDetailID(row.id),
+        }}
+        more={[
+          active && {
+            key: 'revoke',
+            danger: true,
+            disabled: revoke.isPending && !sessionPending,
+            label: intl.formatMessage({ id: 'sessions.action.revoke' }),
+            confirm: {
+              title: intl.formatMessage({ id: 'sessions.revoke.confirm' }),
+              description: row.current
                 ? intl.formatMessage({ id: 'sessions.revoke.current.description' })
-                : undefined
-            }
-            title={intl.formatMessage({ id: 'sessions.revoke.confirm' })}
-            onConfirm={() => revoke.mutate({ kind: 'session', id: row.id })}
-          >
-            <Button
-              danger
-              disabled={revoke.isPending && !sessionPending}
-              loading={sessionPending}
-              size="small"
-              type="link"
-            >
-              {intl.formatMessage({ id: 'sessions.action.revoke' })}
-            </Button>
-          </Popconfirm>
-        ) : null}
-        {active ? (
-          <Popconfirm
-            description={intl.formatMessage(
-              { id: 'sessions.revokeUser.description' },
-              { username: row.username },
-            )}
-            title={intl.formatMessage({ id: 'sessions.revokeUser.confirm' })}
-            onConfirm={() => revoke.mutate({ kind: 'user', id: row.userID })}
-          >
-            <Button
-              danger
-              disabled={revoke.isPending && !userPending}
-              loading={userPending}
-              size="small"
-              type="link"
-            >
-              {intl.formatMessage({ id: 'sessions.action.revokeUser' })}
-            </Button>
-          </Popconfirm>
-        ) : null}
-      </Space>
+                : undefined,
+            },
+            onClick: () => revoke.mutate({ kind: 'session', id: row.id }),
+          },
+          active && {
+            key: 'revokeUser',
+            danger: true,
+            disabled: revoke.isPending && !userPending,
+            label: intl.formatMessage({ id: 'sessions.action.revokeUser' }),
+            confirm: {
+              title: intl.formatMessage({ id: 'sessions.revokeUser.confirm' }),
+              description: intl.formatMessage(
+                { id: 'sessions.revokeUser.description' },
+                { username: row.username },
+              ),
+            },
+            onClick: () => revoke.mutate({ kind: 'user', id: row.userID }),
+          },
+        ]}
+      />
     );
   };
 
@@ -238,7 +232,7 @@ export default function OnlineSessionsView({
     {
       title: intl.formatMessage({ id: 'sessions.field.actions' }),
       key: 'actions',
-      width: 230,
+      width: 120,
       render: (_, row) => renderActions(row),
     },
   ];
@@ -287,108 +281,116 @@ export default function OnlineSessionsView({
           onClose={() => revoke.reset()}
         />
       ) : null}
-      <Form<SessionFilterValues>
-        form={form}
-        initialValues={{ status: 'active' }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            status: values.status,
-            userID: undefined,
-            username: cleanFilter(values.username),
-            ip: cleanFilter(values.ip),
-          }))
-        }
-      >
-        <Row gutter={16} align="bottom">
-          {searchPresentation.expanded && usernameSearch ? (
-            <Col xs={24} sm={12} lg={5} style={{ order: usernameSearch.order }}>
-              <Form.Item name="username" label={usernameSearch.label} extra={usernameSearch.help}>
-                <Input allowClear maxLength={255} placeholder={usernameSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && ipSearch ? (
-            <Col xs={24} sm={12} lg={4} style={{ order: ipSearch.order }}>
-              <Form.Item name="ip" label={ipSearch.label} extra={ipSearch.help}>
-                <Input allowClear maxLength={64} placeholder={ipSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && statusSearch ? (
-            <Col xs={24} sm={12} lg={4} style={{ order: statusSearch.order }}>
-              <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
-                <Select
-                  placeholder={statusSearch.placeholder}
-                  options={(['active', 'revoked', 'expired', 'all'] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `sessions.status.${value}` }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} lg={6} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+      <ListSurface>
+        <Form<SessionFilterValues>
+          form={form}
+          initialValues={{ status: 'active' }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              status: values.status,
+              userID: undefined,
+              username: cleanFilter(values.username),
+              ip: cleanFilter(values.ip),
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && usernameSearch ? (
+              <FilterSlot order={usernameSearch.order}>
+                <Form.Item name="username" label={usernameSearch.label} extra={usernameSearch.help}>
+                  <Input
+                    allowClear
+                    maxLength={255}
+                    placeholder={filterPlaceholder(usernameSearch)}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && ipSearch ? (
+              <FilterSlot order={ipSearch.order}>
+                <Form.Item name="ip" label={ipSearch.label} extra={ipSearch.help}>
+                  <Input allowClear maxLength={64} placeholder={filterPlaceholder(ipSearch)} />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && statusSearch ? (
+              <FilterSlot order={statusSearch.order}>
+                <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(statusSearch)}
+                    options={(['active', 'revoked', 'expired', 'all'] as const).map((value) => ({
+                      value,
+                      label: intl.formatMessage({ id: `sessions.status.${value}` }),
+                    }))}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          form.resetFields();
+                          setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
+                  )}
+                  <Button
+                    icon={<ReloadOutlined />}
+                    loading={sessions.isFetching}
+                    onClick={() => void sessions.refetch()}
+                  >
+                    {intl.formatMessage({ id: 'actions.refresh' })}
                   </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={sessions.isFetching}
-                  onClick={() => void sessions.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<OnlineSession>
-        columns={tablePresentation.columns}
-        dataSource={sessions.data?.data ?? []}
-        loading={sessions.isFetching}
-        locale={{
-          emptyText: <PageEmpty description={intl.formatMessage({ id: 'sessions.empty' })} />,
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: ONLINE_SESSION_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: sessions.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isOnlineSessionPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        rowKey="id"
-        scroll={{ x: 760 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        <ResponsiveEntityTable<OnlineSession>
+          columns={tablePresentation.columns}
+          dataSource={sessions.data?.data ?? []}
+          loading={sessions.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'sessions.empty' })} />,
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: ONLINE_SESSION_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: sessions.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isOnlineSessionPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          rowKey="id"
+          scroll={{ x: 760 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
       <SessionDetailDrawer
         id={detailID}
         open={Boolean(detailID)}

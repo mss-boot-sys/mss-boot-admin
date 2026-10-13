@@ -62,7 +62,9 @@ test('@settings application settings expose every migrated V6 section without wa
   await setLocale(page, 'en-US');
   await login(page);
   await page.goto('/app-config');
-  await expect(page.getByText('Application settings', { exact: true }).first()).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Application settings', exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Basics', exact: true })).toHaveAttribute(
     'aria-selected',
     'true',

@@ -57,4 +57,40 @@ describe('administration API', () => {
 
     expect(client.mock.calls[0]?.[1]?.data).not.toHaveProperty('password');
   });
+
+  it('sends user role/department chip filters and loads the overview', async () => {
+    const client = vi.fn(async (path: string) =>
+      path === '/user/overview'
+        ? { weekNew: 3, onlineSessions: -1, lastLogin: { u1: '2026-10-13T00:00:00Z', u2: 'bad' } }
+        : { data: [], total: 0, current: 1, pageSize: 20 },
+    );
+    const api = createAdministrationAPI(client);
+
+    await api.users.list({
+      current: 1,
+      pageSize: 20,
+      status: 'all',
+      roleID: 'r1',
+      departmentID: 'd1',
+    });
+    expect(client).toHaveBeenCalledWith(
+      '/users',
+      expect.objectContaining({
+        params: expect.objectContaining({ roleID: 'r1', departmentID: 'd1' }),
+      }),
+    );
+
+    const overview = await api.users.overview(['u1', 'u2']);
+    expect(client).toHaveBeenCalledWith('/user/overview', {
+      method: 'GET',
+      params: { ids: 'u1,u2' },
+      skipErrorHandler: true,
+    });
+    // Malformed counts and timestamps are dropped instead of rendered.
+    expect(overview).toEqual({
+      weekNew: 3,
+      onlineSessions: 0,
+      lastLogin: { u1: '2026-10-13T00:00:00Z' },
+    });
+  });
 });

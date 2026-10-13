@@ -88,6 +88,60 @@ the installed pnpm graph and production bundle evidence, not manifest review.
 - Prefer one responsive component over parallel desktop and mobile business
   implementations.
 
+## Frontend conventions (UI consistency)
+
+Every routed page looks and is built the same way. Reuse, do not re-create.
+
+- **Tokens.** `src/shared/design-system/tokens.ts` is the only TypeScript
+  source of colors, layout metrics, overlay widths and motion. Ant Design
+  re-exports them as `--mss-*` CSS variables. `styles/base.css` mirrors the
+  few brand constants CSS needs. Anywhere else, use the variables or the
+  semantic Tailwind colors from `src/tailwind.css` (`text-fg`,
+  `text-fg-secondary|tertiary|quaternary`, `bg-surface`, `bg-canvas`,
+  `border-line`, `divide-split`, `text-brand`).
+- **Styles.** Shared CSS lives in `src/shared/design-system/styles/`:
+  - `base.css`
+  - `motion.css`
+  - `surfaces.css`
+  - `list.css`
+  - `layout.css`
+  - `auth.css`
+
+  `src/tailwind.css` only imports them. Class names use the `mss-` prefix and
+  the form `mss-<block>[-<element>]`, with state carried in `data-*`
+  attributes (`data-tone`, `data-active`).
+- **Primitives.** These live in `src/shared/design-system/` and are exported
+  from `@mss-boot-sys/admin-web/runtime`:
+  - Page: every page renders one `PageShell` (title, description, `extra`).
+    The page's primary action goes through `PageHeaderActions`.
+  - List: a `ListSurface` holds a `ListToolbar` (or a
+    `Form className="mss-list-filters" layout="inline"` with `FilterSlot` /
+    `ListToolbarEnd`) and then the table. Also use `SearchField`,
+    `FilterChipSelect`, `TableSettings` + `useTablePreferences`, `BulkBar`, and
+    the `mss-table-pagination` class on table pagination.
+  - Row actions: `RowActions`, one primary link (usually Edit) plus a "⋯"
+    overflow menu. Danger actions confirm inside the overflow menu.
+  - Overlays: use `FormModal` (`sm` 480 / `md` 720 / `lg` 880) for
+    create/edit and `DetailDrawer` (`md` 560 / `lg` 720, full screen on phones)
+    for details. Never pass raw widths.
+  - Status and KPIs: `StatusBadge` (`success|error|warning|processing|default`),
+    `StatCard` / `StatGrid`.
+  - States: `PageLoading`, `PageEmpty`, `PageError`, `PageForbidden`.
+  - Public auth pages render inside `AuthSplitLayout`.
+- **Guardrails** (`pnpm run lint` runs `scripts/check-style-guardrails.mjs`;
+  `tests/style-guardrails.test.ts` runs it in CI):
+  - No inline `style={{…}}`. Data-driven values such as registry `order` need
+    a `// style-guardrail-ignore: <reason>` comment within 3 lines.
+  - No raw hex colors outside the token sources.
+  - No `[var(--mss-…)]` arbitrary classes; add a semantic color instead.
+- **Codegen.** `templates/module/frontend-v6/page.tsx.tmpl` uses the same
+  primitives. Change it together with the primitives, bump
+  `frontendV6TemplateRevision`, and regenerate with
+  `go run ./cmd/mss module generate .mss/modules/<spec>.yaml --write`.
+- **Selectors.** `.ant-*` selectors are limited to the existing scoped
+  exceptions (sider rows, toolbar-form labels, auth form). Prefer
+  `className` / `classNames` props.
+
 ## Completion rules
 
 Every retained page considers loading, confirmed empty, retryable error, 403,

@@ -1,5 +1,6 @@
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { DetailDrawer } from '@mss-admin-core/shared/design-system/Overlay';
 import {
   PageEmpty,
   PageError,
@@ -7,7 +8,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import { useIntl } from '@umijs/max';
-import { Alert, Button, Descriptions, Drawer, Listy, Space, Tag, Typography } from 'antd';
+import { Alert, Button, Descriptions, Listy, Space, Tag, Typography } from 'antd';
 import { presentOptionDetail } from './presentation';
 import { useOption } from './query';
 
@@ -154,10 +155,10 @@ export default function OptionDetailDrawer({ id, open, onClose }: OptionDetailDr
   })();
 
   return (
-    <Drawer
+    <DetailDrawer
       destroyOnHidden
       open={open}
-      size="large"
+      size="lg"
       title={
         presentedOption?.displayName ||
         presentedOption?.name ||
@@ -166,6 +167,6 @@ export default function OptionDetailDrawer({ id, open, onClose }: OptionDetailDr
       onClose={onClose}
     >
       {content}
-    </Drawer>
+    </DetailDrawer>
   );
 }

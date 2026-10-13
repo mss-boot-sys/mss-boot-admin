@@ -1,7 +1,7 @@
 import OptionEditor from '@mss-admin-core/modules/option/OptionEditor';
 import { hasPermission } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import { useIntl, useModel, useParams } from '@umijs/max';
 
@@ -13,8 +13,8 @@ export default function EditOptionPage() {
     return <PageForbidden message={intl.formatMessage({ id: 'option.forbidden.write' })} />;
   }
   return (
-    <PageContainer title={intl.formatMessage({ id: 'option.edit.title' })}>
+    <PageShell title={intl.formatMessage({ id: 'option.edit.title' })}>
       <OptionEditor id={id} mode="edit" />
-    </PageContainer>
+    </PageShell>
   );
 }

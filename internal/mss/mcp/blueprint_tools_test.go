@@ -12,9 +12,11 @@ import (
 	"strings"
 	"testing"
 
+	distribution "github.com/mss-boot-sys/mss-boot-admin"
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/blueprint"
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/buildinfo"
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"gopkg.in/yaml.v3"
 )
 
 func TestBlueprintToolDefinitionsAreComplete(t *testing.T) {
@@ -144,7 +146,7 @@ func TestServePlansEmbeddedApplicationFromEmptyWorkingDirectory(t *testing.T) {
 	if plan.Destination != filepath.Join(working, ".mss", "output", "empty-admin") {
 		t.Fatalf("plan destination = %q", plan.Destination)
 	}
-	if plan.Identities.Foundation.Version != "1.3.7" || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
+	if plan.Identities.Foundation.Version != mcpDistribution(t).Frontend.Version || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
 		t.Fatalf("embedded release identity = %#v", plan.Identities.Foundation)
 	}
 	entries, err := os.ReadDir(working)
@@ -224,10 +226,10 @@ func TestEmbeddedUpgradeLifecyclePreservesThinHostBusinessFiles(t *testing.T) {
 	}
 
 	dryRun := structuredResult[blueprint.UpgradePlan](t, responses[0])
-	if !dryRun.DryRun || !dryRun.Success || dryRun.FoundationRoot != "embedded://mss/1.3.7" {
+	if !dryRun.DryRun || !dryRun.Success || dryRun.FoundationRoot != "embedded://mss/"+mcpDistribution(t).Frontend.Version {
 		t.Fatalf("embedded upgrade dry-run = %#v", dryRun)
 	}
-	if dryRun.ToDistribution.Version != "v1.3.9" || dryRun.ToIdentities.Foundation.Commit != strings.Repeat("a", 40) {
+	if dryRun.ToDistribution.Version != mcpDistribution(t).Version || dryRun.ToIdentities.Foundation.Commit != strings.Repeat("a", 40) {
 		t.Fatalf("upgrade target is not bound to release build identity: %#v", dryRun.ToIdentities)
 	}
 	if !containsString(dryRun.PreservedFiles, "internal/modules/custom/owned.go") {
@@ -271,21 +273,28 @@ func setMCPReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.3.9"
+	buildinfo.Version = mcpDistribution(t).Version
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 }
 
 func mcpFrontendRegistry(t *testing.T) string {
 	t.Helper()
+	frontend := mcpDistribution(t).Frontend
 	integrity := "sha512-" + strings.Repeat("A", 86) + "=="
 	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/"+frontend.Package+"/"+frontend.Version {
+			http.NotFound(writer, request)
+			return
+		}
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-sys/admin-web","version":"1.3.7","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":%q,"version":%q,"dist":{"integrity":%q,"tarball":%q}}`,
+			frontend.Package,
+			frontend.Version,
 			integrity,
-			"http://"+request.Host+"/artifacts/mcp-admin-web-1.3.7.tgz",
+			"http://"+request.Host+"/artifacts/mcp-admin-web-"+frontend.Version+".tgz",
 		)
 	}))
 	t.Cleanup(server.Close)
@@ -316,4 +325,22 @@ func containsString(values []string, expected string) bool {
 		}
 	}
 	return false
+}
+
+// mcpDistribution keeps release-build and registry fixtures aligned with the
+// same embedded contract used by the standalone MCP application tools.
+func mcpDistribution(t *testing.T) project.DistributionSpec {
+	t.Helper()
+	data, err := distribution.EmbeddedFS().ReadFile(".mss/blueprints/management-system.yaml")
+	if err != nil {
+		t.Fatalf("read embedded distribution contract: %v", err)
+	}
+	var document blueprint.Document
+	if err := yaml.Unmarshal(data, &document); err != nil {
+		t.Fatalf("decode embedded distribution contract: %v", err)
+	}
+	if problems := document.Spec.Distribution.Validate(); len(problems) != 0 {
+		t.Fatalf("invalid embedded distribution contract: %v", problems)
+	}
+	return document.Spec.Distribution
 }

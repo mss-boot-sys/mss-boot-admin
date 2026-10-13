@@ -1,0 +1,99 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: demo-release-maintenance
+  displayName: Official release demo maintenance
+  owner: release-engineering
+spec:
+  problem: The public demo must move from platform-owned one-time deployment to persistent,
+    verified, automatic Admin release maintenance.
+  goals:
+  - Own and automatically update the public Admin demo from verified official releases.
+  - Preserve demo data, configuration and credentials across upgrades and restore
+    matching state on deployment failure.
+  nonGoals:
+  - Change platform development or production environments.
+  - Reinitialize the demo or migrate the untouched legacy demo host.
+  - Change distribution password policy or publish new release artifacts.
+  actors:
+  - id: maintainer
+    displayName: Admin release maintainer
+  modules:
+  - name: demo
+    kind: infrastructure
+    operation: create
+  requirements:
+  - id: official-demo-upgrade
+    title: Deploy one verified release transaction
+    description: Update the existing demo backend and static Worker from the same
+      official immutable release identity.
+    priority: must
+    actor: maintainer
+    module: demo
+    rules:
+    - 'trigger: successful-root-release-workflow'
+    - 'manualRecovery: main-only-official-version'
+    - 'components: [''root'', ''framework'', ''admin'', ''frontend'']'
+    - 'requireStableReleases: True'
+    - 'requireSameSourceCommit: True'
+    - 'requireMergedMainSource: True'
+    - 'backend: official-ghcr-image-by-verified-digest'
+    - 'frontend: official-checksummed-static-archive'
+    - 'waitForCompleteArtifacts: True'
+    - 'serialize: repository-concurrency-and-server-transaction-lock'
+    - 'credentials: protected-environment-secrets-and-server-private-configuration'
+    - 'ssh: dedicated-forced-command-key-with-no-shell-or-forwarding'
+    - 'backup: quiesced-entire-pvc-and-private-configuration'
+    - 'initialization: forbidden'
+    - 'migration: existing-dataset-upgrade-and-api-registry-sync'
+    - 'frontendPromotion: immutable-worker-version'
+    - 'preserveRoutes: [''admin'', ''admin-wildcard'', ''public-wildcard'', ''healthz'',
+      ''readyz'', ''acme-challenge'']'
+    - 'rollback: matching-backend-image-database-configuration-and-worker-version'
+    - no-passwords-tokens-private-keys-or-private-endpoints-in-git
+    - no-initial-admin-secret-in-recurring-deployment
+    - no-route-dns-or-platform-environment-mutation
+    - retain-csrf-and-session-boundaries
+  constraints:
+  - id: demo-isolation
+    type: security
+    statement: Only mss-admin-demo namespace and the mss-boot-admin Worker for demo.mss-boot-io.top
+      may change.
+  - id: preserve-existing-data
+    type: data
+    statement: Back up the entire stopped SQLite/upload PVC and private configuration;
+      recurring deployment never initializes administrators or deletes persistent
+      storage.
+  acceptance:
+  - id: transaction-tests
+    requirement: official-demo-upgrade
+    statement: Reject mismatched identities and unsafe requests; validate rollback
+      and lock behavior.
+    level: unit
+    required: true
+    evidence:
+    - type: command
+      value: python3 -m unittest discover -s tools/demo -p 'test_*.py'
+  - id: live-demo-run
+    requirement: official-demo-upgrade
+    statement: A real GitHub Actions run and built-in-browser login validate preserved
+      demo behavior.
+    level: e2e
+    required: true
+    evidence:
+    - type: manual
+      value: Run Demo Deploy on main for the existing official version, inspect receipt
+        and sign in through the built-in browser.
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+    - python3 -m unittest discover -s tools/demo -p 'test_*.py'
+    - pnpm --dir docs build
+  rollout:
+    strategy: phased
+    migration: Install the demo-only forced SSH command and protected environment,
+      merge via PR, then validate an official-version manual run before automatic
+      future releases.
+    rollback: Restore prior immutable Worker version, backend image, full PVC and
+      private configuration from the same deployment transaction.
