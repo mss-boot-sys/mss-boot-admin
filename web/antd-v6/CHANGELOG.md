@@ -6,7 +6,22 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
-No unreleased changes are recorded.
+### Changed
+
+- Visual refresh (P0): indigo `#3b5bfd` brand color, three-layer light and dark
+  surfaces, CJK-aware font stack, and component tokens for Layout, Menu,
+  Button, Table, Input, Select, Modal and Result. The code-layer default theme
+  is now `light`; existing application and personal overrides keep precedence.
+- Administration list toolbars keep a single primary action: search is a
+  default button, reset is a text button, refresh is an icon button with a
+  tooltip, and business toolbar actions are right-aligned.
+- Loading states show an automatic-retry notice after a failed attempt, and
+  query retries back off at 600 ms / 1.2 s so a 5xx reaches the error state in
+  about two seconds.
+- 403 and 404 pages render inside the application layout with friendly copy and
+  "Go back" / "Back to workplace" actions.
+- Page descriptions and login security notes use plain product language in
+  zh-CN and en-US. Two-character buttons no longer get an inserted space.
 
 ## [web/antd-v6/v1.3.9] - 2026-10-11
 

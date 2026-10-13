@@ -1,12 +1,24 @@
 import LockOutlined from '@ant-design/icons/LockOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import { useIntl } from '@umijs/max';
-import { Button, Empty, Result, Skeleton } from 'antd';
+import { Alert, Button, Empty, Result, Skeleton } from 'antd';
 import type { ReactNode } from 'react';
 
-export function PageLoading({ rows = 5 }: { rows?: number }) {
+export function PageLoading({
+  rows = 5,
+  retrying = false,
+  retryingMessage,
+}: {
+  rows?: number;
+  /** True after a failed attempt while the query client retries automatically. */
+  retrying?: boolean;
+  retryingMessage?: ReactNode;
+}) {
   return (
-    <div aria-busy="true" role="status">
+    <div aria-busy="true" role="status" className="flex flex-col gap-4">
+      {retrying && retryingMessage ? (
+        <Alert showIcon type="warning" title={retryingMessage} />
+      ) : null}
       <Skeleton active paragraph={{ rows }} title />
     </div>
   );

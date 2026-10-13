@@ -1,3 +1,4 @@
+import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
 import {
   PageEmpty,
@@ -13,7 +14,7 @@ import type {
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, Button, Col, Form, Input, Row, Select, Space, Tag } from 'antd';
+import { Alert, Button, Col, Form, Input, Row, Select, Space, Tag, Tooltip } from 'antd';
 import {
   type Dispatch,
   type ReactNode,
@@ -109,7 +110,15 @@ export default function AdministrationTable<T extends { id: string }>({
   if (status === 403) {
     return <PageForbidden message={intl.formatMessage({ id: 'administration.forbidden.read' })} />;
   }
-  if (query.isPending && !query.data) return <PageLoading rows={8} />;
+  if (query.isPending && !query.data) {
+    return (
+      <PageLoading
+        retrying={query.failureCount > 0}
+        retryingMessage={intl.formatMessage({ id: 'states.retrying' })}
+        rows={8}
+      />
+    );
+  }
   if (query.isError && !query.data) {
     return (
       <PageError
@@ -168,15 +177,16 @@ export default function AdministrationTable<T extends { id: string }>({
               </Form.Item>
             </Col>
           ) : null}
-          <Col xs={24} lg={12} style={{ order: 10_000 }}>
+          <Col flex="auto" style={{ order: 10_000 }}>
             <Form.Item>
-              <Space wrap>
+              <div className="flex flex-wrap items-center gap-2">
                 {searchExpanded ? (
                   <>
-                    <Button htmlType="submit" type="primary">
+                    <Button htmlType="submit">
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
                     <Button
+                      type="text"
                       onClick={() => {
                         form.resetFields();
                         setParams({ current: 1, pageSize: resetPageSize, status: 'all' });
@@ -195,11 +205,18 @@ export default function AdministrationTable<T extends { id: string }>({
                     {intl.formatMessage({ id: 'actions.search' })}
                   </Button>
                 )}
-                <Button loading={query.isFetching} onClick={() => void query.refetch()}>
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {toolbar}
-              </Space>
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <Tooltip title={intl.formatMessage({ id: 'actions.refresh' })}>
+                    <Button
+                      aria-label={intl.formatMessage({ id: 'actions.refresh' })}
+                      icon={<ReloadOutlined />}
+                      loading={query.isFetching}
+                      onClick={() => void query.refetch()}
+                    />
+                  </Tooltip>
+                  {toolbar}
+                </div>
+              </div>
             </Form.Item>
           </Col>
         </Row>
