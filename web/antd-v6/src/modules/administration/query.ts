@@ -65,6 +65,43 @@ function catalogEntries<T extends { id: string }>(items: readonly T[]): T[] {
   });
 }
 
+export function useUserOverview(ids: readonly string[], enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.userOverview(ids),
+    queryFn: () => administrationAPI.users.overview(ids),
+    enabled,
+    // Root-only aggregate: a 403 simply hides the optional cards/column.
+    retry: false,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  });
+}
+
+export const MAX_ADMIN_EXPORT_ROWS = 10_000;
+
+/** Collects every row of the current filtered list for CSV export. */
+export async function collectAdministrationRows<R extends AdministrationResource>(
+  resource: R,
+  params: AdministrationListParams,
+): Promise<AdministrationEntities[R][]> {
+  const result: AdministrationEntities[R][] = [];
+  let current = 1;
+  let total = 0;
+  do {
+    const page = await listAPI[resource]({ ...params, current, pageSize: 100 });
+    if (current === 1) {
+      total = page.total;
+      if (total > MAX_ADMIN_EXPORT_ROWS) {
+        throw new AdministrationContractError('administration export exceeds its limit');
+      }
+    }
+    if (page.data.length === 0) break;
+    result.push(...page.data);
+    current += 1;
+  } while (result.length < total);
+  return result;
+}
+
 export async function collectAdministrationCatalog<T extends { id: string }>(
   list: (params: AdministrationListParams) => Promise<AdministrationPage<T>>,
 ): Promise<T[]> {

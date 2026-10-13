@@ -12,7 +12,7 @@ import UserManagement from '@mss-admin-core/modules/administration/UserManagemen
 import { userPresentationRegistryEntry } from '@mss-admin-core/modules/administration/userPresentation';
 import { hasPermission, isRootIdentity } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import type { ManagementRouteIntent } from '@mss-admin-core/shared/navigation/managementRoute';
 import {
@@ -53,12 +53,12 @@ function AdministrationPresentationPage({
   );
 
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: route.description })}
       title={presentationRuntime.model.title}
     >
       {route.render(root, routeIntent, presentationRuntime)}
-    </PageContainer>
+    </PageShell>
   );
 }
 

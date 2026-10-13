@@ -6,7 +6,60 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
-No unreleased changes are recorded.
+- Consistency pass ("所有页面风格要统一"):
+  - `tokens.ts` is now the single token source.
+  - The CSS is split into `shared/design-system/styles/*.css`. It has no raw
+    hex colors, no duplicate rules and no dark-mode status overrides.
+  - New primitives: `PageShell`/`PageHeaderActions`,
+    `ListSurface`/`ListToolbar`/`FilterSlot`/`SearchField`/`BulkBar`,
+    `StatCard`, `StatusBadge`, `FormModal` (sm/md/lg), `DetailDrawer` (md/lg)
+    and `useTablePreferences`. `PageContainer` stays as a deprecated alias.
+    All of them are exported from `/runtime`.
+- Every list page shares the card surface, the inline toolbar filters, the
+  header primary action and `RowActions`. This covers Language, Option,
+  Online sessions, Logs, Notices, Tasks, System config and generated modules.
+  Login, register and recovery share `AuthSplitLayout`.
+- Guardrails: `scripts/check-style-guardrails.mjs` runs in `lint` and vitest.
+  It rejects inline styles unless they carry a reason, raw hex colors and
+  arbitrary `--mss-*` classes. The conventions are documented in `AGENTS.md`.
+
+- Route tabs under the side-layout header: one closable tab per visited authorized menu page (workplace pinned, cap 12, sessionStorage), right-click menu (close / others / right / all), middle-click close.
+- Users list: `导出` downloads the current filtered list as CSV (UTF-8 BOM, formula-injection safe, max 10,000 rows) via the existing list API.
+- Admin lists: status filter becomes a `+ 状态` chip; users add `+ 角色` / `+ 部门` chips (new backend `roleID`/`departmentID` filters).
+- Admin lists: `密度 · 列设置` popover (density + visible columns, persisted per browser; actions column always kept, at least one business column stays visible).
+- Users list: `最近登录` column and `本周新增` / `在线会话` stat cards from the new root-only `/user/overview` endpoint; non-root operators fall back to disabled/locked counts and no column.
+- Compact single-line footer (keeps ICP record and footer contributions); tighter sidebar rows and group titles.
+
+- Admin lists: action column is now a primary `编辑` link plus a `⋯` overflow menu (`RowActions`); permission hide/disable rules preserved, danger actions confirm via modal.
+- Login: mockup-style left-aligned title (no duplicate logo), labelled 40px inputs, gradient submit, `记住我` (persists only the username in localStorage; passwords/session never stored).
+- Side layout: top-level menu directories render as group titles (`menu.type = 'group'`), still backend-driven.
+- Users page: stat cards (total / enabled / disabled / locked) read from the existing paged list `total`; no fabricated trends.
+
+### Changed
+
+- Visual refresh (P0): indigo `#3b5bfd` brand color, three-layer light and dark
+  surfaces, CJK-aware font stack, and component tokens for Layout, Menu,
+  Button, Table, Input, Select, Modal and Result. The code-layer default theme
+  is now `light`; existing application and personal overrides keep precedence.
+- Administration list toolbars keep a single primary action: search is a
+  default button, reset is a text button, refresh is an icon button with a
+  tooltip, and business toolbar actions are right-aligned.
+- Loading states show an automatic-retry notice after a failed attempt, and
+  query retries back off at 600 ms / 1.2 s so a 5xx reaches the error state in
+  about two seconds.
+- 403 and 404 pages render inside the application layout with friendly copy and
+  "Go back" / "Back to workplace" actions.
+- Page descriptions and login security notes use plain product language in
+  zh-CN and en-US. Two-character buttons no longer get an inserted space.
+- Design-system pass matching the concept mockups: split login (brand panel +
+  form), side layout by default with a sticky header (breadcrumb, ⌘K search
+  field, actions, avatar), custom page header with a portal slot for the page's
+  primary action, card-surfaced list with inline search, status filter chips,
+  total count, icon refresh, row selection with a floating batch bar (users:
+  batch delete), avatar/email user cell, pill role tags and dot status tags,
+  icon quick-link cards on the workplace, and CSS motion tokens (page enter
+  240 ms, row stagger, batch bar rise, card hover lift) that honour
+  `prefers-reduced-motion`. The default layout watermark is removed.
 
 ## [web/antd-v6/v1.3.9] - 2026-10-11
 

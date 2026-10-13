@@ -1,8 +1,14 @@
 import CheckOutlined from '@ant-design/icons/CheckOutlined';
-import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import ReloadOutlined from '@ant-design/icons/ReloadOutlined';
 import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import {
+  FilterSlot,
+  filterPlaceholder,
+  ListSurface,
+  ListToolbarEnd,
+} from '@mss-admin-core/shared/design-system/ListSurface';
+import { DetailDrawer } from '@mss-admin-core/shared/design-system/Overlay';
 import {
   PageEmpty,
   PageError,
@@ -10,6 +16,7 @@ import {
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import ResponsiveEntityTable from '@mss-admin-core/shared/design-system/ResponsiveEntityTable';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import type { PagePresentationRuntime } from '@mss-admin-core/shared/presentation/runtime';
 import {
   resolveTablePresentation,
@@ -24,13 +31,10 @@ import {
   App,
   Badge,
   Button,
-  Col,
   Descriptions,
-  Drawer,
   Form,
   Grid,
   Input,
-  Row,
   Select,
   Space,
   type TableColumnsType,
@@ -177,30 +181,25 @@ export default function NoticeCenter({ canMarkRead, presentationRuntime }: Notic
     {
       title: intl.formatMessage({ id: 'notice.field.actions' }),
       key: 'actions',
-      width: canMarkRead ? 220 : 110,
+      width: 120,
       fixed: screens.md ? 'right' : undefined,
       render: (_: unknown, notice) => (
-        <Space size="small" wrap>
-          <Button
-            icon={<EyeOutlined />}
-            size="small"
-            type="link"
-            onClick={() => setDetailID(notice.id)}
-          >
-            {intl.formatMessage({ id: 'actions.view' })}
-          </Button>
-          {canMarkRead && !notice.read ? (
-            <Button
-              icon={<CheckOutlined />}
-              loading={markRead.isPending && markRead.variables === notice.id}
-              size="small"
-              type="link"
-              onClick={() => markRead.mutate(notice.id)}
-            >
-              {intl.formatMessage({ id: 'notice.read.action' })}
-            </Button>
-          ) : null}
-        </Space>
+        <RowActions
+          primary={{
+            key: 'view',
+            label: intl.formatMessage({ id: 'actions.view' }),
+            onClick: () => setDetailID(notice.id),
+          }}
+          more={[
+            canMarkRead &&
+              !notice.read && {
+                key: 'read',
+                disabled: markRead.isPending,
+                label: intl.formatMessage({ id: 'notice.read.action' }),
+                onClick: () => markRead.mutate(notice.id),
+              },
+          ]}
+        />
       ),
     },
   ];
@@ -252,128 +251,132 @@ export default function NoticeCenter({ canMarkRead, presentationRuntime }: Notic
           onClose={() => markRead.reset()}
         />
       ) : null}
-      <Form<NoticeFilterValues>
-        form={form}
-        initialValues={{ status: 'all', type: routeType }}
-        layout="vertical"
-        onFinish={(values) =>
-          setParams((current) => ({
-            ...current,
-            current: 1,
-            title: values.title?.trim() || undefined,
-            status: values.status,
-            type: values.type,
-          }))
-        }
-      >
-        <Row align="bottom" gutter={16}>
-          {searchPresentation.expanded && titleSearch ? (
-            <Col xs={24} sm={12} lg={7} style={{ order: titleSearch.order }}>
-              <Form.Item name="title" label={titleSearch.label} extra={titleSearch.help}>
-                <Input allowClear maxLength={255} placeholder={titleSearch.placeholder} />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && typeSearch ? (
-            <Col xs={12} sm={6} lg={4} style={{ order: typeSearch.order }}>
-              <Form.Item name="type" label={typeSearch.label} extra={typeSearch.help}>
-                <Select
-                  placeholder={typeSearch.placeholder}
-                  options={(['all', ...noticeTypes] as const).map((value) => ({
-                    value,
-                    label: intl.formatMessage({ id: `notice.type.${value}` }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          {searchPresentation.expanded && statusSearch ? (
-            <Col xs={12} sm={6} lg={4} style={{ order: statusSearch.order }}>
-              <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
-                <Select
-                  placeholder={statusSearch.placeholder}
-                  options={(['all', 'urgent', 'doing', 'processing', 'todo'] as const).map(
-                    (value) => ({
+      <ListSurface>
+        <Form<NoticeFilterValues>
+          form={form}
+          initialValues={{ status: 'all', type: routeType }}
+          className="mss-list-filters"
+          layout="inline"
+          onFinish={(values) =>
+            setParams((current) => ({
+              ...current,
+              current: 1,
+              title: values.title?.trim() || undefined,
+              status: values.status,
+              type: values.type,
+            }))
+          }
+        >
+          <div className="mss-list-toolbar">
+            {searchPresentation.expanded && titleSearch ? (
+              <FilterSlot order={titleSearch.order}>
+                <Form.Item name="title" label={titleSearch.label} extra={titleSearch.help}>
+                  <Input allowClear maxLength={255} placeholder={filterPlaceholder(titleSearch)} />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && typeSearch ? (
+              <FilterSlot order={typeSearch.order}>
+                <Form.Item name="type" label={typeSearch.label} extra={typeSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(typeSearch)}
+                    options={(['all', ...noticeTypes] as const).map((value) => ({
                       value,
-                      label: intl.formatMessage({ id: `notice.status.${value}` }),
-                    }),
-                  )}
-                />
-              </Form.Item>
-            </Col>
-          ) : null}
-          <Col xs={24} lg={9} style={{ order: 10_000 }}>
-            <Form.Item>
-              <Space wrap>
-                {searchPresentation.expanded ? (
-                  <>
-                    <Button htmlType="submit" icon={<SearchOutlined />} type="primary">
+                      label: intl.formatMessage({ id: `notice.type.${value}` }),
+                    }))}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            {searchPresentation.expanded && statusSearch ? (
+              <FilterSlot order={statusSearch.order}>
+                <Form.Item name="status" label={statusSearch.label} extra={statusSearch.help}>
+                  <Select
+                    placeholder={filterPlaceholder(statusSearch)}
+                    options={(['all', 'urgent', 'doing', 'processing', 'todo'] as const).map(
+                      (value) => ({
+                        value,
+                        label: intl.formatMessage({ id: `notice.status.${value}` }),
+                      }),
+                    )}
+                  />
+                </Form.Item>
+              </FilterSlot>
+            ) : null}
+            <ListToolbarEnd>
+              <Form.Item>
+                <Space wrap>
+                  {searchPresentation.expanded ? (
+                    <>
+                      <Button htmlType="submit" icon={<SearchOutlined />}>
+                        {intl.formatMessage({ id: 'actions.search' })}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          form.resetFields();
+                          setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
+                        }}
+                      >
+                        {intl.formatMessage({ id: 'actions.reset' })}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
                       {intl.formatMessage({ id: 'actions.search' })}
                     </Button>
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                        setParams({ ...initialParams, pageSize: tablePresentation.pageSize });
-                      }}
-                    >
-                      {intl.formatMessage({ id: 'actions.reset' })}
-                    </Button>
-                  </>
-                ) : (
-                  <Button icon={<SearchOutlined />} onClick={searchPresentation.expand}>
-                    {intl.formatMessage({ id: 'actions.search' })}
-                  </Button>
-                )}
-                <Button
-                  icon={<ReloadOutlined />}
-                  loading={notices.isFetching}
-                  onClick={() => void notices.refetch()}
-                >
-                  {intl.formatMessage({ id: 'actions.refresh' })}
-                </Button>
-                {canMarkRead ? (
+                  )}
                   <Button
-                    icon={<CheckOutlined />}
-                    loading={markRead.isPending && markRead.variables === 'all'}
-                    onClick={() => markRead.mutate('all')}
+                    icon={<ReloadOutlined />}
+                    loading={notices.isFetching}
+                    onClick={() => void notices.refetch()}
                   >
-                    {intl.formatMessage({ id: 'notice.read.all' })}
+                    {intl.formatMessage({ id: 'actions.refresh' })}
                   </Button>
-                ) : null}
-              </Space>
-            </Form.Item>
-          </Col>
-        </Row>
-      </Form>
-      <ResponsiveEntityTable<NoticeSummary>
-        columns={tablePresentation.columns}
-        dataSource={notices.data?.data ?? []}
-        loading={notices.isFetching}
-        locale={{
-          emptyText: <PageEmpty description={intl.formatMessage({ id: 'notice.empty' })} />,
-        }}
-        pagination={{
-          current: params.current,
-          pageSize: params.pageSize,
-          pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
-          showSizeChanger: true,
-          total: notices.data?.total ?? 0,
-          onChange: (current, pageSize) =>
-            setParams((previous) => ({
-              ...previous,
-              current,
-              pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
-            })),
-        }}
-        mobileColumnKeys={tablePresentation.mobileColumnKeys}
-        rowKey="id"
-        scroll={{ x: 880 }}
-        size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
-      />
-      <Drawer
+                  {canMarkRead ? (
+                    <Button
+                      icon={<CheckOutlined />}
+                      loading={markRead.isPending && markRead.variables === 'all'}
+                      onClick={() => markRead.mutate('all')}
+                    >
+                      {intl.formatMessage({ id: 'notice.read.all' })}
+                    </Button>
+                  ) : null}
+                </Space>
+              </Form.Item>
+            </ListToolbarEnd>
+          </div>
+        </Form>
+        <ResponsiveEntityTable<NoticeSummary>
+          columns={tablePresentation.columns}
+          dataSource={notices.data?.data ?? []}
+          loading={notices.isFetching}
+          locale={{
+            emptyText: <PageEmpty description={intl.formatMessage({ id: 'notice.empty' })} />,
+          }}
+          pagination={{
+            className: 'mss-table-pagination',
+            current: params.current,
+            pageSize: params.pageSize,
+            pageSizeOptions: OPERATIONS_PAGE_SIZES.map(String),
+            showSizeChanger: true,
+            total: notices.data?.total ?? 0,
+            onChange: (current, pageSize) =>
+              setParams((previous) => ({
+                ...previous,
+                current,
+                pageSize: isOperationsPageSize(pageSize) ? pageSize : previous.pageSize,
+              })),
+          }}
+          mobileColumnKeys={tablePresentation.mobileColumnKeys}
+          rowKey="id"
+          scroll={{ x: 880 }}
+          size={tablePresentation.density === 'compact' ? 'small' : tablePresentation.density}
+        />
+      </ListSurface>
+      <DetailDrawer
         destroyOnHidden
         open={Boolean(detailID)}
-        size={screens.md ? 640 : '100%'}
+        size="md"
         title={detail.data?.title ?? intl.formatMessage({ id: 'notice.detail.title' })}
         onClose={() => setDetailID(undefined)}
       >
@@ -431,7 +434,7 @@ export default function NoticeCenter({ canMarkRead, presentationRuntime }: Notic
             ) : null}
           </Space>
         ) : null}
-      </Drawer>
+      </DetailDrawer>
     </Space>
   );
 }

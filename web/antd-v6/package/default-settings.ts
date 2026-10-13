@@ -1,11 +1,11 @@
 import type { ProLayoutProps } from '@ant-design/pro-components';
 
 export const defaultSettings = {
-  navTheme: 'realDark',
-  colorPrimary: '#1677ff',
-  layout: 'mix',
+  navTheme: 'light',
+  colorPrimary: '#3b5bfd',
+  layout: 'side',
   contentWidth: 'Fluid',
-  fixedHeader: false,
+  fixedHeader: true,
   fixSiderbar: true,
   colorWeak: false,
   title: 'mss-boot-io',

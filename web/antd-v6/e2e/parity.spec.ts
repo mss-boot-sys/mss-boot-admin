@@ -8,7 +8,7 @@ const localeExpectations = [
     monitor: 'Service monitor',
     account: 'Account center',
     settings: 'Personal settings',
-    suppliers: 'Suppliers list',
+    suppliers: 'Suppliers',
     switchLanguage: 'Switch language',
     systemMenu: 'System settings',
     platformMenu: 'Platform administration',
@@ -19,7 +19,7 @@ const localeExpectations = [
     monitor: '服务监控',
     account: '账户中心',
     settings: '个人设置',
-    suppliers: '供应商管理列表',
+    suppliers: '供应商管理',
     switchLanguage: '切换语言',
     systemMenu: '系统设置',
     platformMenu: '平台管理',
@@ -71,21 +71,23 @@ for (const expected of localeExpectations) {
       .poll(() => logo.evaluate((image: HTMLImageElement) => image.naturalWidth))
       .toBeGreaterThan(0);
     if (testInfo.project.name === 'chromium-desktop') {
-      const systemMenu = page.getByRole('menuitem', { name: new RegExp(expected.systemMenu) });
-      const platformMenu = page.getByRole('menuitem', { name: new RegExp(expected.platformMenu) });
-      await expect(systemMenu).toBeVisible();
-      await expect(systemMenu.locator('[aria-hidden="true"][aria-label="setting"]')).toBeVisible();
-      await expect(platformMenu).toBeVisible();
-      await expect(platformMenu.locator('[aria-hidden="true"][aria-label="audit"]')).toBeVisible();
+      // Top-level directories render as sidebar group titles (not menu items).
+      const sider = page.locator('aside').first();
+      await expect(sider.getByText(expected.systemMenu, { exact: true })).toBeVisible();
+      await expect(sider.getByText(expected.platformMenu, { exact: true })).toBeVisible();
     }
     await expectNoDocumentOverflow(page);
 
     await page.goto('/account/center');
-    await expect(page.getByText(expected.account, { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: expected.account, exact: true }),
+    ).toBeVisible();
     await expectNoDocumentOverflow(page);
 
     await page.goto('/account/settings');
-    await expect(page.getByText(expected.settings, { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: expected.settings, exact: true }),
+    ).toBeVisible();
     await expectNoDocumentOverflow(page);
 
     const supplierList = page.waitForResponse(
@@ -95,7 +97,9 @@ for (const expected of localeExpectations) {
     );
     await page.goto('/suppliers');
     expect((await supplierList).ok()).toBe(true);
-    await expect(page.getByText(expected.suppliers, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: expected.suppliers, exact: true }),
+    ).toBeVisible();
     await expectNoDocumentOverflow(page);
 
     const refreshedSupplierList = page.waitForResponse(
@@ -105,7 +109,9 @@ for (const expected of localeExpectations) {
     );
     await page.reload();
     expect((await refreshedSupplierList).ok()).toBe(true);
-    await expect(page.getByText(expected.suppliers, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: expected.suppliers, exact: true }),
+    ).toBeVisible();
     await expectNoDocumentOverflow(page);
 
     await page.keyboard.press('Tab');

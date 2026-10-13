@@ -35,11 +35,13 @@ vi.mock('@ant-design/pro-components', () => {
   const Field = () => null;
   return {
     LoginFormPage: Form,
+    LoginForm: Form,
     StepsForm: Object.assign(Form, {
       StepForm: ({ children }: { children?: ReactNode }) => children,
     }),
     ProFormText: Object.assign(Field, { Password: Field }),
     ProFormCaptcha: Field,
+    ProFormCheckbox: Field,
   };
 });
 vi.mock('antd', async (importOriginal) => ({
@@ -154,4 +156,26 @@ describe('public auth completion navigation', () => {
       );
     },
   );
+
+  it('remember me stores only the username and clears it when unchecked', async () => {
+    window.localStorage.clear();
+    const view = render(<LoginPage />);
+    await act(async () => {
+      void mocks.submit?.({ ...values, remember: true } as unknown as typeof values);
+    });
+    await waitFor(() => expect(window.location.replace).toHaveBeenCalled());
+    expect(window.localStorage.getItem('mss-admin.login.username')).toBe(values.username);
+    expect(JSON.stringify({ ...window.localStorage })).not.toContain(values.password);
+    expect(mocks.createSession).toHaveBeenCalledWith({
+      username: values.username,
+      password: values.password,
+    });
+    view.unmount();
+
+    render(<LoginPage />);
+    await act(async () => {
+      void mocks.submit?.({ ...values, remember: false } as unknown as typeof values);
+    });
+    await waitFor(() => expect(window.localStorage.getItem('mss-admin.login.username')).toBeNull());
+  });
 });

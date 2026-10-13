@@ -48,7 +48,7 @@ truthy 语义；因此 `false` 是有效覆盖。省略字段表示不修改，`
 | `fixedHeader` | boolean | `false` | `true`、`false` |
 | `fixSiderbar` | boolean | `true` | `true`、`false` |
 | `colorWeak` | boolean | `false` | `true`、`false` |
-| `colorPrimary` | color | `#1677ff` | 规范化六位十六进制颜色 |
+| `colorPrimary` | color | `#3b5bfd` | 规范化六位十六进制颜色 |
 
 `fixSiderbar` 是既有持久化字段名，本次不做破坏性数据库重命名。`pwa`、
 `splitMenus`、Service Worker 生命周期和任意未知字段不属于运行时主题，V6 API 会拒绝写入。

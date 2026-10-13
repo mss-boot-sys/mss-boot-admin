@@ -1,0 +1,60 @@
+/* Base document styles. Colors come from Ant Design CSS variables (--mss-*). */
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --mss-motion-fast: 120ms;
+  --mss-motion-mid: 180ms;
+  --mss-motion-slow: 240ms;
+  --mss-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --mss-radius-surface: 12px;
+  /* Brand constants mirrored from tokens.ts (the only other place hex is allowed). */
+  --mss-brand-accent: #6b4dff;
+  --mss-hero-from: #4f6bff;
+  --mss-hero-via: #2a2f8f;
+  --mss-hero-to: #0f1240;
+  --mss-brand-gradient: linear-gradient(
+    135deg,
+    var(--mss-color-primary) 0%,
+    var(--mss-brand-accent) 100%
+  );
+}
+
+:root[data-mss-theme="realDark"] {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background: var(--mss-color-bg-layout);
+  font-feature-settings: "cv11", "ss01";
+}
+
+*:focus-visible {
+  outline: 2px solid var(--mss-color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component transitions. */
+    scroll-behavior: auto !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component transitions. */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations. */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override component animations. */
+    animation-iteration-count: 1 !important;
+  }
+}

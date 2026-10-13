@@ -12,7 +12,7 @@ import {
 } from '@mss-admin-core/modules/operations/tablePresentation';
 import { hasPermission, isRootIdentity } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import type { ManagementRouteIntent } from '@mss-admin-core/shared/navigation/managementRoute';
 import { usePagePresentation } from '@mss-admin-core/shared/presentation/runtime';
@@ -47,7 +47,7 @@ function TaskOperationsPage({ initialState, root, routeIntent }: PresentedRouteP
     initialState.authorizationVersion,
   );
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'task.description' })}
       title={presentationRuntime.model.title}
     >
@@ -56,7 +56,7 @@ function TaskOperationsPage({ initialState, root, routeIntent }: PresentedRouteP
         root={root}
         routeIntent={routeIntent}
       />
-    </PageContainer>
+    </PageShell>
   );
 }
 
@@ -69,7 +69,7 @@ function NoticeOperationsPage({ initialState }: PresentedRouteProps) {
     initialState.authorizationVersion,
   );
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'notice.description' })}
       title={presentationRuntime.model.title}
     >
@@ -77,7 +77,7 @@ function NoticeOperationsPage({ initialState }: PresentedRouteProps) {
         canMarkRead={hasPermission(initialState.currentUser, '/notice/read')}
         presentationRuntime={presentationRuntime}
       />
-    </PageContainer>
+    </PageShell>
   );
 }
 
@@ -90,12 +90,12 @@ function SystemConfigOperationsPage({ initialState, routeIntent }: PresentedRout
     initialState.authorizationVersion,
   );
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'systemConfig.description' })}
       title={presentationRuntime.model.title}
     >
       <SystemConfigManagement presentationRuntime={presentationRuntime} routeIntent={routeIntent} />
-    </PageContainer>
+    </PageShell>
   );
 }
 
@@ -123,7 +123,7 @@ function LogOperationsPage({ initialState }: PresentedRouteProps) {
     authorizationVersion,
   );
   return (
-    <PageContainer
+    <PageShell
       content={intl.formatMessage({ id: 'log.description' })}
       title={intl.formatMessage({ id: 'log.title' })}
     >
@@ -134,7 +134,7 @@ function LogOperationsPage({ initialState }: PresentedRouteProps) {
         loginPresentationRuntime={loginPresentationRuntime}
         runtimePresentationRuntime={runtimePresentationRuntime}
       />
-    </PageContainer>
+    </PageShell>
   );
 }
 

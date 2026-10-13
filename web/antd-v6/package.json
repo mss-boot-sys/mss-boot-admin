@@ -168,7 +168,7 @@
     "delivery:smoke": "bash scripts/smoke-nginx-delivery.sh",
     "deps:check": "node scripts/check-dependencies.mjs",
     "dev": "cross-env PORT=8001 REACT_APP_ENV=dev UMI_ENV=dev MOCK=none max dev",
-    "lint": "biome check . && max setup && tsc --noEmit",
+    "lint": "biome check . && node scripts/check-style-guardrails.mjs && max setup && tsc --noEmit",
     "playwright:install": "playwright install chromium",
     "preview": "cross-env REACT_APP_ENV=local UMI_ENV=local max build && max preview --port 8001",
     "release:check": "node scripts/check-release-api.mjs",
@@ -187,7 +187,8 @@
     "test:e2e:settings": "playwright test --grep @settings",
     "test:e2e:debug": "playwright test --debug",
     "test:update": "vitest run -u",
-    "tsc": "max setup && tsc --noEmit"
+    "tsc": "max setup && tsc --noEmit",
+    "style:check": "node scripts/check-style-guardrails.mjs"
   },
   "browserslist": [
     "Chrome >= 120",

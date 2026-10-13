@@ -171,10 +171,10 @@ describe('v6 theme snapshots and identity binding', () => {
 
     applyThemeFirstPaintHint();
 
-    expect(document.documentElement.dataset.mssTheme).toBe('realDark');
-    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(document.documentElement.dataset.mssTheme).toBe('light');
+    expect(document.documentElement.style.colorScheme).toBe('light');
     expect(document.documentElement.style.getPropertyValue('--mss-theme-color-primary')).toBe(
-      '#1677ff',
+      '#3b5bfd',
     );
     expect(APPLICATION_THEME_SNAPSHOT_KEY).toBe('mss.antd-v6.theme.application.v1');
     expect(THEME_AUTH_SESSION_KEY).toBe('mss.antd-v6.theme.auth-session.v1');

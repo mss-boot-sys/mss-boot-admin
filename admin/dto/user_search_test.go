@@ -83,3 +83,40 @@ func bindUserSearchStatus(status string) (UserSearch, *gorms.GormCondition, erro
 	gorms.ResolveSearchQuery(gorms.Mysql, search, condition)
 	return search, condition, nil
 }
+
+func TestUserSearchRoleAndDepartmentAreExactOptionalFilters(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	context, _ := gin.CreateTestContext(httptest.NewRecorder())
+	context.Request = httptest.NewRequest(http.MethodGet,
+		"/admin/api/users?roleID=r%25&departmentID=d1", nil)
+	search := UserSearch{}
+	if err := context.ShouldBindQuery(&search); err != nil {
+		t.Fatalf("bind: %v", err)
+	}
+	condition := &gorms.GormCondition{}
+	gorms.ResolveSearchQuery(gorms.Mysql, search, condition)
+	if args := condition.Where["`role_id` = ?"]; len(args) != 1 || args[0] != "r%" {
+		t.Fatalf("role predicate = %#v, want exact r%%", condition.Where)
+	}
+	if args := condition.Where["`department_id` = ?"]; len(args) != 1 || args[0] != "d1" {
+		t.Fatalf("department predicate = %#v", condition.Where)
+	}
+
+	empty, emptyCondition, err := bindUserSearchStatus("")
+	if err != nil || empty.RoleID != "" || len(emptyCondition.Where) != 0 {
+		t.Fatalf("empty filters produced predicates: %#v (%v)", emptyCondition.Where, err)
+	}
+}
+
+func TestUserSearchRejectsOversizedRoleFilter(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	context, _ := gin.CreateTestContext(httptest.NewRecorder())
+	long := make([]byte, 65)
+	for i := range long {
+		long[i] = 'a'
+	}
+	context.Request = httptest.NewRequest(http.MethodGet, "/admin/api/users?roleID="+string(long), nil)
+	if err := context.ShouldBindQuery(&UserSearch{}); err == nil {
+		t.Fatal("oversized roleID was accepted")
+	}
+}

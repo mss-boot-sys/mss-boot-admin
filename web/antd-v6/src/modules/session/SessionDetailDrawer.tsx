@@ -4,13 +4,14 @@ import {
 } from '@mss-admin-core/modules/administration/contract';
 import { useAdministrationPage } from '@mss-admin-core/modules/administration/query';
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { DetailDrawer } from '@mss-admin-core/shared/design-system/Overlay';
 import {
   PageError,
   PageForbidden,
   PageLoading,
 } from '@mss-admin-core/shared/design-system/PageState';
 import { useIntl } from '@umijs/max';
-import { Alert, Descriptions, Drawer, Grid, Space, Tag } from 'antd';
+import { Alert, Descriptions, Space, Tag } from 'antd';
 import { useMemo } from 'react';
 import { getOnlineSessionStatus } from './contract';
 import { sessionDeviceSummary } from './device';
@@ -32,7 +33,6 @@ export default function SessionDetailDrawer({
   onClose: () => void;
 }) {
   const intl = useIntl();
-  const screens = Grid.useBreakpoint();
   const session = useOnlineSession(open ? id : undefined);
   const relationParams = useMemo<AdministrationListParams>(
     () => ({ current: 1, pageSize: 100 }),
@@ -63,11 +63,11 @@ export default function SessionDetailDrawer({
   const status = session.data ? getOnlineSessionStatus(session.data) : undefined;
 
   return (
-    <Drawer
+    <DetailDrawer
       destroyOnHidden
       open={open}
       title={intl.formatMessage({ id: 'sessions.detail.title' })}
-      size={screens.sm ? 560 : '100%'}
+      size="md"
       onClose={onClose}
     >
       {session.isPending ? <PageLoading rows={8} /> : null}
@@ -180,6 +180,6 @@ export default function SessionDetailDrawer({
           bordered
         />
       ) : null}
-    </Drawer>
+    </DetailDrawer>
   );
 }

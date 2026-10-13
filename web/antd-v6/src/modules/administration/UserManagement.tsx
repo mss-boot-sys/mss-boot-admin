@@ -1,4 +1,10 @@
+import DownloadOutlined from '@ant-design/icons/DownloadOutlined';
+import PlusOutlined from '@ant-design/icons/PlusOutlined';
 import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
+import { FilterChipSelect } from '@mss-admin-core/shared/design-system/FilterChipSelect';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
+import { buildCsv, downloadCsv } from '@mss-admin-core/shared/export/csv';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -13,7 +19,7 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, App, Avatar, Button, Form, Input, Modal, Popconfirm, Select, Space } from 'antd';
+import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Select, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import AdministrationTable, { AdministrationStatusTag } from './AdministrationTable';
 import { administrationAPI } from './api';
@@ -26,12 +32,44 @@ import {
   type UserSummary,
   type UserWriteValues,
 } from './contract';
-import { useAdministrationCatalog, useAdministrationPage } from './query';
+import {
+  collectAdministrationRows,
+  MAX_ADMIN_EXPORT_ROWS,
+  useAdministrationCatalog,
+  useAdministrationPage,
+  useUserOverview,
+} from './query';
+import { UserStatCards } from './UserStatCards';
 import {
   userPresentationListComponents,
   userPresentationMobileFields,
   userPresentationSearchComponents,
 } from './userPresentation';
+
+const AVATAR_TONES = 6;
+
+export function formatRelativeTime(iso: string, locale: string, now = Date.now()): string {
+  const seconds = Math.round((Date.parse(iso) - now) / 1000);
+  const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['year', 31_536_000],
+    ['month', 2_592_000],
+    ['week', 604_800],
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
+  }
+  return format.format(0, 'minute');
+}
+
+function avatarColor(seed: string) {
+  let hash = 0;
+  for (const char of seed) hash = (hash * 31 + char.charCodeAt(0)) | 0;
+  return String(Math.abs(hash) % AVATAR_TONES);
+}
 
 interface UserManagementProps {
   canCreate: boolean;
@@ -65,6 +103,11 @@ export default function UserManagement({
     : initialParams.pageSize;
   const [params, setParams] = usePresentationPageParams(initialParams, configuredPageSize);
   const users = useAdministrationPage('users', params);
+  const pageIDs = useMemo(() => (users.data?.data ?? []).map((user) => user.id), [users.data]);
+  // Root-only aggregate (week-new, online sessions, last login). Non-root
+  // operators get 403 and the optional cards/column simply stay hidden.
+  const overview = useUserOverview(pageIDs, users.isSuccess);
+  const [exporting, setExporting] = useState(false);
   const roles = useAdministrationCatalog('roles');
   const departments = useAdministrationCatalog('departments');
   const posts = useAdministrationCatalog('posts');
@@ -171,11 +214,20 @@ export default function UserManagement({
       dataIndex: 'username',
       width: 210,
       render: (_, user) => (
-        <Space>
-          <Avatar src={user.avatar || undefined}>
+        <Space size={10}>
+          <Avatar
+            src={user.avatar || undefined}
+            className="mss-avatar"
+            data-tone={avatarColor(user.username)}
+          >
             {(user.name || user.username).slice(0, 1).toUpperCase()}
           </Avatar>
-          <span>{user.username}</span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="font-medium">{user.username}</span>
+            {user.email ? (
+              <span className="truncate text-xs text-fg-tertiary">{user.email}</span>
+            ) : null}
+          </span>
         </Space>
       ),
     },
@@ -188,13 +240,16 @@ export default function UserManagement({
       title: intl.formatMessage({ id: 'user.field.email' }),
       dataIndex: 'email',
       ellipsis: true,
-      responsive: ['md'],
+      responsive: ['xxl'],
     },
     {
       title: intl.formatMessage({ id: 'user.field.role' }),
       key: 'roleName',
       width: 150,
-      render: (_, user) => administrationReferenceName(user.role, user.roleID, roleNamesByID),
+      render: (_, user) => {
+        const name = administrationReferenceName(user.role, user.roleID, roleNamesByID);
+        return name === '—' ? name : <span className="mss-pill">{name}</span>;
+      },
     },
     {
       title: intl.formatMessage({ id: 'user.field.organization' }),
@@ -207,7 +262,15 @@ export default function UserManagement({
           departmentNamesByID,
         );
         const post = administrationReferenceName(user.post, user.postID, postNamesByID);
-        return [department, post].filter((name) => name !== '—').join(' · ') || '—';
+        if (department === '—' && post === '—') return '—';
+        return (
+          <span className="flex flex-col leading-tight">
+            <span>{department === '—' ? post : department}</span>
+            {department !== '—' && post !== '—' ? (
+              <span className="text-xs text-fg-tertiary">{post}</span>
+            ) : null}
+          </span>
+        );
       },
     },
     {
@@ -216,50 +279,67 @@ export default function UserManagement({
       width: 120,
       render: (_, user) => <AdministrationStatusTag status={user.status} />,
     },
+    ...(overview.data
+      ? ([
+          {
+            title: intl.formatMessage({ id: 'user.field.lastLogin' }),
+            key: 'lastLogin',
+            width: 130,
+            responsive: ['md'],
+            render: (_: unknown, user: UserSummary) => {
+              const at = overview.data?.lastLogin[user.id];
+              return at ? (
+                <time dateTime={at} title={new Date(at).toLocaleString(intl.locale)}>
+                  {formatRelativeTime(at, intl.locale)}
+                </time>
+              ) : (
+                <span className="text-fg-quaternary">
+                  {intl.formatMessage({ id: 'user.lastLogin.never' })}
+                </span>
+              );
+            },
+          },
+        ] satisfies TableColumnsType<UserSummary>)
+      : []),
     {
       title: intl.formatMessage({ id: 'administration.field.actions' }),
       key: 'actions',
-      width: 300,
+      width: 120,
       fixed: 'right',
       render: (_, user) => {
         const rootTarget = (user.role ?? rolesByID.get(user.roleID))?.root === true;
         return (
-          <Space size="small" wrap>
-            {canEdit ? (
-              <Button
-                disabled={rootTarget}
-                size="small"
-                type="link"
-                onClick={() => openEditor(user)}
-              >
-                {intl.formatMessage({ id: 'actions.edit' })}
-              </Button>
-            ) : null}
-            {canResetPassword ? (
-              <Button
-                size="small"
-                type="link"
-                onClick={() => {
+          <RowActions
+            primary={
+              canEdit && {
+                key: 'edit',
+                label: intl.formatMessage({ id: 'actions.edit' }),
+                disabled: rootTarget,
+                onClick: () => openEditor(user),
+              }
+            }
+            more={[
+              canResetPassword && {
+                key: 'password',
+                label: intl.formatMessage({ id: 'user.passwordReset.action' }),
+                onClick: () => {
                   passwordForm.resetFields();
                   setPasswordTarget(user);
-                }}
-              >
-                {intl.formatMessage({ id: 'user.passwordReset.action' })}
-              </Button>
-            ) : null}
-            {canDelete ? (
-              <Popconfirm
-                description={intl.formatMessage({ id: 'user.delete.description' })}
-                disabled={rootTarget}
-                title={intl.formatMessage({ id: 'user.delete.confirm' })}
-                onConfirm={() => remove.mutate(user)}
-              >
-                <Button danger disabled={rootTarget} size="small" type="link">
-                  {intl.formatMessage({ id: 'actions.delete' })}
-                </Button>
-              </Popconfirm>
-            ) : null}
-          </Space>
+                },
+              },
+              canDelete && {
+                key: 'delete',
+                label: intl.formatMessage({ id: 'actions.delete' }),
+                danger: true,
+                disabled: rootTarget,
+                confirm: {
+                  title: intl.formatMessage({ id: 'user.delete.confirm' }),
+                  description: intl.formatMessage({ id: 'user.delete.description' }),
+                },
+                onClick: () => remove.mutate(user),
+              },
+            ]}
+          />
         );
       },
     },
@@ -272,7 +352,7 @@ export default function UserManagement({
     listComponents: userPresentationListComponents,
     mobileColumnKeys: [...userPresentationMobileFields, 'actions'],
     model: presentation,
-    protectedColumnKeys: ['actions'],
+    protectedColumnKeys: ['lastLogin', 'actions'],
     searchComponents: userPresentationSearchComponents,
   });
   const nameSearch = tablePresentation.searchFields.get('name') ?? null;
@@ -280,8 +360,80 @@ export default function UserManagement({
 
   const dependencyError = roles.error || departments.error || posts.error;
 
+  const exportUsers = async () => {
+    setExporting(true);
+    try {
+      const rows = await collectAdministrationRows('users', params);
+      const lastLogin = overview.data
+        ? (
+            await administrationAPI.users
+              .overview(rows.slice(0, 100).map((row) => row.id))
+              .catch(() => undefined)
+          )?.lastLogin
+        : undefined;
+      const csv = buildCsv<UserSummary>(
+        [
+          { header: intl.formatMessage({ id: 'user.field.username' }), value: (u) => u.username },
+          { header: intl.formatMessage({ id: 'administration.field.name' }), value: (u) => u.name },
+          { header: intl.formatMessage({ id: 'user.field.email' }), value: (u) => u.email },
+          {
+            header: intl.formatMessage({ id: 'user.field.role' }),
+            value: (u) => administrationReferenceName(u.role, u.roleID, roleNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'user.field.department' }),
+            value: (u) =>
+              administrationReferenceName(u.department, u.departmentID, departmentNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'user.field.post' }),
+            value: (u) => administrationReferenceName(u.post, u.postID, postNamesByID),
+          },
+          {
+            header: intl.formatMessage({ id: 'administration.field.status' }),
+            value: (u) =>
+              intl.formatMessage({ id: `administration.status.${u.status || 'unknown'}` }),
+          },
+          ...(lastLogin && rows.length <= 100
+            ? [
+                {
+                  header: intl.formatMessage({ id: 'user.field.lastLogin' }),
+                  value: (u: UserSummary) => lastLogin[u.id] ?? '',
+                },
+              ]
+            : []),
+        ],
+        rows,
+      );
+      downloadCsv(`users-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      void message.success(
+        intl.formatMessage({ id: 'administration.export.done' }, { count: rows.length }),
+      );
+    } catch (error) {
+      void message.error(
+        error instanceof Error && error.message.includes('limit')
+          ? intl.formatMessage(
+              { id: 'administration.export.tooMany' },
+              { max: MAX_ADMIN_EXPORT_ROWS },
+            )
+          : intl.formatMessage({ id: 'administration.export.failed' }),
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const roleFilterOptions = (roles.data ?? []).map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+  const departmentFilterOptions = flattenAdministrationTree(departments.data ?? []).map(
+    (department) => ({ value: department.id, label: department.name }),
+  );
+
   return (
     <>
+      <UserStatCards overview={overview.data} />
       <AdministrationTable
         columns={tablePresentation.columns}
         density={tablePresentation.density}
@@ -294,15 +446,71 @@ export default function UserManagement({
         setParams={setParams}
         statusSearch={statusSearch}
         mobileColumnKeys={tablePresentation.mobileColumnKeys}
+        settingsKey="users"
+        extraFilters={
+          <>
+            <FilterChipSelect
+              label={intl.formatMessage({ id: 'user.filter.role' })}
+              options={roleFilterOptions}
+              value={params.roleID}
+              onChange={(roleID) => setParams((current) => ({ ...current, current: 1, roleID }))}
+            />
+            <FilterChipSelect
+              label={intl.formatMessage({ id: 'user.filter.department' })}
+              options={departmentFilterOptions}
+              value={params.departmentID}
+              onChange={(departmentID) =>
+                setParams((current) => ({ ...current, current: 1, departmentID }))
+              }
+            />
+          </>
+        }
+        bulkActions={
+          canDelete
+            ? (selected, clear) => (
+                <Popconfirm
+                  title={intl.formatMessage(
+                    { id: 'administration.bulk.deleteConfirm' },
+                    { count: selected.length },
+                  )}
+                  description={intl.formatMessage({ id: 'user.delete.description' })}
+                  onConfirm={async () => {
+                    const targets = selected.filter(
+                      (user) => (user.role ?? rolesByID.get(user.roleID))?.root !== true,
+                    );
+                    for (const user of targets) await remove.mutateAsync(user);
+                    clear();
+                  }}
+                >
+                  <Button danger size="small" loading={remove.isPending}>
+                    {intl.formatMessage({ id: 'administration.bulk.delete' })}
+                  </Button>
+                </Popconfirm>
+              )
+            : undefined
+        }
         toolbar={
-          canCreate ? (
-            <Button type="primary" onClick={() => openEditor('create')}>
-              {intl.formatMessage({ id: 'user.create.action' })}
+          <>
+            <Button
+              icon={<DownloadOutlined aria-hidden />}
+              loading={exporting}
+              onClick={() => void exportUsers()}
+            >
+              {intl.formatMessage({ id: 'actions.export' })}
             </Button>
-          ) : null
+            {canCreate ? (
+              <Button
+                icon={<PlusOutlined aria-hidden />}
+                type="primary"
+                onClick={() => openEditor('create')}
+              >
+                {intl.formatMessage({ id: 'user.create.action' })}
+              </Button>
+            ) : null}
+          </>
         }
       />
-      <Modal
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -319,7 +527,7 @@ export default function UserManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'user.create.title' : 'user.edit.title',
         })}
-        width={720}
+        size="md"
         onCancel={() => {
           setEditing(undefined);
           form.resetFields();
@@ -455,8 +663,8 @@ export default function UserManagement({
             />
           </Form.Item>
         </Form>
-      </Modal>
-      <Modal
+      </FormModal>
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={resetPassword.isPending}
@@ -525,7 +733,7 @@ export default function UserManagement({
             <Input.Password autoComplete="new-password" />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </>
   );
 }

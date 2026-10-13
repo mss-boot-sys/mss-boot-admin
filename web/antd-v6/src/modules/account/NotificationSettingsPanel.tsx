@@ -73,7 +73,7 @@ export default function NotificationSettingsPanel() {
           onClose={() => setMutationError(undefined)}
         />
       ) : null}
-      <ul className="m-0 list-none divide-y divide-[var(--mss-color-split)] p-0">
+      <ul className="m-0 list-none divide-y divide-split p-0">
         {settingKeys.map((key) => (
           <li className="flex items-center justify-between gap-4 py-4" key={key}>
             <div>

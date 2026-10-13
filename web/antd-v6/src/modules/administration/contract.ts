@@ -12,6 +12,9 @@ export interface AdministrationListParams {
   pageSize: AdminPageSize;
   name?: string;
   status?: AdministrationStatusFilter;
+  /** Users only: exact role / department filter chips. */
+  roleID?: string;
+  departmentID?: string;
 }
 
 export interface AdministrationPage<T> {

@@ -1,19 +1,19 @@
 import ApartmentOutlined from '@ant-design/icons/ApartmentOutlined';
 import FileTextOutlined from '@ant-design/icons/FileTextOutlined';
+import InfoCircleOutlined from '@ant-design/icons/InfoCircleOutlined';
 import MenuOutlined from '@ant-design/icons/MenuOutlined';
 import SafetyCertificateOutlined from '@ant-design/icons/SafetyCertificateOutlined';
 import SettingOutlined from '@ant-design/icons/SettingOutlined';
 import SlidersOutlined from '@ant-design/icons/SlidersOutlined';
 import TeamOutlined from '@ant-design/icons/TeamOutlined';
 import UserOutlined from '@ant-design/icons/UserOutlined';
-import { ProCard } from '@ant-design/pro-components';
 import MonitorOverview from '@mss-admin-core/modules/monitor/MonitorOverview';
 import { hasPermission } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { WorkplaceContributions } from '@mss-admin-core/shared/workplace/WorkplaceContributions';
 import { Link, useIntl, useModel } from '@umijs/max';
-import { Avatar, Button, Col, Row, Space, Tag, Typography } from 'antd';
+import { Avatar, Col, Row, Space, Tooltip, Typography } from 'antd';
 
 export default function WorkplacePage() {
   const intl = useIntl();
@@ -72,7 +72,7 @@ export default function WorkplacePage() {
   ].filter((item) => item.visible);
 
   return (
-    <PageContainer
+    <PageShell
       content={
         <Space>
           <Avatar src={currentUser?.avatar || undefined} icon={<UserOutlined />} />
@@ -81,34 +81,45 @@ export default function WorkplacePage() {
           </Typography.Text>
         </Space>
       }
-      extra={currentUser?.role?.name ? <Tag color="blue">{currentUser.role.name}</Tag> : undefined}
+      extra={
+        currentUser?.role?.name ? (
+          <span className="mss-pill">{currentUser.role.name}</span>
+        ) : undefined
+      }
       title={intl.formatMessage({ id: 'pages.workplace.greeting' }, { name: displayName })}
     >
       <WorkplaceContributions />
-      <ProCard
-        className="mb-4"
-        title={intl.formatMessage({ id: 'pages.workplace.quickLinks' })}
-        variant="outlined"
-      >
+      <section className="mss-surface p-5">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <h2 className="m-0 text-[15px] font-semibold">
+            {intl.formatMessage({ id: 'pages.workplace.quickLinks' })}
+          </h2>
+          <span className="text-xs text-fg-tertiary">
+            {intl.formatMessage({ id: 'pages.workplace.quickLinks.hint' })}
+          </span>
+        </div>
         <Row gutter={[12, 12]}>
           {quickLinks.map((item) => (
-            <Col key={item.path} xs={24} sm={12} lg={8} xl={6}>
-              <Link className="block" prefetch to={item.path}>
-                <Button block icon={item.icon} size="large">
-                  {item.label}
-                </Button>
+            <Col key={item.path} xs={12} sm={8} lg={6} xl={6}>
+              <Link className="mss-quick-link mss-lift mss-row-enter" prefetch to={item.path}>
+                <span aria-hidden className="mss-quick-link-icon">
+                  {item.icon}
+                </span>
+                <span className="truncate font-medium">{item.label}</span>
               </Link>
             </Col>
           ))}
         </Row>
-      </ProCard>
-      <ProCard
-        title={intl.formatMessage({ id: 'monitor.title' })}
-        tooltip={intl.formatMessage({ id: 'monitor.authorityNotice' })}
-        variant="outlined"
-      >
+      </section>
+      <section className="mss-surface p-5">
+        <h2 className="m-0 mb-4 flex items-center gap-2 text-[15px] font-semibold">
+          {intl.formatMessage({ id: 'monitor.title' })}
+          <Tooltip title={intl.formatMessage({ id: 'monitor.authorityNotice' })}>
+            <InfoCircleOutlined aria-hidden className="text-[13px] text-fg-quaternary" />
+          </Tooltip>
+        </h2>
         <MonitorOverview />
-      </ProCard>
-    </PageContainer>
+      </section>
+    </PageShell>
   );
 }

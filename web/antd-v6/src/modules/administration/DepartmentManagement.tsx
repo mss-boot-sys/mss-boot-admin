@@ -1,4 +1,6 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
+import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
   finishManagementRouteIntent,
   type ManagementRouteIntent,
@@ -13,18 +15,7 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import {
-  Alert,
-  App,
-  Button,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Popconfirm,
-  Select,
-  Space,
-} from 'antd';
+import { Alert, App, Button, Form, Input, InputNumber, Select } from 'antd';
 import { useMemo, useState } from 'react';
 import AdministrationTable, { AdministrationStatusTag } from './AdministrationTable';
 import { administrationAPI } from './api';
@@ -195,24 +186,29 @@ export default function DepartmentManagement({
       width: 190,
       fixed: 'right',
       render: (_, department) => (
-        <Space size="small">
-          {canEdit ? (
-            <Button size="small" type="link" onClick={() => openEditor(department)}>
-              {intl.formatMessage({ id: 'actions.edit' })}
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Popconfirm
-              description={intl.formatMessage({ id: 'department.delete.description' })}
-              title={intl.formatMessage({ id: 'department.delete.confirm' })}
-              onConfirm={() => remove.mutate(department)}
-            >
-              <Button danger size="small" type="link">
-                {intl.formatMessage({ id: 'actions.delete' })}
-              </Button>
-            </Popconfirm>
-          ) : null}
-        </Space>
+        <RowActions
+          primary={
+            canEdit && {
+              key: 'edit',
+              label: intl.formatMessage({ id: 'actions.edit' }),
+
+              onClick: () => openEditor(department),
+            }
+          }
+          more={[
+            canDelete && {
+              key: 'delete',
+              label: intl.formatMessage({ id: 'actions.delete' }),
+              danger: true,
+
+              confirm: {
+                title: intl.formatMessage({ id: 'department.delete.confirm' }),
+                description: intl.formatMessage({ id: 'department.delete.description' }),
+              },
+              onClick: () => remove.mutate(department),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -249,7 +245,7 @@ export default function DepartmentManagement({
           ) : null
         }
       />
-      <Modal
+      <FormModal
         destroyOnHidden
         forceRender
         confirmLoading={save.isPending}
@@ -264,7 +260,7 @@ export default function DepartmentManagement({
         title={intl.formatMessage({
           id: editing === 'create' ? 'department.create.title' : 'department.edit.title',
         })}
-        width={680}
+        size="md"
         onCancel={() => {
           setEditing(undefined);
           form.resetFields();
@@ -368,7 +364,7 @@ export default function DepartmentManagement({
             />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </>
   );
 }

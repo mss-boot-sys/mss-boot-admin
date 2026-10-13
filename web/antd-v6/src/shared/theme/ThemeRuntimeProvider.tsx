@@ -28,6 +28,7 @@ export function ThemeRuntimeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ConfigProvider
+      button={{ autoInsertSpace: false }}
       locale={intl.locale.toLowerCase().startsWith('en') ? enUS : zhCN}
       theme={createThemeConfig(runtime.resolved.settings)}
     >

@@ -2,7 +2,7 @@ import OnlineSessionsView from '@mss-admin-core/modules/session/OnlineSessionsVi
 import { onlineSessionPresentationRegistryEntry } from '@mss-admin-core/modules/session/tablePresentation';
 import { isRootIdentity } from '@mss-admin-core/shared/auth/access';
 import type { InitialState } from '@mss-admin-core/shared/auth/types';
-import { PageContainer } from '@mss-admin-core/shared/design-system/PageContainer';
+import { PageShell } from '@mss-admin-core/shared/design-system/PageShell';
 import { PageForbidden } from '@mss-admin-core/shared/design-system/PageState';
 import { usePagePresentation } from '@mss-admin-core/shared/presentation/runtime';
 import { useIntl, useModel } from '@umijs/max';
@@ -17,12 +17,12 @@ function OnlineSessionsPresentationPage({ initialState }: { initialState: Initia
   );
 
   return (
-    <PageContainer
+    <PageShell
       title={presentationRuntime.model.title}
       content={intl.formatMessage({ id: 'sessions.description' })}
     >
       <OnlineSessionsView presentationRuntime={presentationRuntime} />
-    </PageContainer>
+    </PageShell>
   );
 }
 

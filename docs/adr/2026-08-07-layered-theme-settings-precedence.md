@@ -65,7 +65,7 @@ default object.
 | Field | Code default | Accepted values |
 | --- | --- | --- |
 | `navTheme` | `light` | `light`, `realDark` |
-| `colorPrimary` | `#1677ff` | normalized six-digit hexadecimal color |
+| `colorPrimary` | `#3b5bfd` | normalized six-digit hexadecimal color |
 | `layout` | `mix` | `side`, `top`, `mix` |
 | `contentWidth` | `Fluid` | `Fluid`, `Fixed` |
 | `fixedHeader` | `false` | boolean |
