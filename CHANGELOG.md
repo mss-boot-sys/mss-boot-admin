@@ -6,6 +6,11 @@ tag namespaces.
 
 ## [Unreleased]
 
+### CI
+
+- Bump SHA-pinned `actions/setup-node` to v7.1.0 and
+  `actions/download-artifact` to v8.0.2 in CI and release workflows (#19).
+
 ### Module generator
 
 - Generated v6 pages use `RowActions` (Edit + ⋯ menu) with config-driven

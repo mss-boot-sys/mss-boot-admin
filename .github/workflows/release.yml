@@ -156,7 +156,7 @@ jobs:
           tools/install
           tools/release
     - name: Download all artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
     - name: Assemble release packages
       env:
         RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
@@ -339,7 +339,7 @@ jobs:
       run: |
         python3 tools/release/verify_publication.py --component root
     - name: Download release archives
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
       with:
         name: release-packages-${{ needs.metadata.outputs.version }}
         path: release-assets
