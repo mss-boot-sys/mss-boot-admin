@@ -6,6 +6,8 @@ import type { ReactNode } from 'react';
 export interface RowAction {
   key: string;
   label: ReactNode;
+  /** Stable accessible name when `label` is operator-configurable. */
+  ariaLabel?: string;
   onClick: () => void;
   disabled?: boolean;
   danger?: boolean;
@@ -45,7 +47,13 @@ export function RowActions({
   return (
     <div className="flex items-center gap-1">
       {primary ? (
-        <Button disabled={primary.disabled} size="small" type="link" onClick={() => run(primary)}>
+        <Button
+          aria-label={primary.ariaLabel}
+          disabled={primary.disabled}
+          size="small"
+          type="link"
+          onClick={() => run(primary)}
+        >
           {primary.label}
         </Button>
       ) : null}
@@ -56,6 +64,7 @@ export function RowActions({
             items: items.map((item) => ({
               key: item.key,
               label: item.label,
+              'aria-label': item.ariaLabel,
               danger: item.danger,
               disabled: item.disabled,
             })),

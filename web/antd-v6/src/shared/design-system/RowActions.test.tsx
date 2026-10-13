@@ -48,4 +48,18 @@ describe('RowActions', () => {
     fireEvent.click(screen.getByRole('button', { name: /OK/ }));
     await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
   });
+
+  it('keeps stable accessible names when labels are operator-configured', async () => {
+    render(
+      <App>
+        <RowActions
+          primary={{ key: 'edit', ariaLabel: 'Edit', label: '修改', onClick: vi.fn() }}
+          more={[{ key: 'detail', ariaLabel: 'Details', label: '查看', onClick: vi.fn() }]}
+        />
+      </App>,
+    );
+    expect(screen.getByRole('button', { name: 'Edit' }).textContent).toContain('修改');
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    expect(await screen.findByRole('menuitem', { name: 'Details' })).toBeTruthy();
+  });
 });

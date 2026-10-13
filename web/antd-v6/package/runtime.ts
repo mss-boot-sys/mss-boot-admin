@@ -26,7 +26,7 @@ export {
   PageForbidden,
   PageLoading,
 } from '../src/shared/design-system/PageState';
-export { RowActions } from '../src/shared/design-system/RowActions';
+export { type RowAction, RowActions } from '../src/shared/design-system/RowActions';
 export { StatCard, StatGrid } from '../src/shared/design-system/StatCard';
 export { StatusBadge } from '../src/shared/design-system/StatusBadge';
 export { TableSettings } from '../src/shared/design-system/TableSettings';

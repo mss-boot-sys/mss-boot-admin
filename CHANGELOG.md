@@ -6,6 +6,12 @@ tag namespaces.
 
 ## [Unreleased]
 
+### Module generator
+
+- Generated v6 pages use `RowActions` (Edit + ⋯ menu) with config-driven
+  labels/order; templates bumped to `1.3.0-frontend-v6.8` / `1.3.0-e2e-v6.10`
+  and generated e2e opens the ⋯ menu for secondary actions.
+
 ### Admin API
 
 - Add root-only `GET /admin/api/user/overview?ids=` (route contract

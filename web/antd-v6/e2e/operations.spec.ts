@@ -179,7 +179,7 @@ test('@operations bounded operational pages work through the browser contract', 
     );
     await page.goto('/log');
     expect((await loginLogs).ok()).toBe(true);
-    await expect(page.getByText('Logs', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Logs', exact: true })).toBeVisible();
     const runtimeLogs = page.waitForResponse(
       (response) =>
         response.request().method() === 'GET' &&
