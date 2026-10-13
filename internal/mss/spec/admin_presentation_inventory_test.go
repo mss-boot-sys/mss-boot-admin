@@ -814,9 +814,9 @@ func TestAdminPresentationPageInventoryClosesCompiledRouteDeclarations(t *testin
 	}
 
 	wantSourceHashes := map[string]string{
-		"web/antd-v6/package/core-routes.cjs":    "54d2b20f6cd48889da202f75bad989edf8610fb6a96b9a07357f17cd34dca7de",
-		"web/antd-v6/config/routes.generated.ts": "e6b670e37ea6133400fbf8d7283f7242e8baed4ab799512158064111af9726b9",
-		"web/antd-v6/src/generated/routes.ts":    "bc6d132bb48fa1af81522b0ad58c08d2a9c32ebe81f16ede807be91f6d87899a",
+		"web/antd-v6/package/core-routes.cjs":    "1b2de3332e04b4a73682b9ffc1db79924a6c9f3638cbff379e2c412ea5fbecee",
+		"web/antd-v6/config/routes.generated.ts": "78f2055a804939a681bd527659cde4ec8afbca59a2b240e9ed9a582e44954b8d",
+		"web/antd-v6/src/generated/routes.ts":    "13ac582cbbfbbdb61b68be832f4f3fadceb36b09631391ef437bc0942cba2522",
 	}
 	for sourcePath, wantHash := range wantSourceHashes {
 		sum := sha256.Sum256(readRepositoryFile(t, repositoryRoot, sourcePath))

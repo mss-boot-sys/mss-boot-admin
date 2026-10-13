@@ -30,7 +30,7 @@ const (
 	moduleTemplateRevision       = "1.3.0-fullstack.2"
 	backendTemplateRevision      = "1.3.0-backend.2"
 	instructionsTemplateRevision = "1.3.0-module-instructions.1"
-	frontendV6TemplateRevision   = "1.3.0-frontend-v6.6"
+	frontendV6TemplateRevision   = "1.3.0-frontend-v6.7"
 	docsTemplateRevision         = "1.3.7-docs.2"
 	e2eV6TemplateRevision        = "1.3.0-e2e-v6.9"
 	presentationTemplateRevision = "1.3.7-presentation-v2.2"

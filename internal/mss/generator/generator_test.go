@@ -663,7 +663,8 @@ func TestGenerateAntDV6TargetIsConfinedAndIdempotent(t *testing.T) {
 	for path, fragments := range map[string][]string{
 		"web/antd-v6/src/generated/modules/supplier/SupplierPage.tsx": {
 			"@tanstack/react-query",
-			"PageContainer",
+			"PageShell",
+			"ListSurface",
 			"destroyOnHidden",
 			"form: 'supplier-editor'",
 			"htmlType: 'submit'",
