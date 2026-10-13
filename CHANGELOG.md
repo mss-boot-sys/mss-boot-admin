@@ -6,6 +6,11 @@ tag namespaces.
 
 ## [Unreleased]
 
+### CI
+
+- Bump SHA-pinned `actions/setup-node` to v7.1.0 and
+  `actions/download-artifact` to v8.0.2 in CI and release workflows (#19).
+
 No unreleased changes are recorded.
 
 ## [v1.3.9] - 2026-10-11
