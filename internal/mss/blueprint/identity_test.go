@@ -349,8 +349,8 @@ func TestDecodeCanonicalFoundationReleasePolicy(t *testing.T) {
 	if policy.Spec.NextPublicVersion != "v1.4.0" || policy.Spec.DistributionVersion != "v1.4.0" || policy.Spec.PublicationWorkflowsReady == nil || !*policy.Spec.PublicationWorkflowsReady {
 		t.Fatalf("canonical release target = %#v, want v1.4.0 with publication enabled", policy.Spec)
 	}
-	if policy.Spec.CurrentStableVersion != "v1.3.9" || (policy.Spec.CurrentStableCommit != "pending" && !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit)) {
-		t.Fatalf("canonical current stable must identify the first v1.3.9 publication: %#v", policy.Spec)
+	if policy.Spec.CurrentStableVersion != "v1.4.0" || (policy.Spec.CurrentStableCommit != "pending" && !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit)) {
+		t.Fatalf("canonical current stable must identify the v1.4.0 publication: %#v", policy.Spec)
 	}
 	if policy.Spec.LegacyRepository != "mss-boot-io/mss-boot-admin" || policy.Spec.LegacyStableVersion != "v1.3.8" {
 		t.Fatalf("legacy publication history missing: %#v", policy.Spec)
