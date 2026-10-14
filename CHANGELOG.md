@@ -48,6 +48,16 @@ tag namespaces.
   `middleware.SharesAdminSigningKey` reports key sharing as a boolean only.
   Acceptance: `aud=portal`/`aud=user` tokens signed with the same key are
   rejected on every non-public route of the P1 baseline route table.
+- Upgrade note for strict mode: browser sessions refresh with their original
+  claims, so pre-upgrade sessions stay aud-less until `auth.maxRefresh`
+  (default `2160h`) plus `auth.timeout` (default `12h`) have elapsed since the
+  upgrade, unless sessions are revoked or `auth.key` is rotated. PATs default
+  to ~100-year validity and must be reissued (`PUT
+  /admin/api/user-auth-token/{id}/refresh`, Account settings → Access tokens)
+  or revoked before enabling `auth.requireAdminAudience`. Compatibility mode
+  counts accepted aud-less tokens (`middleware.LegacyAudienceTokenCounts`)
+  and logs a rate-limited WARN (once per minute, kind and totals only). See
+  the security baseline docs.
 
 ### Framework
 

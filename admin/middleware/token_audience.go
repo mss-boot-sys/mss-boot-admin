@@ -2,7 +2,10 @@ package middleware
 
 import (
 	"crypto/subtle"
+	"log/slog"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 
@@ -83,7 +86,11 @@ func AdminTokenAudienceAccepted(claims jwt.MapClaims) bool {
 		}
 	}
 	if !hasAud || len(audiences) == 0 {
-		return !config.Cfg.Auth.RequireAdminAudience
+		if config.Cfg.Auth.RequireAdminAudience {
+			return false
+		}
+		recordLegacyAudienceToken(claims)
+		return true
 	}
 	matched := 0
 	for _, audience := range audiences {
@@ -101,4 +108,38 @@ func SharesAdminSigningKey(key []byte) bool {
 		return false
 	}
 	return subtle.ConstantTimeCompare(key, adminKey) == 1
+}
+
+var (
+	legacySessionTokens atomic.Int64
+	legacyPATokens      atomic.Int64
+	legacyLastLog       atomic.Int64
+)
+
+// LegacyAudienceTokenCounts reports how many tokens without aud were accepted
+// in compatibility mode since start, split into browser sessions and PATs.
+// Operators use it (and the WARN log) to decide when strict mode is safe.
+func LegacyAudienceTokenCounts() (sessions, personalAccessTokens int64) {
+	return legacySessionTokens.Load(), legacyPATokens.Load()
+}
+
+const legacyAudienceLogInterval = time.Minute
+
+func recordLegacyAudienceToken(claims jwt.MapClaims) {
+	kind := "session"
+	if pat, _ := claims["personAccessToken"].(string); pat != "" {
+		kind = "pat"
+		legacyPATokens.Add(1)
+	} else {
+		legacySessionTokens.Add(1)
+	}
+	now := time.Now().UnixNano()
+	last := legacyLastLog.Load()
+	if now-last < int64(legacyAudienceLogInterval) || !legacyLastLog.CompareAndSwap(last, now) {
+		return
+	}
+	sessions, pats := LegacyAudienceTokenCounts()
+	// Low-cardinality, rate-limited (once per minute); no token or user data.
+	slog.Warn("accepted legacy admin token without aud (compatibility mode)",
+		"kind", kind, "legacy_sessions_total", sessions, "legacy_pats_total", pats)
 }
