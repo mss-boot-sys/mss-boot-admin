@@ -37,7 +37,7 @@ jobs:
         python3 tools/release/verify_publication.py --component root
     - name: Verify generated-project module sums against sum.golang.org
       run: |
-        python3 tools/release/check_published_module_sums.py
+        python3 tools/release/check_published_module_sums.py --strict
   backend-build:
     needs: metadata
     runs-on: ubuntu-24.04
