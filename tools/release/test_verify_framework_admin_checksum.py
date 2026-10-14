@@ -40,7 +40,7 @@ class FrameworkAdminChecksumTest(unittest.TestCase):
         self.assertEqual(replacements, 1, "fixture must set its own stable identity")
         # These fixtures model the v1.3.9 first direct release, independent of
         # the repository's current reviewed target.
-        for field in ("nextPublicVersion", "distributionVersion"):
+        for field in ("nextPublicVersion", "distributionVersion", "currentStableVersion"):
             policy, replacements = re.subn(
                 rf"^  {field}: .+$", f"  {field}: v1.3.9", policy, flags=re.MULTILINE
             )
