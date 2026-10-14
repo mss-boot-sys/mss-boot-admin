@@ -8,6 +8,11 @@ and the root changelog, not as a current release surface.
 
 No unreleased changes are recorded.
 
+## [web/antd-v6/v1.5.0] - 2026-10-14
+
+- Coordinated version with the v1.5.0 Admin Distribution; no Admin Web
+  source changes.
+
 ## [web/antd-v6/v1.4.0] - 2026-10-14
 
 - Default theme changed from dark to light; saved personal themes are kept.

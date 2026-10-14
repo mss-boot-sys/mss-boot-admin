@@ -465,10 +465,10 @@ github.com/montanaflynn/stats v0.9.0 h1:tsBJ0RXwph9BmAuFoCmqGv6e8xa0MENQ8m0ptKq2
 github.com/montanaflynn/stats v0.9.0/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt6R8Bnaayow=
 github.com/mss-boot-io/redisqueue/v2 v2.0.0-20240222064111-d36e396df7f9 h1:/YgpHiqgrxz/0+mKoETXu21c6/fyDt7/j9bdD3UkbdU=
 github.com/mss-boot-io/redisqueue/v2 v2.0.0-20240222064111-d36e396df7f9/go.mod h1:f/sISkwvecPq37zygQzWNj5ntJoP/jcoK0kPIjFTWFI=
-github.com/mss-boot-sys/mss-boot-admin/admin v1.4.0 h1:C7ZkgszEU7hY9F0oqc5/JoaXrDt9Lufs4oSypCAmfAk=
-github.com/mss-boot-sys/mss-boot-admin/admin v1.4.0/go.mod h1:shPrJbhPnZmksCnd1hWc5JDKen849OwyckN+ARkrnqg=
-github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.4.0 h1:uiXd3jaDvWwNH8bTXdr6zwkMnVOQ2E3aYY2ApT9+L1w=
-github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.4.0/go.mod h1:8zdG8z5Iiq1I/3+tlEauatjrJhhXRXQzfWm0E0CEZ/c=
+github.com/mss-boot-sys/mss-boot-admin/admin v1.5.0 h1:lgMtwmHW1bYO/r+4RKUElC+uwel266OMYuHryQmlNqw=
+github.com/mss-boot-sys/mss-boot-admin/admin v1.5.0/go.mod h1:FUFM57YFlIwbcy8Sr3jPmjWrGUT+n27mnrSwDKxc270=
+github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.5.0 h1:MWZqLw0I3nAxjCv1l3FINVBWAoBmhpQLCrk630aHB3c=
+github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.5.0/go.mod h1:8zdG8z5Iiq1I/3+tlEauatjrJhhXRXQzfWm0E0CEZ/c=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=

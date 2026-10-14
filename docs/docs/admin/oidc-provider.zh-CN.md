@@ -4,7 +4,7 @@ title: 原生 OIDC Provider 与 Proxmox VE
 
 # 原生 OIDC Provider 与 Proxmox VE
 
-本文对应 `mss-boot-sys/mss-boot-admin` v1.4.0 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
+本文对应 `mss-boot-sys/mss-boot-admin` v1.5.0 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
 
 平台继续管理账号、身份和策略，不引入独立身份服务。核心认证复用密码校验、浏览器 cookie、数据库会话、账号禁用和审计。`admin/oidc` 使用已有的 JWT 库及 Go 密码学实现，独立签发 OIDC 凭证，不向 PVE 交付 Admin 自身 JWT。
 
@@ -87,7 +87,7 @@ PVE 待处理登录 state 位于发起节点本地。反向代理或负载均衡
 - 普通 `acr_values` 作为可选偏好接受，包括未知值和空格分隔的多个值；当前忽略这些偏好，不触发 MFA 或认证等级选择。ID Token 不返回 `acr`、`amr`，也不会把请求值当作已验证事实写入令牌。
 - request/request_uri、动态注册参数、claims 参数（包括 essential ACR 要求）和 id_token_hint 仍未实现，明确拒绝，不发布虚假支持元数据。`select_account` 通过重新登录选择账号，不维护另一套多账号选择器。本实现不是 OpenID 认证声明。
 
-依据 [Core 15.1](https://openid.net/specs/openid-connect-core-1_0.html#OP_mandatory) 和 [5.5.1.1](https://openid.net/specs/openid-connect-core-1_0.html#acrSemantics)，普通 `acr_values` 偏好本身不会导致有效登录失败。例如 `acr_values=urn:example:mfa%20urn:mss:password` 可继续授权码流程，但 ID Token 不声称满足任一等级，也不保证 MFA。通过 `claims` 请求 `acr.essential=true` 仍返回 `invalid_request`，不会静默宣称满足强制认证强度。参数长度和唯一性、会话、应用授权、prompt/max_age、精确回调、nonce、PKCE 校验继续生效。此兼容修复纳入 v1.4.0，但不代表已完成真实 PVE 验收。
+依据 [Core 15.1](https://openid.net/specs/openid-connect-core-1_0.html#OP_mandatory) 和 [5.5.1.1](https://openid.net/specs/openid-connect-core-1_0.html#acrSemantics)，普通 `acr_values` 偏好本身不会导致有效登录失败。例如 `acr_values=urn:example:mfa%20urn:mss:password` 可继续授权码流程，但 ID Token 不声称满足任一等级，也不保证 MFA。通过 `claims` 请求 `acr.essential=true` 仍返回 `invalid_request`，不会静默宣称满足强制认证强度。参数长度和唯一性、会话、应用授权、prompt/max_age、精确回调、nonce、PKCE 校验继续生效。此兼容修复纳入 v1.5.0，但不代表已完成真实 PVE 验收。
 
 UserInfo 每次重新核验账号与角色有效性、未撤销会话、client 版本和应用授权。禁用账号/client、撤销平台会话或移除应用访问可阻止 Provider 后续请求，但已签发 ID Token 在到期前仍可通过密码学验证。PVE 自己签发和续期 ticket/CSRF，**平台退出或禁用不会天然立即终止所有已有 PVE 会话**。紧急处置需使用 PVE 自身的会话和访问控制。
 

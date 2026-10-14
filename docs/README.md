@@ -1,6 +1,6 @@
 # mss-boot documentation
 
-This source tree documents **v1.4.0**, the current coordinated release under
+This source tree documents **v1.5.0**, the current coordinated release under
 `mss-boot-sys/mss-boot-admin` (v1.3.9 was the first). Versions **v1.3.8** and earlier were published under
 `mss-boot-io`; their release pages and evidence remain historical records.
 
@@ -8,7 +8,7 @@ The Distribution uses the new Go module paths and `@mss-boot-sys/admin-web` on
 GitHub Packages only. Release readiness is established locally on the exact
 merged-main commit; tag workflows build and publish artifacts. Docs keeps the
 existing `https://docs.mss-boot-io.top` domain and is published through
-`docs/v1.4.0`. Source changes alone do not prove deployment: verify the public
+`docs/v1.5.0`. Source changes alone do not prove deployment: verify the public
 `/release.json` and browser-visible pages.
 
 Start at [`docs/getting-started`](./docs/getting-started/index.md) for the human
@@ -35,7 +35,7 @@ Within the public site:
 - `docs/admin/`: current Admin configuration, security, and operations;
 - `docs/agent/`: human-readable Agent collaboration and contract navigation;
 - `docs/architecture/`: current architecture summaries;
-- `docs/releases/`: the v1.4.0 release guide, old-organization release records, and a clearly separated read-only archive.
+- `docs/releases/`: the v1.5.0 release guide, old-organization release records, and a clearly separated read-only archive.
 
 Prompt dumps, one-off plans, test snapshots, and duplicate tutorials are not
 documentation inputs.
@@ -51,5 +51,5 @@ python3 tools/docs/check_current_docs.py
 corepack pnpm@9.15.9 --dir docs build
 ```
 
-The drift check verifies the v1.4.0 repository, version and registry boundaries, operational onboarding contracts, the human/Agent audience split,
+The drift check verifies the v1.5.0 repository, version and registry boundaries, operational onboarding contracts, the human/Agent audience split,
 navigation targets, internal links, archive banners, and ADR status markers.

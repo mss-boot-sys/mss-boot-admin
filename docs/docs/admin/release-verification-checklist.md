@@ -10,7 +10,7 @@ keywords: [admin release checklist smoke regression]
 
 ## 使用方式
 
-本清单用于 v1.4.0 新仓库首发与业务 Thin Host 部署。发布变更先通过 PR 合入 `main`，
+本清单用于 v1.5.0 新仓库首发与业务 Thin Host 部署。发布变更先通过 PR 合入 `main`，
 再从精确且 tracked-clean 的提交执行一次本地完整验证。正式标签流水线仅校验来源、构建
 并发布对应制品，不重复宽泛质量矩阵，不依赖托管候选预览或稳定晋升轮次。
 
@@ -84,5 +84,5 @@ npm 包只发布 GitHub Packages；Docs 源码与站点必须同时对齐。源�
 - [集成测试指南](/admin/integration-test-guide)
 - [v1.3.5 不可变部分发布记录](/releases/v1-3-5)
 - [v1.3.6 不可变部分发布记录](/releases/v1-3-6)
-- [v1.4.0 发行版说明](/releases/v1-3-9)
-- [v1.4.0 快速开始](/getting-started)
+- [v1.5.0 发行版说明](/releases/v1-4-0)
+- [v1.5.0 快速开始](/getting-started)

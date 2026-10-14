@@ -20,10 +20,10 @@ SPEC.loader.exec_module(CHECKSUM)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_FRAMEWORK_SUM = "h1:uiXd3jaDvWwNH8bTXdr6zwkMnVOQ2E3aYY2ApT9+L1w="
+EXPECTED_FRAMEWORK_SUM = "h1:MWZqLw0I3nAxjCv1l3FINVBWAoBmhpQLCrk630aHB3c="
 EXPECTED_FRAMEWORK_GO_MOD_SUM = "h1:8zdG8z5Iiq1I/3+tlEauatjrJhhXRXQzfWm0E0CEZ/c="
-EXPECTED_ADMIN_SUM = "h1:C7ZkgszEU7hY9F0oqc5/JoaXrDt9Lufs4oSypCAmfAk="
-EXPECTED_ADMIN_GO_MOD_SUM = "h1:shPrJbhPnZmksCnd1hWc5JDKen849OwyckN+ARkrnqg="
+EXPECTED_ADMIN_SUM = "h1:lgMtwmHW1bYO/r+4RKUElC+uwel266OMYuHryQmlNqw="
+EXPECTED_ADMIN_GO_MOD_SUM = "h1:FUFM57YFlIwbcy8Sr3jPmjWrGUT+n27mnrSwDKxc270="
 
 
 class FrameworkAdminChecksumTest(unittest.TestCase):

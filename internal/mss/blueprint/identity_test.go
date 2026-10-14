@@ -346,8 +346,8 @@ func TestDecodeCanonicalFoundationReleasePolicy(t *testing.T) {
 	if policy.Spec.PublicationMode != "direct" || policy.Spec.DocsTagMutable == nil || !*policy.Spec.DocsTagMutable || policy.Spec.StablePromotionReady != nil || len(policy.Spec.ImmutableStoppedTrains) != 0 {
 		t.Fatalf("canonical direct release controls = %#v", policy.Spec)
 	}
-	if policy.Spec.NextPublicVersion != "v1.4.0" || policy.Spec.DistributionVersion != "v1.4.0" || policy.Spec.PublicationWorkflowsReady == nil || !*policy.Spec.PublicationWorkflowsReady {
-		t.Fatalf("canonical release target = %#v, want v1.4.0 with publication enabled", policy.Spec)
+	if policy.Spec.NextPublicVersion != "v1.5.0" || policy.Spec.DistributionVersion != "v1.5.0" || policy.Spec.PublicationWorkflowsReady == nil || !*policy.Spec.PublicationWorkflowsReady {
+		t.Fatalf("canonical release target = %#v, want v1.5.0 with publication enabled", policy.Spec)
 	}
 	if policy.Spec.CurrentStableVersion != "v1.4.0" || (policy.Spec.CurrentStableCommit != "pending" && !fullCommitPattern.MatchString(policy.Spec.CurrentStableCommit)) {
 		t.Fatalf("canonical current stable must identify the v1.4.0 publication: %#v", policy.Spec)

@@ -32,6 +32,8 @@ admin/config/application-*
 !admin/config/application-e2e.yml
 !admin/config/application-local.yml
 *.db
+*.db-shm
+*.db-wal
 
 # Runtime and build output
 bin/

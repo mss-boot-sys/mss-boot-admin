@@ -12,13 +12,13 @@ spec:
   foundationVersion: 0.1.0
   distribution:
     name: mss-boot-admin
-    version: v1.4.0
+    version: v1.5.0
     backend:
       module: github.com/mss-boot-sys/mss-boot-admin/admin
-      version: v1.4.0
+      version: v1.5.0
     frontend:
       package: "@mss-boot-sys/admin-web"
-      version: 1.4.0
+      version: 1.5.0
   repositoryLayout:
     kind: foundation
     backend: admin
