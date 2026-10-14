@@ -6,7 +6,29 @@ tag namespaces.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+Planned v1.5.1 patch release for issues found during downstream v1.5.0
+acceptance.
+
+### Fixed
+
+- `mss new app` v1.5.0 wrote `admin v1.5.0 h1:lgMtwmHW…` into the generated
+  `go.sum`, but the published module is `h1:4a+E4pf3…`, so new projects failed
+  `go mod download` with a checksum mismatch. The pinned sum was computed from
+  the release-candidate tree before the same release PR deleted stray SQLite
+  WAL/SHM files from `admin/`, and was never re-verified after that change. The
+  template now pins the published sum. Workaround for existing v1.5.0 projects:
+  replace that line, or delete it and run `go mod tidy`.
+- `@mss-boot-sys/admin-web` `PageContainer` accepts `subTitle` again as a
+  deprecated alias of `content` (see the Admin Web changelog).
+
+### Changed
+
+- New `tools/release/check_published_module_sums.py` compares every pinned
+  Foundation module sum in `templates/application/go.sum` and `admin/go.sum`
+  with sum.golang.org. It runs in Agent-native CI and blocks Root Release
+  (which publishes the `mss` CLI that embeds the template) on any mismatch.
+- `mss-admin-web build` treats the reference application's default bundle
+  ceilings as warnings in downstream hosts unless the host sets its own.
 
 ## [v1.5.0] - 2026-10-14
 
