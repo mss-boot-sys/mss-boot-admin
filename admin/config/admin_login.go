@@ -3,7 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strings"
+	"time"
 )
 
 // Supported external identity providers for the Admin login allowlist. Local
@@ -38,6 +40,64 @@ const (
 type AdminLogin struct {
 	Allowlist    []AdminLoginAllowEntry `yaml:"allowlist" json:"allowlist"`
 	SecondFactor string                 `yaml:"secondFactor" json:"secondFactor"`
+	// RateLimit bounds sign-in attempts per client IP. Zero disables it.
+	RateLimit AdminLoginRateLimit `yaml:"rateLimit" json:"rateLimit"`
+	// ClientIP decides which client address the login rate limiter and the
+	// login audit use. It does not change gin's global ClientIP behaviour.
+	ClientIP AdminLoginClientIP `yaml:"clientIP" json:"clientIP"`
+}
+
+// AdminLoginClientIP is the trusted-proxy rule for login rate limiting and
+// login audit addresses.
+//
+// TrustedProxies lists proxy CIDRs or IPs. When empty it inherits
+// application.trustedProxies (itself empty by default), so with no
+// configuration the direct peer address (RemoteAddr) is used and forwarding
+// headers are ignored. Header optionally names one client-IP header such as
+// CF-Connecting-IP; when empty, X-Forwarded-For then X-Real-IP are used.
+// Headers are honoured only when the direct peer is a trusted proxy.
+type AdminLoginClientIP struct {
+	TrustedProxies []string `yaml:"trustedProxies" json:"trustedProxies"`
+	Header         string   `yaml:"header" json:"header"`
+}
+
+// ParseTrustedProxies parses CIDRs and bare IPs; any invalid entry fails.
+func ParseTrustedProxies(entries []string) ([]*net.IPNet, error) {
+	networks := make([]*net.IPNet, 0, len(entries))
+	for index, entry := range entries {
+		value := strings.TrimSpace(entry)
+		if !strings.Contains(value, "/") {
+			ip := net.ParseIP(value)
+			if ip == nil {
+				return nil, fmt.Errorf("trusted proxy [%d] %q is not a valid IP or CIDR", index, entry)
+			}
+			bits := 128
+			if ip.To4() != nil {
+				ip, bits = ip.To4(), 32
+			}
+			networks = append(networks, &net.IPNet{IP: ip, Mask: net.CIDRMask(bits, bits)})
+			continue
+		}
+		_, network, err := net.ParseCIDR(value)
+		if err != nil {
+			return nil, fmt.Errorf("trusted proxy [%d] %q is not a valid IP or CIDR", index, entry)
+		}
+		networks = append(networks, network)
+	}
+	return networks, nil
+}
+
+// AdminLoginRateLimit allows Limit sign-in attempts per client IP per Window
+// on the password login and OAuth callback endpoints. The built-in store is
+// process-local; multi-replica deployments need a shared keyedlimit store.
+type AdminLoginRateLimit struct {
+	Limit  int           `yaml:"limit" json:"limit"`
+	Window time.Duration `yaml:"window" json:"window"`
+}
+
+// Enabled reports whether login rate limiting is configured.
+func (r AdminLoginRateLimit) Enabled() bool {
+	return r.Limit != 0 || r.Window != 0
 }
 
 // AdminLoginAllowEntry matches one external identity.
@@ -111,6 +171,15 @@ func (a AdminLogin) Validate() error {
 		return errors.New("auth.adminLogin.secondFactor: only \"off\" is supported in this release; TOTP ships separately")
 	default:
 		return fmt.Errorf("auth.adminLogin.secondFactor must be off, optional or required, got %q", a.SecondFactor)
+	}
+	if a.RateLimit.Enabled() && (a.RateLimit.Limit <= 0 || a.RateLimit.Window <= 0) {
+		return errors.New("auth.adminLogin.rateLimit requires a positive limit and window")
+	}
+	if _, err := ParseTrustedProxies(a.ClientIP.TrustedProxies); err != nil {
+		return fmt.Errorf("auth.adminLogin.clientIP.trustedProxies: %w", err)
+	}
+	if header := strings.TrimSpace(a.ClientIP.Header); header != "" && strings.ContainsAny(header, " :\t") {
+		return fmt.Errorf("auth.adminLogin.clientIP.header %q is not a valid header name", header)
 	}
 	for index, entry := range a.Allowlist {
 		provider := strings.ToLower(strings.TrimSpace(entry.Provider))
