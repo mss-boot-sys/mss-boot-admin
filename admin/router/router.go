@@ -142,6 +142,14 @@ func mountCoreRoutes(v1 *gin.RouterGroup, explicit ...response.Controller) {
 
 func mountController(v1 *gin.RouterGroup, current response.Controller) {
 	current.Other(v1.Group("", current.Handlers()...))
+	if current.Path() == "" {
+		// Model-less controllers (for example AppConfig, Log, Monitor, WS)
+		// contribute only explicit routes through Other. Their default
+		// provider actions have no resource and used to be mounted at the
+		// API root as GET/POST /admin/api and GET/PUT/DELETE /admin/api/:id
+		// dead stubs, some of them answering 501 without authentication.
+		return
+	}
 	e := v1.Group(current.Path(), current.Handlers()...)
 	if action := current.GetAction(response.Get); action != nil {
 		e.GET("/:"+current.GetKey(), action.Handler()...)
