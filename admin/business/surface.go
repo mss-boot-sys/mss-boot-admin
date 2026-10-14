@@ -189,6 +189,9 @@ type SurfaceRegistration struct {
 	Issuer        string
 	Authenticator SurfaceAuthenticator
 	CORS          SurfaceCORS
+	// CSRF opts the surface into core double-submit CSRF tokens for
+	// cookie-based sessions. Nil keeps the exact-Origin check only.
+	CSRF *SurfaceCSRF
 	// Middleware runs after authentication and CSRF, immediately before the
 	// route handlers. It cannot replace or reorder the core chain.
 	Middleware []gin.HandlerFunc
@@ -245,6 +248,11 @@ func validateSurface(surface SurfaceRegistration) error {
 			return fmt.Errorf("surface %s CORS origin %q is not an exact http(s) origin", name, origin)
 		}
 	}
+	if surface.CSRF != nil {
+		if err := validateSurfaceCSRF(*surface.CSRF); err != nil {
+			return fmt.Errorf("surface %s: %w", name, err)
+		}
+	}
 	for index, handler := range surface.Middleware {
 		if handler == nil {
 			return fmt.Errorf("surface %s middleware %d is nil", name, index)
@@ -284,6 +292,11 @@ func cloneSurface(surface SurfaceRegistration) SurfaceRegistration {
 	clone := surface
 	clone.CORS.AllowOrigins = browsersecurity.TrustedOrigins(surface.CORS.AllowOrigins)
 	clone.CORS.AllowHeaders = append([]string(nil), surface.CORS.AllowHeaders...)
+	if surface.CSRF != nil {
+		csrf := *surface.CSRF
+		csrf.Key = append([]byte(nil), surface.CSRF.Key...)
+		clone.CSRF = &csrf
+	}
 	clone.Middleware = append([]gin.HandlerFunc(nil), surface.Middleware...)
 	clone.Routes = make([]SurfaceRoute, len(surface.Routes))
 	for index, route := range surface.Routes {
@@ -338,6 +351,13 @@ func (r *Registry) MountSurfaces(root gin.IRouter, sink audit.Sink) (int, error)
 	mounted := 0
 	for _, registered := range entries {
 		for _, surface := range registered.surfaces {
+			if surface.CSRF != nil && surfaceCSRFKeyIsAdminKey(surface.CSRF.Key) {
+				return mounted, fmt.Errorf("surface %s: %w", surface.Name, errSurfaceCSRFAdminKey)
+			}
+		}
+	}
+	for _, registered := range entries {
+		for _, surface := range registered.surfaces {
 			mountSurface(root, surface, sink)
 			mounted++
 		}
@@ -353,9 +373,12 @@ func (r *Registry) MountSurfaces(root gin.IRouter, sink audit.Sink) (int, error)
 
 func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink) {
 	group := root.Group("/" + surface.Name + "/api")
-	group.Use(surfaceCORS(surface.CORS))
+	group.Use(surfaceCORS(surface.CORS, surfaceCSRFHeaderFor(surface.CSRF)))
 	group.Use(func(c *gin.Context) {
 		c.Set(surfaceAuditKey, surfaceAudit{surface: surface.Name, sink: sink})
+		if surface.CSRF != nil {
+			c.Set(surfaceCSRFKey, surfaceCSRFScope{surface: surface.Name, options: *surface.CSRF})
+		}
 		c.Next()
 	})
 	group.OPTIONS("/*path", func(c *gin.Context) { c.Status(http.StatusNoContent) })
@@ -364,14 +387,14 @@ func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink
 		if route.Category == SurfaceRouteAuthenticated {
 			chain = append(chain, surfaceAuthentication(surface))
 		}
-		chain = append(chain, surfaceCSRF(surface.CORS.AllowOrigins))
+		chain = append(chain, surfaceCSRFCheck(surface))
 		chain = append(chain, surface.Middleware...)
 		chain = append(chain, route.Handlers...)
 		group.Handle(route.Method, route.Path, chain...)
 	}
 }
 
-func surfaceCORS(policy SurfaceCORS) gin.HandlerFunc {
+func surfaceCORS(policy SurfaceCORS, csrfHeader string) gin.HandlerFunc {
 	configCors := cors.DefaultConfig()
 	configCors.AllowOrigins = append([]string(nil), policy.AllowOrigins...)
 	if len(configCors.AllowOrigins) == 0 {
@@ -383,10 +406,24 @@ func surfaceCORS(policy SurfaceCORS) gin.HandlerFunc {
 	} else {
 		configCors.AddAllowHeaders("Authorization")
 	}
+	if csrfHeader != "" && !surfaceHeaderListed(configCors.AllowHeaders, csrfHeader) {
+		// Cross-origin unsafe requests carry the double-submit header; without
+		// it the browser preflight fails before the core can verify the token.
+		configCors.AddAllowHeaders(csrfHeader)
+	}
 	if policy.MaxAge > 0 {
 		configCors.MaxAge = policy.MaxAge
 	}
 	return cors.New(configCors)
+}
+
+func surfaceHeaderListed(headers []string, name string) bool {
+	for _, header := range headers {
+		if strings.EqualFold(strings.TrimSpace(header), name) {
+			return true
+		}
+	}
+	return false
 }
 
 func abortSurface(c *gin.Context, status int, message string) {
@@ -428,39 +465,6 @@ func surfaceUnsafeMethod(method string) bool {
 		return false
 	default:
 		return true
-	}
-}
-
-// surfaceCSRF rejects unsafe browser requests unless they carry an exact
-// trusted Origin. The exemption is decided by the credential the core chain
-// actually verified, never by the shape of request headers:
-//
-//   - authenticated with a bearer credential: not subject to browser CSRF;
-//   - authenticated with a cookie credential: trusted Origin required;
-//   - public route (no principal): a request with no cookies and no Origin
-//     carries no ambient browser credential and passes; otherwise a trusted
-//     Origin is required.
-func surfaceCSRF(origins []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if !surfaceUnsafeMethod(c.Request.Method) {
-			c.Next()
-			return
-		}
-		origin := c.GetHeader("Origin")
-		if principal, ok := SurfacePrincipalFrom(c); ok {
-			if principal.Credential == SurfaceCredentialBearer {
-				c.Next()
-				return
-			}
-		} else if origin == "" && len(c.Request.Cookies()) == 0 {
-			c.Next()
-			return
-		}
-		if !browsersecurity.IsTrustedOrigin(origin, "", origins) {
-			abortSurface(c, http.StatusForbidden, "csrf validation failed")
-			return
-		}
-		c.Next()
 	}
 }
 

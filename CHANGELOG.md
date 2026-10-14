@@ -17,6 +17,16 @@ tag namespaces.
   registration. Mounting any surface (in `MountSurfaces` itself) makes Admin
   token audience strict. With no surface, Admin routes and behaviour are
   unchanged. See `docs/adr/2026-10-14-surface-security-chain.md`.
+- Opt-in core double-submit CSRF for cookie-based surface sessions
+  (`SurfaceRegistration.CSRF`, `business.SetSurfaceCSRFCookie`): token bound
+  to surface and session by HMAC-SHA256, `__Host-` cookie, constant-time
+  compare. Enforced whenever the request was cookie-authenticated (a missing
+  or empty session cookie is rejected with 403, never skipped); the CSRF key
+  may not equal the Admin auth key. Session cookies are read raw; duplicate,
+  empty or malformed values are rejected. The token header (default
+  `X-MSS-CSRF-Token`, configurable via `SurfaceCSRF.HeaderName`) is always
+  added to the surface CORS allowed headers.
+
 - Redacted business audit sink: `admin/business/audit` (`Sink`, `Event`,
   `Redacting`), `business.Runtime.Audit` and `business.RecordSurfaceEvent`.
   Events land in the operation audit log as `type=business`; tokens, OAuth
@@ -30,6 +40,8 @@ tag namespaces.
   pages under `/<surface>` in the single SPA, with closed options and route
   confinement. No extension leaves the configuration unchanged.
   See `docs/adr/2026-10-14-admin-web-extensions-mount-point.md`.
+
+
 
 ### Fixed
 
