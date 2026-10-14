@@ -23,6 +23,9 @@ type Auth struct {
 	Timeout        time.Duration  `yaml:"timeout" json:"timeout"`
 	MaxRefresh     time.Duration  `yaml:"maxRefresh" json:"maxRefresh"`
 	BrowserSession BrowserSession `yaml:"browserSession" json:"browserSession"`
+	// AdminLogin restricts which external identities may sign in to Admin.
+	// The zero value keeps v1.4.0 behaviour.
+	AdminLogin AdminLogin `yaml:"adminLogin" json:"adminLogin"`
 }
 
 const insecureDefaultAuthKey = "mss-boot-admin-secret"

@@ -6,6 +6,19 @@ tag namespaces.
 
 ## [Unreleased]
 
+### Security
+
+- Add the optional Admin login allowlist `auth.adminLogin.allowlist` for
+  external identities (GitHub strictly by numeric user id; `login` is an
+  optional label that is never matched, and login-only GitHub entries fail
+  startup; Lark by open id). No network resolution at startup. Empty by default, keeping v1.4.0 behaviour. When set, unlisted
+  identities are denied before provisioning or token issuance (OAuth callback
+  403, no user, no session cookie), regardless of `security:registerEnabled`;
+  local password and email-code sign-in stay exempt so root can always recover.
+  Denials are recorded in the login audit with provider, login and id only.
+  `auth.adminLogin.secondFactor` is reserved and only accepts `off`; invalid
+  configuration fails startup.
+
 ### Verification
 
 - Add the v1.5.0 Admin API baseline snapshot: golden route tables (prod/dev),

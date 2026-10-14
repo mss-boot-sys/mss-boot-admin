@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -638,4 +639,34 @@ func (expiredOAuthStateStore) Consume(
 	string,
 ) (oauthstate.Record, error) {
 	return oauthstate.Record{}, oauthstate.ErrExpired
+}
+
+// Acceptance (v1.5.0 C1): a callback whose identity is outside the Admin login
+// allowlist answers 403 and establishes no browser session.
+func TestOAuthCallbackDeniedByAdminLoginAllowlistReturnsForbiddenWithoutSession(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	installOAuthTestVerifier(t)
+	configureOAuthBrowserSession(t)
+
+	exchanges := 0
+	user := newOAuthTestUser(&exchanges)
+	user.oauthLoginComplete = func(_ *gin.Context, _ pkg.LoginProvider, _ string) (string, time.Time, error) {
+		return "", time.Time{}, &models.AdminLoginDeniedError{Provider: pkg.GithubLoginProvider, Subject: "42", Login: "intruder"}
+	}
+	state, cookie := issueOAuthState(t, user, pkg.GithubLoginProvider, oauthstate.IntentLogin, "", nil)
+	callback := executeOAuthCallback(user, pkg.GithubLoginProvider, state, "", nil, cookie)
+	if callback.Code != http.StatusForbidden {
+		t.Fatalf("denied callback status=%d body=%s, want 403", callback.Code, callback.Body.String())
+	}
+	for _, responseCookie := range callback.Result().Cookies() {
+		if (responseCookie.Name == middleware.BrowserSessionCookieName ||
+			responseCookie.Name == middleware.BrowserCSRFCookieName) && responseCookie.MaxAge >= 0 && responseCookie.Value != "" {
+			t.Fatalf("denied callback established a session cookie: %#v", responseCookie)
+		}
+	}
+	for _, forbidden := range []string{"admin-session-token", "provider-token", "\"expire\""} {
+		if strings.Contains(callback.Body.String(), forbidden) {
+			t.Fatalf("denied callback leaked %q: %s", forbidden, callback.Body.String())
+		}
+	}
 }
