@@ -36,7 +36,9 @@ jobs:
         run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
 
       - name: Test presentation OpenAPI verifier
-        run: python3 -m unittest tools.verification.test_check_presentation_openapi
+        run: |
+          python3 -m unittest tools.verification.test_check_presentation_openapi
+          python3 -m unittest tools.verification.test_check_openapi_baseline
 
       - name: Generate Admin API documentation
         working-directory: admin
@@ -45,6 +47,7 @@ jobs:
           test -s docs/swagger.json
           test -s docs/swagger.yaml
           python3 ../tools/verification/check_presentation_openapi.py docs/swagger.json
+          python3 ../tools/verification/check_openapi_baseline.py docs/swagger.json
           rm -f docs/docs.go
 
       - name: Setup Pages

@@ -52,6 +52,15 @@ jobs:
         working-directory: admin
         run: go test -shuffle=on -count=1 ./...
 
+      - name: Verify Admin OpenAPI baseline snapshot
+        working-directory: admin
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@v1.16.6
+          (cd .. && python3 -m unittest tools.verification.test_check_openapi_baseline)
+          go generate .
+          python3 ../tools/verification/check_openapi_baseline.py docs/swagger.json
+          rm -rf docs
+
       - name: Test coverage policy tooling
         if: github.event_name != 'pull_request'
         run: python3 -m unittest scripts/test_check_go_coverage.py
