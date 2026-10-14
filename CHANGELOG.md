@@ -8,6 +8,13 @@ tag namespaces.
 
 ### Security
 
+- Remove dead default-action stubs mounted at the Admin API root by
+  model-less controllers (AppConfig, Log, Monitor, Statistics, Storage,
+  UserConfig, WS): `GET/POST /admin/api` and `GET/PUT/DELETE /admin/api/:id`.
+  They had no resource, were absent from OpenAPI and the frontend, and the
+  `:id` variants answered 501 without authentication. Model-less controllers
+  now contribute only their explicit routes. Route baseline regenerated
+  (5 routes removed per mode); OpenAPI unchanged.
 - Add the optional Admin login allowlist `auth.adminLogin.allowlist` for
   external identities (GitHub strictly by numeric user id; `login` is an
   optional label that is never matched, and login-only GitHub entries fail

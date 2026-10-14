@@ -1,4 +1,3 @@
-DELETE /admin/api/:id
 DELETE /admin/api/alert-rule/:id
 DELETE /admin/api/apis/:id
 DELETE /admin/api/app-configs/theme
@@ -16,8 +15,6 @@ DELETE /admin/api/tasks/:id
 DELETE /admin/api/user-configs/theme
 DELETE /admin/api/user/oauth2/:provider
 DELETE /admin/api/users/:id
-GET /admin/api
-GET /admin/api/:id
 GET /admin/api/alert-history
 GET /admin/api/alert-history/:id
 GET /admin/api/alert-rule
@@ -81,7 +78,6 @@ GET /admin/api/ws/connect
 GET /admin/api/ws/online
 GET /admin/swagger/*any
 OPTIONS /admin/api/*path
-POST /admin/api
 POST /admin/api/alert-rule
 POST /admin/api/apis
 POST /admin/api/departments
@@ -114,7 +110,6 @@ POST /admin/api/user/session/oauth2/authorize
 POST /admin/api/user/session/refresh-token
 POST /admin/api/users
 POST /admin/api/ws/tickets
-PUT /admin/api/:id
 PUT /admin/api/alert-rule/:id
 PUT /admin/api/apis/:id
 PUT /admin/api/app-configs/:group

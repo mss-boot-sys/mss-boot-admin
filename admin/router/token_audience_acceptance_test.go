@@ -56,24 +56,8 @@ func TestLegacyNoAudienceTokenRejectedInStrictMode(t *testing.T) {
 	}
 }
 
-// knownUnauthenticatedStubs are pre-existing generic action routes mounted by
-// a controller with an empty base path. They run no authentication and answer
-// 501 Not Implemented without touching data. They are pinned here so any
-// behaviour change surfaces; removing them is tracked separately from C2.
-var knownUnauthenticatedStubs = map[string]bool{
-	"GET /admin/api/:id":    true,
-	"PUT /admin/api/:id":    true,
-	"DELETE /admin/api/:id": true,
-}
-
 func requireRejected(t *testing.T, name string, route baselineRoute, code int) {
 	t.Helper()
-	if knownUnauthenticatedStubs[route.String()] {
-		if code != http.StatusNotImplemented {
-			t.Errorf("%s token on stub %s returned %d, want pinned 501", name, route, code)
-		}
-		return
-	}
 	if code != http.StatusUnauthorized && code != http.StatusForbidden {
 		t.Errorf("%s token on %s returned %d, want 401/403", name, route, code)
 	}
@@ -96,7 +80,7 @@ func nonPublicBaselineRoutes(t *testing.T) []baselineRoute {
 	var routes []baselineRoute
 	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
 		method, path, _ := strings.Cut(line, " ")
-		if method == http.MethodOptions || !strings.HasPrefix(path, "/admin/api/") || public[line] {
+		if method == http.MethodOptions || (path != "/admin/api" && !strings.HasPrefix(path, "/admin/api/")) || public[line] {
 			continue
 		}
 		routes = append(routes, baselineRoute{method: method, path: path})
@@ -186,4 +170,26 @@ func newAudienceAcceptanceEngine(t *testing.T, strict bool) *gin.Engine {
 	engine := gin.New()
 	InitRouter(engine.Group("/admin"))
 	return engine
+}
+
+// Regression: model-less controllers must not mount default CRUD stubs at the
+// API root (previously GET/POST /admin/api and GET/PUT/DELETE /admin/api/:id,
+// some answering 501 without authentication).
+func TestNoDefaultActionStubsAtAdminAPIRoot(t *testing.T) {
+	engine := newAudienceAcceptanceEngine(t, false)
+	for _, route := range engine.Routes() {
+		if route.Path == "/admin/api" || route.Path == "/admin/api/:id" {
+			t.Errorf("unexpected root stub route %s %s", route.Method, route.Path)
+		}
+	}
+	for _, method := range []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete} {
+		for _, path := range []string{"/admin/api", "/admin/api/some-id"} {
+			request := httptest.NewRequest(method, path, nil)
+			recorder := httptest.NewRecorder()
+			engine.ServeHTTP(recorder, request)
+			if recorder.Code == http.StatusNotImplemented || (recorder.Code >= 200 && recorder.Code < 300) {
+				t.Errorf("anonymous %s %s = %d", method, path, recorder.Code)
+			}
+		}
+	}
 }
