@@ -94,6 +94,10 @@ type Registration struct {
 	Readiness     ReadinessCheck
 	Routes        RouteRegistrar
 	Presentations []presentation.CapabilityDefinition
+	// Surfaces are optional non-Admin API surfaces (v1.6.0). Each is mounted
+	// by the core behind a non-replaceable security chain; see
+	// docs/adr/2026-10-14-surface-security-chain.md.
+	Surfaces []SurfaceRegistration
 }
 
 // MigrationPhases keeps Foundation-owned migrations ahead of business-owned
@@ -117,6 +121,7 @@ type entry struct {
 	readiness     ReadinessCheck
 	routes        RouteRegistrar
 	presentations []presentation.CapabilityDefinition
+	surfaces      []SurfaceRegistration
 }
 
 // registrationTransaction stages every side effect from one Module.Register
@@ -413,6 +418,19 @@ func (r *Registry) Add(module Module) error {
 		return fmt.Errorf("register business module %s presentation definitions: %w", name, err)
 	}
 
+	r.mu.RLock()
+	for _, surface := range stagedEntry.surfaces {
+		for _, existing := range r.entries {
+			for _, other := range existing.surfaces {
+				if other.Name == surface.Name {
+					r.mu.RUnlock()
+					return fmt.Errorf("business module %s surface %q is already registered by %s", name, surface.Name, existing.name)
+				}
+			}
+		}
+	}
+	r.mu.RUnlock()
+
 	r.mu.Lock()
 	r.businessMigrations = nextBusinessMigrations
 	r.entries = append(r.entries, *stagedEntry)
@@ -503,7 +521,25 @@ func (r *Registry) Register(registration Registration) error {
 		))
 	}
 
+	surfaces := make([]SurfaceRegistration, 0, len(registration.Surfaces))
+	surfaceNames := map[string]struct{}{}
+	for _, surface := range registration.Surfaces {
+		if _, dup := surfaceNames[surface.Name]; dup {
+			return transaction.failRegistration(fmt.Errorf(
+				"business module %s: surface %q is declared twice", transaction.module, surface.Name,
+			))
+		}
+		surfaceNames[surface.Name] = struct{}{}
+		if err := validateSurface(surface); err != nil {
+			return transaction.failRegistration(fmt.Errorf(
+				"business module %s: %w", transaction.module, err,
+			))
+		}
+		surfaces = append(surfaces, cloneSurface(surface))
+	}
+
 	return transaction.completeRegistration(entry{
+		surfaces:      surfaces,
 		name:          transaction.module,
 		descriptor:    descriptor,
 		readiness:     registration.Readiness,

@@ -259,6 +259,9 @@ func setupWithOptions(
 		); err != nil {
 			return err
 		}
+		if err := mountBusinessSurfaces(businessRegistry, routerEngine); err != nil {
+			return err
+		}
 	}
 	if err := initializeApplicationDelivery(ctx, config.Cfg, center.GetRouter()); err != nil {
 		return err

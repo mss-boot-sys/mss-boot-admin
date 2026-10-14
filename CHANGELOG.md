@@ -6,8 +6,19 @@ tag namespaces.
 
 ## [Unreleased]
 
-Planned v1.5.1 patch release for issues found during downstream v1.5.0
-acceptance.
+### Added
+
+- Optional business API surfaces (`business.Registration.Surfaces`) served at
+  `/<name>/api` behind a core-enforced chain: per-surface CORS, module
+  authenticator (read-only `SurfaceRequest`, reports `bearer`/`cookie`
+  credential) with core `aud`/`iss` enforcement, exact-Origin CSRF decided by
+  the verified credential, then module middleware. Route categories are a
+  closed set (`public`, `authenticated`). Duplicate surface names fail
+  registration. Mounting any surface (in `MountSurfaces` itself) makes Admin
+  token audience strict. With no surface, Admin routes and behaviour are
+  unchanged. See `docs/adr/2026-10-14-surface-security-chain.md`.
+- ADRs for the v1.6.0 frontend extension mount point and the redacted
+  business audit sink.
 
 ### Fixed
 
