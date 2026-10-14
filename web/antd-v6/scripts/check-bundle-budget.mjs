@@ -15,6 +15,26 @@ const distRoot = resolve(
   distArgument >= 0 ? process.argv[distArgument + 1] : join(projectRoot, 'dist'),
 );
 const productionGzipLevel = 6;
+// The default ceilings are calibrated for this repository's reference
+// application. A downstream Thin Host built through `mss-admin-web build`
+// passes --advisory: its business code legitimately adds JavaScript, so the
+// defaults only warn there. A host opts back into enforcement by setting any
+// MSS_V6_*_GZIP_BUDGET_KB ceiling or MSS_V6_BUNDLE_BUDGET=enforce;
+// MSS_V6_BUNDLE_BUDGET=warn makes any build advisory.
+const budgetEnvNames = [
+  'MSS_V6_ENTRY_GZIP_BUDGET_KB',
+  'MSS_V6_CHUNK_GZIP_BUDGET_KB',
+  'MSS_V6_TOTAL_JS_GZIP_BUDGET_KB',
+];
+const budgetMode = process.env.MSS_V6_BUNDLE_BUDGET;
+if (budgetMode !== undefined && !['enforce', 'warn'].includes(budgetMode)) {
+  throw new Error('MSS_V6_BUNDLE_BUDGET must be "enforce" or "warn"');
+}
+const advisory =
+  budgetMode === 'warn' ||
+  (budgetMode !== 'enforce' &&
+    process.argv.includes('--advisory') &&
+    budgetEnvNames.every((name) => process.env[name] === undefined));
 
 const readBudget = (name, fallbackKiB) => {
   const value = process.env[name] === undefined ? fallbackKiB : Number(process.env[name]);
@@ -81,4 +101,14 @@ if (largestChunk) {
     `Largest async chunk: ${relative(distRoot, largestChunk.file)} (${formatKiB(largestChunk.gzip)})`,
   );
 }
-if (failures.length > 0) throw new Error(`Bundle budget failed: ${failures.join('; ')}`);
+if (failures.length > 0) {
+  if (advisory) {
+    console.warn(
+      `Bundle budget warning (advisory default ceilings): ${failures.join('; ')}. ` +
+        'Set MSS_V6_ENTRY_GZIP_BUDGET_KB / MSS_V6_CHUNK_GZIP_BUDGET_KB / ' +
+        'MSS_V6_TOTAL_JS_GZIP_BUDGET_KB to enforce ceilings for this host.',
+    );
+  } else {
+    throw new Error(`Bundle budget failed: ${failures.join('; ')}`);
+  }
+}

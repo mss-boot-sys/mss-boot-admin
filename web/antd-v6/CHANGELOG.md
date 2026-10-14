@@ -6,7 +6,24 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
-No unreleased changes are recorded.
+- Restore `subTitle` on `PageShell`/`PageContainer` as a deprecated alias of
+  `content`. v1.4.0 replaced the ProComponents-based `PageContainer` with
+  `PageShell`, which silently dropped `subTitle` (and other ProComponents
+  props); hosts upgrading from v1.3.x broke at type check. `content` wins when
+  both are set.
+- `mss-admin-web build` no longer fails downstream hosts on the reference
+  application's default gzip ceilings (32 KiB entry / 240 KiB chunk / 940 KiB
+  total). In a host build they are printed as a warning. Setting any
+  `MSS_V6_*_GZIP_BUDGET_KB` or `MSS_V6_BUNDLE_BUDGET=enforce` enforces ceilings;
+  `MSS_V6_BUNDLE_BUDGET=warn` makes any build advisory. The repository's own
+  `build:release` still enforces the defaults.
+
+### Known issue in v1.4.0 and v1.5.0
+
+- Breaking change not recorded at the time: `PageContainer` from the runtime
+  package no longer accepts ProComponents props such as `subTitle`. Use
+  `content` for the page description (or upgrade to the release containing the
+  compatibility alias above).
 
 ## [web/antd-v6/v1.5.0] - 2026-10-14
 
