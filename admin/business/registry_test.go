@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
 	migrationmodels "github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration/models"
@@ -751,5 +752,49 @@ func TestMountChecksAllReadinessBeforeAnyRoute(t *testing.T) {
 	engine.ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusNotFound {
 		t.Fatalf("unready route status = %d, want 404", recorder.Code)
+	}
+}
+
+func TestMountAlwaysRedactsRuntimeAudit(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var got audit.Event
+	module := validTestModule("audited", migration.MigrationID("202610140201"))
+	var runtimeAudit audit.Sink
+	module.registration.Routes = func(_ *gin.RouterGroup, runtime Runtime) error {
+		runtimeAudit = runtime.Audit
+		return nil
+	}
+	registry, err := Compose(migration.New(), module)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, sink := range []audit.Sink{nil, audit.SinkFunc(func(_ context.Context, e audit.Event) error { got = e; return nil })} {
+		runtimeAudit = nil
+		err = registry.Mount(context.Background(),
+			func(op func(*gorm.DB) error) error { return op(db) },
+			gin.New().Group("/admin/api"),
+			Runtime{
+				RequestDatabase: func(context.Context) (*gorm.DB, bool) { return db, true },
+				Principal:       func(*gin.Context) security.Verifier { return nil },
+				Events:          testEventCollector{},
+				Audit:           sink,
+			})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if runtimeAudit == nil {
+			t.Fatal("modules must always receive a sink")
+		}
+		if err := runtimeAudit.Record(context.Background(), audit.Event{Action: "a", Result: "ok",
+			Detail: map[string]string{"Cookie": "sid=secret-cookie"}}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got.Detail["Cookie"] != audit.Redacted {
+		t.Fatalf("module-provided sink received unredacted detail: %v", got.Detail)
 	}
 }

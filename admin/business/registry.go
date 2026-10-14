@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
 	moduleruntime "github.com/mss-boot-sys/mss-boot-admin/admin/modules/runtime"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/presentation"
 	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
@@ -74,6 +75,10 @@ type Runtime struct {
 	RequestDatabase RequestDatabase
 	Principal       PrincipalResolver
 	Events          EventCollector
+	// Audit records redacted audit evidence into the core audit store
+	// (v1.6.0). Mount always wraps it with audit.Redacting; a nil Audit is
+	// replaced by audit.Discard so existing hosts keep compiling and running.
+	Audit audit.Sink
 }
 
 // ReadinessCheck must prove the module's migrations and authorization storage
@@ -715,6 +720,7 @@ func (r *Registry) Mount(
 			return fmt.Errorf("business module %s readiness failed: %w", registered.name, err)
 		}
 	}
+	runtime.Audit = audit.Redacting(runtime.Audit)
 	for _, registered := range entries {
 		if err := registered.routes(protectedAPI, runtime); err != nil {
 			return fmt.Errorf("register business module %s routes: %w", registered.name, err)

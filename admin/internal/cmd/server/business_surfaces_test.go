@@ -42,7 +42,7 @@ func TestMountBusinessSurfacesTogglesStrictAudienceOnlyWithSurfaces(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := mountBusinessSurfaces(empty, gin.New()); err != nil {
+	if err := mountBusinessSurfaces(empty, gin.New(), nil); err != nil {
 		t.Fatal(err)
 	}
 	if config.Cfg.Auth.RequireAdminAudience {
@@ -61,7 +61,7 @@ func TestMountBusinessSurfacesTogglesStrictAudienceOnlyWithSurfaces(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := mountBusinessSurfaces(withSurface, gin.New()); err != nil {
+	if err := mountBusinessSurfaces(withSurface, gin.New(), nil); err != nil {
 		t.Fatal(err)
 	}
 	if !config.Cfg.Auth.RequireAdminAudience {

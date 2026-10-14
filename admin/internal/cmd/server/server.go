@@ -255,11 +255,12 @@ func setupWithOptions(
 				RequestDatabase: center.RequestDatabase,
 				Principal:       middleware.GetVerify,
 				Events:          businessEventLogger{},
+				Audit:           newBusinessAuditSink(business.DatabaseAccess(config.Cfg.WithDatabase)),
 			},
 		); err != nil {
 			return err
 		}
-		if err := mountBusinessSurfaces(businessRegistry, routerEngine); err != nil {
+		if err := mountBusinessSurfaces(businessRegistry, routerEngine, newBusinessAuditSink(business.DatabaseAccess(config.Cfg.WithDatabase))); err != nil {
 			return err
 		}
 	}
