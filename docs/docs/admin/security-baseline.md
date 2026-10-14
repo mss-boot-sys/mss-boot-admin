@@ -19,6 +19,27 @@ Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或�
 - WebSocket 使用一次性短期 ticket，不在 URL 放长期凭据；
 - 生产使用 HTTPS、Secure Cookie 和精确 origin。
 
+### 后台登录白名单（`auth.adminLogin`，main 分支，尚未发布）
+
+外部身份（GitHub、飞书）登录后台可以用白名单限制：
+
+```yaml
+auth:
+  adminLogin:
+    allowlist:
+      - provider: github
+        id: "583231"     # GitHub 数字用户 ID，推荐，改名不受影响
+      - provider: github
+        login: octocat   # GitHub 登录名，不区分大小写
+    secondFactor: off    # 本版只接受 off；TOTP 另行提供
+```
+
+- 名单为空（默认）时行为与 v1.4.0 完全一致；
+- 名单非空时，名单外的外部身份在建号和签发令牌之前被拒绝，OAuth 回调返回 403，不建用户、不写会话 Cookie，与 `security:registerEnabled` 无关；已绑定但不在名单内的账号同样被拒绝；
+- 本地用户名密码与邮箱验证码登录不受白名单约束，Root 账号始终可以用本地凭据恢复访问；
+- 拒绝写入登录审计，只记录 provider、登录名和数字 ID，不记录 provider token 或授权码；
+- 配置非法（未知 provider、条目缺少 id 和 login、GitHub id 非数字、`secondFactor` 不是 off）时启动失败。
+
 ## 授权
 
 - 每个受保护 API 在后端执行 Casbin 或业务授权；

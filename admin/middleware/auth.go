@@ -214,7 +214,15 @@ func AuthenticateVerifier(c *gin.Context, loginVals security.Verifier) (security
 		// Authentication providers may include credentials or upstream response
 		// details in errors. Keep the durable audit outcome diagnosable without
 		// persisting those details.
-		if logErr := service.Audit.LogLogin(db, "", extractLoginUsername(loginVals), ip, userAgent, "authentication failed", false); logErr != nil {
+		auditUsername, auditMessage := extractLoginUsername(loginVals), "authentication failed"
+		var denied *models.AdminLoginDeniedError
+		if errors.As(err, &denied) {
+			// Only public provider identifiers are recorded; the provider
+			// token and OAuth code never reach the audit log.
+			auditUsername = string(denied.Provider) + ":" + denied.Login
+			auditMessage = "admin login denied: identity not in allowlist (" + string(denied.Provider) + " id " + denied.Subject + ")"
+		}
+		if logErr := service.Audit.LogLogin(db, "", auditUsername, ip, userAgent, auditMessage, false); logErr != nil {
 			api.AddError(logErr).Log.Warn("write login log failed")
 		}
 		return nil, err

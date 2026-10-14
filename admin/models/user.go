@@ -446,6 +446,10 @@ func (e *UserLogin) Verify(ctx context.Context) (bool, security.Verifier, error)
 			slog.Error("github identity verification failed")
 			return false, nil, err
 		}
+		if err := enforceAdminLoginAllowlist(pkg.GithubLoginProvider, userOAuth2); err != nil {
+			slog.Warn("github identity denied by admin login allowlist")
+			return false, nil, err
+		}
 		if userOAuth2.ID == "" {
 			// register
 			if err := requirePublicRegistration(c); err != nil {
@@ -488,6 +492,10 @@ func (e *UserLogin) Verify(ctx context.Context) (bool, security.Verifier, error)
 		userOAuth2, err := e.GetUserLarkOAuth2(c)
 		if err != nil {
 			slog.Error("lark identity verification failed")
+			return false, nil, err
+		}
+		if err := enforceAdminLoginAllowlist(pkg.LarkLoginProvider, userOAuth2); err != nil {
+			slog.Warn("lark identity denied by admin login allowlist")
 			return false, nil, err
 		}
 		if userOAuth2.ID == "" {

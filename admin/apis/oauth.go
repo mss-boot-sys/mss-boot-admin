@@ -292,6 +292,10 @@ func (e *User) oauthCallback(c *gin.Context) {
 	switch record.Intent {
 	case oauthstate.IntentLogin:
 		token, expiresAt, completeErr := e.loginCompleter()(c, req.Provider, providerAccessToken)
+		if errors.Is(completeErr, models.ErrAdminLoginNotAllowed) {
+			api.Err(http.StatusForbidden)
+			return
+		}
 		if completeErr != nil || token == "" || expiresAt.IsZero() {
 			api.Err(http.StatusUnauthorized)
 			return

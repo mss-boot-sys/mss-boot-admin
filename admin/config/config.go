@@ -117,6 +117,9 @@ func (e *Config) InitContext(ctx context.Context, opts ...source.Option) (err er
 	if err := validateBrowserSession(e.Application.Mode, e.Auth); err != nil {
 		return err
 	}
+	if err := e.Auth.AdminLogin.Validate(); err != nil {
+		return err
+	}
 	if err := validateBrowserSessionOrigins(
 		e.Application.Mode,
 		e.Auth,
