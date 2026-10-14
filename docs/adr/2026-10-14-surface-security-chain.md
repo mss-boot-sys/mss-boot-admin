@@ -38,8 +38,13 @@ core owns authentication, CORS and CSRF.
    unchanged and covered by the P1 baseline snapshot.
 7. Surface CSRF in v1.6.0 is an exact-Origin check against the surface's CORS
    origins for unsafe cookie-bearing requests; bearer-only API clients are
-   exempt. A derived double-submit cookie may be added later without changing
-   the registration API.
+   exempt. A surface may additionally opt into core double-submit tokens with
+   `SurfaceRegistration.CSRF{SessionCookie, Key}`: when the session cookie is
+   present on an unsafe request, the core requires header `X-MSS-CSRF-Token`
+   to equal the readable cookie `__Host-mss-<name>-csrf` (constant time) and to
+   carry an HMAC-SHA256 over (surface, nonce, session cookie value) under the
+   surface key (>= 32 bytes, not the Admin key). Modules issue it with
+   `business.SetSurfaceCSRFCookie` after sign-in or refresh.
 
 ## Consequences
 

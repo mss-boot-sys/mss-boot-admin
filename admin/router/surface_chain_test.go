@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -289,4 +290,99 @@ func TestSurfaceAuditEventsAreScopedAndRedactedByCore(t *testing.T) {
 
 	outside, _ := gin.CreateTestContext(httptest.NewRecorder())
 	require.ErrorIs(t, business.RecordSurfaceEvent(outside, audit.Event{Action: "a", Result: "b"}), business.ErrNoSurfaceAudit)
+}
+
+func TestSurfaceDoubleSubmitCSRFForCookieSessions(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	key := []byte("portal-csrf-key-0123456789abcdef-0123")
+	var issued string
+	surface := business.SurfaceRegistration{
+		Name: "portal", Issuer: surfaceTestIssuer, Authenticator: headerAuthenticator,
+		CORS: business.SurfaceCORS{AllowOrigins: []string{"https://shop.example.com"}},
+		CSRF: &business.SurfaceCSRF{SessionCookie: "__Host-portal-session", Key: key},
+		Routes: []business.SurfaceRoute{
+			{Method: http.MethodPost, Path: "/sign-in", Category: business.SurfaceRoutePublic, Handlers: []gin.HandlerFunc{func(c *gin.Context) {
+				token, err := business.SetSurfaceCSRFCookie(c, c.GetHeader("X-Session"), time.Now().Add(time.Hour))
+				if err != nil {
+					c.Status(http.StatusInternalServerError)
+					return
+				}
+				issued = token
+				c.Status(http.StatusOK)
+			}}},
+			{Method: http.MethodPost, Path: "/orders", Category: business.SurfaceRouteAuthenticated, Handlers: []gin.HandlerFunc{func(c *gin.Context) { c.Status(http.StatusOK) }}},
+		},
+	}
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, nil)
+	require.NoError(t, err)
+
+	origin := "https://shop.example.com"
+	res := serveSurface(engine, http.MethodPost, "/portal/api/sign-in", map[string]string{"Origin": origin, "X-Session": "session-A"})
+	require.Equal(t, http.StatusOK, res.Code)
+	cookie := res.Result().Cookies()[0]
+	require.Equal(t, business.SurfaceCSRFCookieName("portal"), cookie.Name)
+	require.True(t, cookie.Secure)
+	require.False(t, cookie.HttpOnly)
+	require.Equal(t, "/", cookie.Path)
+	require.Equal(t, issued, cookie.Value)
+
+	post := func(session, cookieToken, header string) int {
+		headers := map[string]string{"Origin": origin, "X-Test-Principal": "portal",
+			"Cookie": "__Host-portal-session=" + session}
+		if cookieToken != "" {
+			headers["Cookie"] += "; " + business.SurfaceCSRFCookieName("portal") + "=" + cookieToken
+		}
+		if header != "" {
+			headers[business.SurfaceCSRFHeader] = header
+		}
+		return serveSurface(engine, http.MethodPost, "/portal/api/orders", headers).Code
+	}
+	require.Equal(t, http.StatusOK, post("session-A", issued, issued))
+	require.Equal(t, http.StatusForbidden, post("session-A", issued, ""), "missing header")
+	require.Equal(t, http.StatusForbidden, post("session-A", "", issued), "missing cookie")
+	require.Equal(t, http.StatusForbidden, post("session-A", issued, issued+"x"), "header != cookie")
+	require.Equal(t, http.StatusForbidden, post("session-B", issued, issued), "token bound to another session")
+	forged := "s1.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	require.Equal(t, http.StatusForbidden, post("session-A", forged, forged), "forged token")
+
+	// A token for the same session minted for another surface does not validate.
+	portalToken := issued
+	other := surface
+	other.Name = "shop"
+	otherRegistry, err := business.Compose(migration.New(), surfaceTestModule{name: "other", id: "202610140009", surfaces: []business.SurfaceRegistration{other}})
+	require.NoError(t, err)
+	otherEngine := gin.New()
+	_, err = otherRegistry.MountSurfaces(otherEngine, nil)
+	require.NoError(t, err)
+	res = serveSurface(otherEngine, http.MethodPost, "/shop/api/sign-in", map[string]string{"Origin": origin, "X-Session": "session-A"})
+	require.Equal(t, http.StatusOK, res.Code)
+	shopToken := res.Result().Cookies()[0].Value
+	require.NotEqual(t, portalToken, shopToken)
+	require.Equal(t, http.StatusForbidden, post("session-A", shopToken, shopToken), "token minted for another surface")
+}
+
+func TestSurfaceCSRFIsOptInAndValidated(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var hits []string
+	plain := portalSurface(&hits) // no CSRF option
+	registry := composeSurfaceRegistry(t, plain)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, nil)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/orders", map[string]string{
+		"Origin": "https://shop.example.com", "X-Test-Principal": "portal", "Cookie": "portal_session=x"}).Code,
+		"without opt-in only the Origin check applies")
+
+	for name, csrf := range map[string]*business.SurfaceCSRF{
+		"short key":      {SessionCookie: "s", Key: []byte("short")},
+		"bad cookie":     {SessionCookie: "bad cookie;", Key: make([]byte, 32)},
+		"missing cookie": {Key: make([]byte, 32)},
+	} {
+		bad := portalSurface(&hits)
+		bad.CSRF = csrf
+		_, err := business.Compose(migration.New(), surfaceTestModule{name: "shop", id: "202610140001", surfaces: []business.SurfaceRegistration{bad}})
+		require.Error(t, err, name)
+	}
 }
