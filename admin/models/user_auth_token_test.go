@@ -100,6 +100,9 @@ func TestGenerateUserAuthTokenPersistsDigestAndRestoresVerifier(t *testing.T) {
 	if claims["jti"] == "" {
 		t.Fatal("generated PAT has no uniqueness claim")
 	}
+	if claims["aud"] != "admin" {
+		t.Fatalf("PAT aud = %#v, want admin", claims["aud"])
+	}
 }
 
 func TestGenerateUserAuthTokenForcesSecurityClaims(t *testing.T) {
@@ -115,6 +118,7 @@ func TestGenerateUserAuthTokenForcesSecurityClaims(t *testing.T) {
 					"refreshTokenDisabled": false,
 					"personAccessToken":    "wrong-selector",
 					"jti":                  "reused-id",
+					"aud":                  "portal",
 					"custom":               "preserved",
 				}
 			},
@@ -147,6 +151,9 @@ func TestGenerateUserAuthTokenForcesSecurityClaims(t *testing.T) {
 			}
 			if claims["personAccessToken"] != record.ID {
 				t.Fatalf("personAccessToken = %#v, want %q", claims["personAccessToken"], record.ID)
+			}
+			if claims["aud"] != "admin" {
+				t.Fatalf("aud = %#v, want forced admin", claims["aud"])
 			}
 			if claims["jti"] == "" || claims["jti"] == "reused-id" {
 				t.Fatalf("jti = %#v, want a fresh forced value", claims["jti"])

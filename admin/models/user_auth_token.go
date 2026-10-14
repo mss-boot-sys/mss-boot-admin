@@ -219,6 +219,9 @@ func generateUserAuthTokenValue(authMiddleware *jwt.GinJWTMiddleware, verify sec
 		claims["refreshTokenDisabled"] = true
 		claims["personAccessToken"] = id
 		claims["jti"] = tokenID
+		// PATs are Admin credentials: always carry aud=admin, even when the
+		// application PayloadFunc is replaced or sets another audience.
+		claims["aud"] = "admin"
 		return claims
 	}
 

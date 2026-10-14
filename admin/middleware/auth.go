@@ -88,6 +88,10 @@ func Init() error {
 		},
 		IdentityHandler: func(c *gin.Context) any {
 			claims := jwt.ExtractClaims(c)
+			if !AdminTokenAudienceAccepted(claims) {
+				markAuthenticationFailure(c)
+				return nil
+			}
 			if personAccessToken, ok := claims["personAccessToken"]; ok && cast.ToString(personAccessToken) != "" {
 				userID, roleID, err := principalSnapshotFromClaims(claims)
 				if err != nil {
@@ -287,12 +291,12 @@ func principalClaims(verifier security.Verifier) jwt.MapClaims {
 		return jwt.MapClaims{}
 	}
 	clearVerifierSecrets(verifier)
-	return jwt.MapClaims{
+	return stampAdminTokenClaims(jwt.MapClaims{
 		"uid":                  verifier.GetUserID(),
 		"rid":                  verifier.GetRoleID(),
 		"refreshTokenDisabled": verifier.GetRefreshTokenDisable(),
 		"personAccessToken":    verifier.GetPersonAccessToken(),
-	}
+	})
 }
 
 func principalSnapshotFromClaims(claims jwt.MapClaims) (string, string, error) {

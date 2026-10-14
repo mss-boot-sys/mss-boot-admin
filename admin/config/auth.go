@@ -26,6 +26,12 @@ type Auth struct {
 	// AdminLogin restricts which external identities may sign in to Admin.
 	// The zero value keeps v1.4.0 behaviour.
 	AdminLogin AdminLogin `yaml:"adminLogin" json:"adminLogin"`
+	// Issuer is written to the "iss" claim of Admin tokens; defaults to
+	// "mss-boot-admin".
+	Issuer string `yaml:"issuer" json:"issuer"`
+	// RequireAdminAudience rejects tokens without aud=admin (strict mode).
+	// Default false keeps tokens issued before v1.5.0 valid during migration.
+	RequireAdminAudience bool `yaml:"requireAdminAudience" json:"requireAdminAudience"`
 }
 
 const insecureDefaultAuthKey = "mss-boot-admin-secret"

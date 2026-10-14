@@ -30,6 +30,9 @@ func OIDCBrowserSession(c *gin.Context) (*models.UserSession, error) {
 		return nil, nil
 	}
 	claims := jwt.ExtractClaimsFromToken(token)
+	if !AdminTokenAudienceAccepted(claims) {
+		return nil, nil
+	}
 	if cast.ToString(claims["personAccessToken"]) != "" || cast.ToBool(claims["refreshTokenDisabled"]) {
 		return nil, nil
 	}

@@ -44,6 +44,13 @@ auth:
 - `rateLimit` 作用于密码登录和 OAuth 回调：超出后返回 429 并带 `Retry-After`，同时写登录审计；限流存储不可用时返回 503（失败即关闭）。内置实现是进程内的 `mss-boot/pkg/keyedlimit` 内存实现，多副本部署需要通过 `middleware.SetLoginRateLimiter` 换成共享存储实现，该实现必须通过 `keyedlimit/limittest` 契约测试；
 - 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off、`rateLimit` 只填了一半或为负数）时启动失败。
 
+### 令牌受众（`iss` / `aud=admin`，main 分支，尚未发布）
+
+- 后台签发的浏览器会话令牌和个人访问令牌（PAT）都写入 `iss`（`auth.issuer`，默认 `mss-boot-admin`）和 `aud=admin`；PAT 无论自定义 PayloadFunc 怎么写都强制 `aud=admin`；
+- 后台接口、会话刷新和 OIDC 浏览器会话只接受 `aud` 含 `admin` 的令牌；`aud` 为其他值（如 `portal`、`user`）或 `iss` 不匹配时一律 401，即使用的是同一把签名密钥；比较为常量时间，只返回布尔结果；
+- 兼容模式（默认）：升级前签发、没有 `aud` 的旧令牌在过渡期内仍可用，旧会话在下次登录后换成新令牌，旧 PAT 建议轮换；设置 `auth.requireAdminAudience: true` 进入严格模式，拒绝没有 `aud` 的令牌；
+- 新增的其他 surface 不应与后台共用签名密钥，可用 `middleware.SharesAdminSigningKey` 做布尔检查（不暴露密钥指纹）。
+
 ## 授权
 
 - 每个受保护 API 在后端执行 Casbin 或业务授权；
