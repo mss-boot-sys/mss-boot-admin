@@ -34,6 +34,9 @@ auth:
     rateLimit:           # 可选：按客户端 IP 限制登录尝试，默认关闭
       limit: 10
       window: 1m
+    clientIP:            # 可选：限流与登录审计使用的客户端 IP 规则
+      trustedProxies: ["10.0.0.0/8"]   # 可信代理 CIDR/IP；为空时继承 application.trustedProxies（默认也为空）
+      header: CF-Connecting-IP         # 可选；为空时依次用 X-Forwarded-For、X-Real-IP
 ```
 
 - GitHub 条目**只按数字用户 ID 匹配**：登录名可以改名、被他人重新注册，因此 `login` 只是备注；只写 `login` 不写 `id` 的条目启动即报错。启动时不联网解析 ID，可用 `https://api.github.com/users/<login>` 自行查询；
@@ -42,7 +45,8 @@ auth:
 - 本地用户名密码与邮箱验证码登录不受白名单约束，Root 账号始终可以用本地凭据恢复访问；
 - 拒绝写入登录审计，只记录 provider、登录名和数字 ID，不记录 provider token 或授权码；
 - `rateLimit` 作用于密码登录和 OAuth 回调：超出后返回 429 并带 `Retry-After`，同时写登录审计；限流存储不可用时返回 503（失败即关闭）。内置实现是进程内的 `mss-boot/pkg/keyedlimit` 内存实现，多副本部署需要通过 `middleware.SetLoginRateLimiter` 换成共享存储实现，该实现必须通过 `keyedlimit/limittest` 契约测试；
-- 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off、`rateLimit` 只填了一半或为负数）时启动失败。
+- 登录限流和登录审计用独立的客户端 IP 规则：只有直连对端在可信代理列表内时才读取转发头，X-Forwarded-For 从右往左取第一个非可信地址；默认（未配置任何可信代理）只用 RemoteAddr，伪造的转发头无法换限流桶或篡改审计 IP。该规则不改变 gin 全局 `ClientIP()` 的行为（全局仍由 `application.trustedProxies` 控制）；
+- 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off、`rateLimit` 只填了一半或为负数、可信代理不是合法 IP/CIDR、header 名非法）时启动失败。
 
 ## 授权
 
