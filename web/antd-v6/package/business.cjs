@@ -36,15 +36,19 @@ function logoDataURL() {
   return `data:image/svg+xml,${encodeURIComponent(logo)}`;
 }
 
-function proxyConfig(apiTarget) {
+function proxyConfig(apiTarget, surfacePrefixes = []) {
   if (environment === 'release') return {};
-  return {
+  const proxy = {
     '/admin/': {
       target: apiTarget,
       changeOrigin: false,
       secure: false,
     },
   };
+  for (const prefix of surfacePrefixes) {
+    proxy[`${prefix}/api/`] = { target: apiTarget, changeOrigin: false, secure: false };
+  }
+  return proxy;
 }
 
 function validateBusinessAdminOptions(options) {
@@ -79,8 +83,99 @@ function validateBusinessAdminOptions(options) {
   }
 }
 
+const extensionSurfacePattern = /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/;
+// Mirrors the reserved surface names enforced by the Admin backend.
+const reservedExtensionSurfaces = new Set([
+  'admin',
+  'api',
+  'oidc',
+  'swagger',
+  'static',
+  'assets',
+  'public',
+  'docs',
+  'ws',
+  'healthz',
+  'readyz',
+  'metrics',
+  'user',
+  'users',
+  'workplace',
+]);
+const extensionKeys = new Set(['surface', 'routes', 'layout']);
+
+function routeTreePaths(routes) {
+  return routes.flatMap((route) => [
+    ...(typeof route.path === 'string' ? [route.path] : []),
+    ...(Array.isArray(route.routes) ? routeTreePaths(route.routes) : []),
+  ]);
+}
+
+// Extensions (v1.6.0) mount a module's pages under its own surface prefix in
+// the single Admin SPA. They cannot replace Admin routes, layout or runtime;
+// see docs/adr/2026-10-14-admin-web-extensions-mount-point.md.
+function extensionRoutes(extensions) {
+  if (extensions === undefined) return [];
+  if (!Array.isArray(extensions)) {
+    throw new TypeError('Admin Web extensions must be an array.');
+  }
+  const surfaces = new Set();
+  return extensions.map((extension, index) => {
+    if (extension === null || typeof extension !== 'object' || Array.isArray(extension)) {
+      throw new TypeError(`Admin Web extension ${index} must be an object.`);
+    }
+    for (const key of Object.keys(extension)) {
+      if (!extensionKeys.has(key)) {
+        throw new Error(`Admin Web extension ${index} has unsupported option: ${key}`);
+      }
+    }
+    const { surface, routes, layout } = extension;
+    if (typeof surface !== 'string' || !extensionSurfacePattern.test(surface)) {
+      throw new TypeError(
+        `Admin Web extension ${index} surface must match ${extensionSurfacePattern}`,
+      );
+    }
+    if (reservedExtensionSurfaces.has(surface)) {
+      throw new Error(`Admin Web extension surface is reserved: ${surface}`);
+    }
+    if (surfaces.has(surface)) {
+      throw new Error(`duplicate Admin Web extension surface: ${surface}`);
+    }
+    surfaces.add(surface);
+    if (!Array.isArray(routes) || routes.length === 0) {
+      throw new TypeError(`Admin Web extension ${surface} routes must be a non-empty array.`);
+    }
+    const prefix = `/${surface}`;
+    for (const routePath of routeTreePaths(routes)) {
+      if (routePath !== prefix && !routePath.startsWith(`${prefix}/`)) {
+        throw new Error(
+          `Admin Web extension ${surface} route must stay below ${prefix}: ${routePath}`,
+        );
+      }
+      if (routePath.startsWith(`${prefix}/api`)) {
+        throw new Error(`Admin Web extension ${surface} route overlaps its API: ${routePath}`);
+      }
+    }
+    if (
+      layout !== undefined &&
+      layout !== false &&
+      (typeof layout !== 'string' || !layout.trim())
+    ) {
+      throw new TypeError(
+        `Admin Web extension ${surface} layout must be false or a compile-time module.`,
+      );
+    }
+    const mount = { path: prefix, layout: false, routes };
+    if (typeof layout === 'string') {
+      mount.component = layout;
+    }
+    return mount;
+  });
+}
+
 function defineBusinessAdmin(options = {}) {
   validateBusinessAdminOptions(options);
+  const extensions = extensionRoutes(options.extensions);
   const title = options.title || 'mss-boot-io';
   const logo = logoDataURL();
   const tailwindStyles = require.resolve('tailwindcss/index.css');
@@ -91,7 +186,7 @@ function defineBusinessAdmin(options = {}) {
     ? resolve(process.cwd(), options.routeRegistrations)
     : emptyRegistrations;
   const routes = createAdminRoutes({
-    businessRoutes: options.businessRoutes || [],
+    businessRoutes: [...(options.businessRoutes || []), ...extensions],
     pagesRoot: resolve(packageRoot, 'src/pages'),
   });
   const ownedWorkplace = resolve(process.cwd(), 'src/business/workplace.ts');
@@ -280,7 +375,10 @@ function defineBusinessAdmin(options = {}) {
     },
     npmClient: 'pnpm',
     polyfill: { imports: [] },
-    proxy: proxyConfig(apiTarget),
+    proxy: proxyConfig(
+      apiTarget,
+      extensions.map((extension) => extension.path),
+    ),
     reactQuery: { queryClient: false },
     request: {},
     routePrefetch: {},
