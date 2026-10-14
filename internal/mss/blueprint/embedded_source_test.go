@@ -63,7 +63,7 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GenerateEmbedded(dry-run) error = %v", err)
 	}
-	if !plan.DryRun || !plan.Success || plan.Identities.Foundation.Version != "1.5.0" || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
+	if !plan.DryRun || !plan.Success || plan.Identities.Foundation.Version != "1.6.0" || plan.Identities.Foundation.Commit != strings.Repeat("a", 40) {
 		t.Fatalf("embedded dry-run plan = %#v", plan)
 	}
 	if _, err := os.Stat(destination); !os.IsNotExist(err) {
@@ -165,7 +165,7 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 		}
 	}
 	if !strings.Contains(string(lockData), "resolution: {tarball: http://127.0.0.1:") ||
-		!strings.Contains(string(lockData), "/artifacts/frozen-admin-web-1.5.0.tgz, integrity: sha512-") {
+		!strings.Contains(string(lockData), "/artifacts/frozen-admin-web-1.6.0.tgz, integrity: sha512-") {
 		t.Fatalf("generated frontend lock did not resolve the exact tarball URL and integrity")
 	}
 	goModuleData, err := os.ReadFile(filepath.Join(destination, "go.mod"))
@@ -286,7 +286,7 @@ func TestUpgradeEmbeddedUsesMatchingSourceAndPreservesBusinessFiles(t *testing.T
 	if err != nil {
 		t.Fatalf("UpgradeEmbedded(plan) error = %v", err)
 	}
-	if !plan.DryRun || !plan.Success || plan.FoundationRoot != "embedded://mss/1.5.0" {
+	if !plan.DryRun || !plan.Success || plan.FoundationRoot != "embedded://mss/1.6.0" {
 		t.Fatalf("embedded upgrade plan = %#v", plan)
 	}
 	if !containsEmbeddedString(plan.PreservedFiles, "internal/modules/custom/owned.go") {
@@ -333,9 +333,9 @@ func embeddedFrontendRegistry(t *testing.T) string {
 		writer.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(
 			writer,
-			`{"name":"@mss-boot-sys/admin-web","version":"1.5.0","dist":{"integrity":%q,"tarball":%q}}`,
+			`{"name":"@mss-boot-sys/admin-web","version":"1.6.0","dist":{"integrity":%q,"tarball":%q}}`,
 			integrity,
-			"http://"+request.Host+"/artifacts/frozen-admin-web-1.5.0.tgz",
+			"http://"+request.Host+"/artifacts/frozen-admin-web-1.6.0.tgz",
 		)
 	}))
 	t.Cleanup(server.Close)

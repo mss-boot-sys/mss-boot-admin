@@ -6,6 +6,17 @@ tag namespaces.
 
 ## [Unreleased]
 
+No unreleased changes are recorded.
+
+## [v1.6.0] - 2026-10-15
+
+Release scope: coordinated minor release of Root, Framework, Admin and
+`@mss-boot-sys/admin-web` from one merged-main commit. Publication results are
+recorded by the corresponding tags, Releases and registry assets. No database
+schema migration. New business-module extension points (surfaces, audit,
+commands, frontend extensions) are opt-in; with no module registered, Admin
+routes and behaviour are unchanged.
+
 ### Added
 
 - Optional business API surfaces (`business.Registration.Surfaces`) served at

@@ -20,7 +20,7 @@ Admin、Framework 与 Admin Web，并保留生成器写入的精确锁。v1.3.8 
 
 - 普通 Thin Host 直接依赖 Admin，由 Admin 固定 Framework；只有开发通用基础设施时才
   直接导入 `mss-boot`；
-- `@mss-boot-sys/admin-web@1.5.0` 是完整前端发行单元，不拆出第二个 SPA；
+- `@mss-boot-sys/admin-web@1.6.0` 是完整前端发行单元，不拆出第二个 SPA；
 - 不使用本地 `replace`、源码目录、未验证的本地 tarball 或相邻版本补齐依赖；
 - 后端权限始终是最终权威，前端控件隐藏不能授权请求。
 
@@ -91,7 +91,7 @@ finally {
 
 ## Admin Web npm 包
 
-官方包为 `@mss-boot-sys/admin-web@1.5.0`，仅发布至
+官方包为 `@mss-boot-sys/admin-web@1.6.0`，仅发布至
 `https://npm.pkg.github.com`，不发布 npmjs。生成的 Thin Host 固定精确版本与锁文件，
 不要手工改成范围版本。
 
@@ -109,7 +109,7 @@ finally {
 在已有前端 `package.json` 所在目录中执行：
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.5.0
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0
 ```
 
 其他第三方依赖仍从其既有 registry 获取；不要把全部 npm 依赖转到 GitHub Packages。

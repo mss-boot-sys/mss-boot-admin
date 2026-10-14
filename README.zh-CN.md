@@ -18,7 +18,7 @@ mss-boot 是面向 Agent 的管理系统基础设施。**v1.5.0 是
 | Root 工具、后端镜像与 GitHub Release | `v1.5.0` |
 | 可复用 Go Framework | `mss-boot/v1.5.0` |
 | 可导入 Admin Go Module | `admin/v1.5.0` |
-| 完整 Admin Web | `web/antd-v6/v1.5.0` / `@mss-boot-sys/admin-web@1.5.0` |
+| 完整 Admin Web | `web/antd-v6/v1.6.0` / `@mss-boot-sys/admin-web@1.6.0` |
 | Docs 网站 | `docs/v1.5.0`，继续使用 https://docs.mss-boot-io.top |
 
 Admin Web 仅发布到 GitHub Packages（`npm.pkg.github.com`），下载需要 GitHub 认证。
@@ -70,7 +70,7 @@ go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0
 Frontend package 根目录：
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.5.0
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0
 ```
 
 Thin Host 固定精确版本。通过本机秘密存储注入具有 `read:packages` 权限的

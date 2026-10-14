@@ -20,7 +20,7 @@ merged `main` commit; publication results are verified from their actual assets.
 | Root tools, backend image, and GitHub Release | `v1.5.0` |
 | Reusable Go Framework | `mss-boot/v1.5.0` |
 | Importable Admin Go module | `admin/v1.5.0` |
-| Complete Admin Web | `web/antd-v6/v1.5.0` / `@mss-boot-sys/admin-web@1.5.0` |
+| Complete Admin Web | `web/antd-v6/v1.6.0` / `@mss-boot-sys/admin-web@1.6.0` |
 | Documentation website | `docs/v1.5.0` at https://docs.mss-boot-io.top |
 
 Admin Web is published only to GitHub Packages (`npm.pkg.github.com`); package
@@ -75,7 +75,7 @@ go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0
 Frontend package root:
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.5.0
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0
 ```
 
 Thin Hosts pin the exact version. Set `NODE_AUTH_TOKEN` from a local secret store

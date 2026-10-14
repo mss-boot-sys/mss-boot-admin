@@ -2,7 +2,7 @@
 
 ## v1.5.0 release identity
 
-`@mss-boot-sys/admin-web@1.5.0` is the sole complete Admin frontend package for
+`@mss-boot-sys/admin-web@1.6.0` is the sole complete Admin frontend package for
 `mss-boot-sys/mss-boot-admin`. It is published to GitHub Packages only, from the
 same exact merged-main commit as the Framework, Admin, Root tools, and images.
 Versions v1.3.8 and earlier belong to the former `mss-boot-io` organization.
@@ -72,7 +72,7 @@ is advisory to backend RBAC, and production business capability registration is
 empty so existing pages retain compiled defaults.
 
 Install the official public package with
-`corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.5.0`.
+`corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0`.
 The frontend tag workflow publishes with the repository-scoped `GITHUB_TOKEN`. See
 [package status](../../docs/docs/getting-started/packages.md) and
 [mss-shop status](../../docs/docs/getting-started/mss-shop.md).

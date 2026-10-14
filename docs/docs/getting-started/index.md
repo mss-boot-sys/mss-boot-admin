@@ -61,7 +61,7 @@ cd example-admin
 ```
 
 生成仓库只持有组合胶水、业务规格与业务代码；Admin、Framework 与
-`@mss-boot-sys/admin-web@1.5.0` 均固定为公共 v1.5.0 依赖。不要复制 Foundation
+`@mss-boot-sys/admin-web@1.6.0` 均固定为公共 v1.6.0 依赖。不要复制 Foundation
 源码、提交 `replace`，或用本地 tarball 替代 GitHub Packages 正式版本。
 
 ## 3. 初始化并首次登录

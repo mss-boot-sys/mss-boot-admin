@@ -38,7 +38,7 @@ v1.5.0 是新仓库首发，v1.5.0 是其后的次版本。迁移前备份已安
 
 ## 为什么不能从 npmjs 安装新包？
 
-`@mss-boot-sys/admin-web@1.5.0` 仅发布到 GitHub Packages。配置 scoped registry，
+`@mss-boot-sys/admin-web@1.6.0` 仅发布到 GitHub Packages。配置 scoped registry，
 通过 `NODE_AUTH_TOKEN` 注入具有 `read:packages` 权限的认证；不要向仓库写入令牌。
 完整配置见[包与导入边界](/getting-started/packages)。
 

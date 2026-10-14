@@ -14,7 +14,7 @@ keywords: [admin ant-design-v6 theme settings precedence inheritance]
 
 ## 产品合同
 
-- Admin Web 稳定身份：`@mss-boot-sys/admin-web@1.5.0`，从 GitHub Packages 与对应 Release 核对身份；
+- Admin Web 稳定身份：`@mss-boot-sys/admin-web@1.6.0`，从 GitHub Packages 与对应 Release 核对身份；
 - Admin 后端稳定身份：`github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0`，从公开 Go 模块与对应 Release 核对身份；
 - 历史状态：v1.3.5 与 v1.3.6 的已公开组件保持不可变，但不能补全或混用；
 - 源码状态：主题继承、重置、并发前置条件和授权已在 Foundation 中实现；
