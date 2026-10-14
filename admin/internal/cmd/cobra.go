@@ -44,6 +44,14 @@ func New(registry *business.Registry) *cobra.Command {
 	}
 	root.AddCommand(server.NewCommand(registry))
 	root.AddCommand(migrate.NewCommand(registry))
+	if registry != nil {
+		moduleCommands, err := registry.Commands()
+		if err != nil && !errors.Is(err, business.ErrRegistryNotFrozen) {
+			root.RunE = func(*cobra.Command, []string) error { return err }
+			return root
+		}
+		root.AddCommand(moduleCommands...)
+	}
 	return root
 }
 

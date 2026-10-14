@@ -103,6 +103,10 @@ type Registration struct {
 	// by the core behind a non-replaceable security chain; see
 	// docs/adr/2026-10-14-surface-security-chain.md.
 	Surfaces []SurfaceRegistration
+	// Commands contributes host-binary subcommands (v1.6.0), for example
+	// `<host> portal install|uninstall|migrate`. Factories are called once per
+	// command-tree build so every execution gets fresh Cobra state.
+	Commands []CommandFactory
 }
 
 // MigrationPhases keeps Foundation-owned migrations ahead of business-owned
@@ -127,6 +131,8 @@ type entry struct {
 	routes        RouteRegistrar
 	presentations []presentation.CapabilityDefinition
 	surfaces      []SurfaceRegistration
+	commands      []CommandFactory
+	commandNames  []string
 }
 
 // registrationTransaction stages every side effect from one Module.Register
@@ -434,6 +440,16 @@ func (r *Registry) Add(module Module) error {
 			}
 		}
 	}
+	for _, command := range stagedEntry.commandNames {
+		for _, existing := range r.entries {
+			for _, other := range existing.commandNames {
+				if other == command {
+					r.mu.RUnlock()
+					return fmt.Errorf("business module %s command %q is already registered by %s", name, command, existing.name)
+				}
+			}
+		}
+	}
 	r.mu.RUnlock()
 
 	r.mu.Lock()
@@ -543,7 +559,16 @@ func (r *Registry) Register(registration Registration) error {
 		surfaces = append(surfaces, cloneSurface(surface))
 	}
 
+	commandNames, err := validateCommands(registration.Commands)
+	if err != nil {
+		return transaction.failRegistration(fmt.Errorf(
+			"business module %s: %w", transaction.module, err,
+		))
+	}
+
 	return transaction.completeRegistration(entry{
+		commands:      append([]CommandFactory(nil), registration.Commands...),
+		commandNames:  commandNames,
 		surfaces:      surfaces,
 		name:          transaction.module,
 		descriptor:    descriptor,

@@ -22,6 +22,10 @@ tag namespaces.
   Events land in the operation audit log as `type=business`; tokens, OAuth
   code/state, PKCE verifiers, cookies and Authorization values are never
   stored. `Registry.MountSurfaces` now takes the audit sink.
+- Module host-binary subcommands: `business.Registration.Commands` with
+  `business.CommandFactory`, mounted next to `server` and `migrate`; reserved,
+  aliased and duplicate names fail composition.
+  See `docs/adr/2026-10-14-module-host-commands.md`.
 - ADR for the v1.6.0 frontend extension mount point.
 
 ### Fixed
