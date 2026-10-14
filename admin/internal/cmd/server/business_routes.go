@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
-	"github.com/mss-boot-sys/mss-boot-admin/admin/middleware"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"gorm.io/gorm"
 )
 
@@ -56,7 +56,8 @@ func mountBusinessSurfaces(registry *business.Registry, root gin.IRouter) error 
 		return err
 	}
 	if mounted > 0 {
-		middleware.EnforceAdminAudienceForSurfaces()
+		// Same effect as auth.requireAdminAudience: true for this process.
+		config.Cfg.Auth.RequireAdminAudience = true
 		slog.Info("business surfaces mounted; Admin API audience is strict", "surfaces", registry.Surfaces())
 	}
 	return nil

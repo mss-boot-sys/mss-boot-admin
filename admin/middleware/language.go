@@ -15,7 +15,7 @@ var supportedLanguages = map[string]bool{
 	"zh-CN": true,
 	"en-US": true,
 	"zh":    true,
-	"en":    true,
+	"en":     true,
 }
 
 func Language() gin.HandlerFunc {

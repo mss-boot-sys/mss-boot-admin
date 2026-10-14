@@ -86,7 +86,7 @@ func AdminTokenAudienceAccepted(claims jwt.MapClaims) bool {
 		}
 	}
 	if !hasAud || len(audiences) == 0 {
-		if config.Cfg.Auth.RequireAdminAudience || surfacesRegistered.Load() {
+		if config.Cfg.Auth.RequireAdminAudience {
 			return false
 		}
 		recordLegacyAudienceToken(claims)
@@ -108,28 +108,6 @@ func SharesAdminSigningKey(key []byte) bool {
 		return false
 	}
 	return subtle.ConstantTimeCompare(key, adminKey) == 1
-}
-
-var surfacesRegistered atomic.Bool
-
-// EnforceAdminAudienceForSurfaces switches Admin APIs to strict audience mode
-// for the life of the process. The core calls it as soon as any non-Admin
-// surface is mounted, so a token without aud can never be ambiguous between
-// Admin and a surface, regardless of auth.requireAdminAudience.
-func EnforceAdminAudienceForSurfaces() {
-	surfacesRegistered.Store(true)
-}
-
-// SetAdminAudienceEnforcedBySurfacesForTest restores the process-wide flag.
-// Production code must use EnforceAdminAudienceForSurfaces only.
-func SetAdminAudienceEnforcedBySurfacesForTest(enforced bool) {
-	surfacesRegistered.Store(enforced)
-}
-
-// AdminAudienceEnforcedBySurfaces reports whether a mounted surface forced
-// strict Admin audience mode.
-func AdminAudienceEnforcedBySurfaces() bool {
-	return surfacesRegistered.Load()
 }
 
 var (

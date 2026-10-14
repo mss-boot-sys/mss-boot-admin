@@ -95,9 +95,9 @@ func composeSurfaceRegistry(t *testing.T, surfaces ...business.SurfaceRegistrati
 }
 
 func restoreSurfaceEnforcement(t *testing.T) {
-	previous := middleware.AdminAudienceEnforcedBySurfaces()
-	t.Cleanup(func() { middleware.SetAdminAudienceEnforcedBySurfacesForTest(previous) })
-	middleware.SetAdminAudienceEnforcedBySurfacesForTest(false)
+	previous := config.Cfg.Auth.RequireAdminAudience
+	t.Cleanup(func() { config.Cfg.Auth.RequireAdminAudience = previous })
+	config.Cfg.Auth.RequireAdminAudience = false
 }
 
 // 1. No surface registered: Admin route table equals the frozen baseline and
@@ -116,7 +116,7 @@ func TestNoSurfaceKeepsAdminBaselineAndAudienceBehaviour(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, mounted)
 	require.Empty(t, registry.Surfaces())
-	require.False(t, middleware.AdminAudienceEnforcedBySurfaces())
+	require.False(t, config.Cfg.Auth.RequireAdminAudience)
 
 	lines := []string{}
 	for _, route := range engine.Routes() {
@@ -142,7 +142,8 @@ func TestSurfaceTokensNeverReachAdminRoutes(t *testing.T) {
 	mounted, err := registry.MountSurfaces(engine)
 	require.NoError(t, err)
 	require.Equal(t, 1, mounted)
-	middleware.EnforceAdminAudienceForSurfaces()
+	// Mirrors server.mountBusinessSurfaces (tested in internal/cmd/server).
+	config.Cfg.Auth.RequireAdminAudience = true
 
 	tokens := map[string]jwt.MapClaims{
 		"surface aud=portal":         {"aud": "portal", "iss": surfaceTestIssuer},
