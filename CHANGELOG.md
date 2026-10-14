@@ -10,15 +10,20 @@ tag namespaces.
 
 - Optional business API surfaces (`business.Registration.Surfaces`) served at
   `/<name>/api` behind a core-enforced chain: per-surface CORS, module
-  authenticator with core `aud`/`iss` enforcement, exact-Origin CSRF, then
-  module middleware. Route categories are a closed set (`public`,
-  `authenticated`). Mounting any surface makes Admin token audience strict.
-  With no surface, Admin routes and behaviour are unchanged.
-  See `docs/adr/2026-10-14-surface-security-chain.md`.
+  authenticator (read-only `SurfaceRequest`, reports `bearer`/`cookie`
+  credential) with core `aud`/`iss` enforcement, exact-Origin CSRF decided by
+  the verified credential, then module middleware. Route categories are a
+  closed set (`public`, `authenticated`). Duplicate surface names fail
+  registration. Mounting any surface (in `MountSurfaces` itself) makes Admin
+  token audience strict. With no surface, Admin routes and behaviour are
+  unchanged. See `docs/adr/2026-10-14-surface-security-chain.md`.
 - Opt-in core double-submit CSRF for cookie-based surface sessions
   (`SurfaceRegistration.CSRF`, `business.SetSurfaceCSRFCookie`): token bound
   to surface and session by HMAC-SHA256, `__Host-` cookie, constant-time
-  compare.
+  compare. Enforced whenever the request was cookie-authenticated (a missing
+  or empty session cookie is rejected with 403, never skipped); the CSRF key
+  may not equal the Admin auth key; `X-MSS-CSRF-Token` is always added to the
+  surface CORS allowed headers.
 - Redacted business audit sink: `admin/business/audit` (`Sink`, `Event`,
   `Redacting`), `business.Runtime.Audit` and `business.RecordSurfaceEvent`.
   Events land in the operation audit log as `type=business`; tokens, OAuth

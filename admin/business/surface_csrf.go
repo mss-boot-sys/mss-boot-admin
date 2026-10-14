@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/browsersecurity"
 )
 
@@ -45,12 +46,28 @@ func SurfaceCSRFCookieName(surface string) string {
 	return "__Host-mss-" + surface + "-csrf"
 }
 
+var errSurfaceCSRFAdminKey = errors.New("CSRF key must not be the Admin auth key")
+
+// surfaceCSRFKeyIsAdminKey compares in constant time and never exposes either
+// key. It is checked at registration and again when surfaces are mounted, so
+// a configuration loaded after registration is still covered.
+func surfaceCSRFKeyIsAdminKey(key []byte) bool {
+	adminKey := []byte(config.Cfg.Auth.Key)
+	if len(key) == 0 || len(adminKey) == 0 {
+		return false
+	}
+	return subtle.ConstantTimeCompare(key, adminKey) == 1
+}
+
 func validateSurfaceCSRF(options SurfaceCSRF) error {
 	if !cookieNamePattern.MatchString(options.SessionCookie) {
 		return errors.New("CSRF session cookie name is invalid")
 	}
 	if len(options.Key) < 32 {
 		return errors.New("CSRF key must be at least 32 bytes")
+	}
+	if surfaceCSRFKeyIsAdminKey(options.Key) {
+		return errSurfaceCSRFAdminKey
 	}
 	return nil
 }
@@ -131,10 +148,18 @@ func SetSurfaceCSRFCookie(c *gin.Context, session string, expiresAt time.Time) (
 }
 
 // surfaceCSRFCheck rejects unsafe browser requests unless they carry an exact
-// trusted Origin; when the surface opted into CSRF tokens and the request
-// carries the session cookie, it additionally requires header == cookie
-// (constant time) and a token HMAC-bound to that session and surface.
-// Bearer-only API clients without cookies are exempt.
+// trusted Origin. What is exempt and what needs a double-submit token is
+// decided by the credential the core chain actually verified, never by the
+// shape of request headers or by which cookies happen to be present:
+//
+//   - bearer-authenticated: not subject to browser CSRF;
+//   - cookie-authenticated: trusted Origin required and, when the surface
+//     opted into CSRF tokens, the session cookie must be present (missing or
+//     empty -> 403) and the header token must equal the cookie token and be
+//     HMAC-bound to that session and surface;
+//   - public route (no principal): a request without cookies and without
+//     Origin carries no ambient credential and passes; otherwise a trusted
+//     Origin is required, plus a valid token if the session cookie is sent.
 func surfaceCSRFCheck(surface SurfaceRegistration) gin.HandlerFunc {
 	origins := surface.CORS.AllowOrigins
 	return func(c *gin.Context) {
@@ -142,28 +167,45 @@ func surfaceCSRFCheck(surface SurfaceRegistration) gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		bearer := strings.HasPrefix(strings.ToLower(c.GetHeader("Authorization")), "bearer ")
-		if bearer && len(c.Request.Cookies()) == 0 {
+		origin := c.GetHeader("Origin")
+		principal, authenticated := SurfacePrincipalFrom(c)
+		if authenticated && principal.Credential == SurfaceCredentialBearer {
 			c.Next()
 			return
 		}
-		if !browsersecurity.IsTrustedOrigin(c.GetHeader("Origin"), "", origins) {
+		if !authenticated && origin == "" && len(c.Request.Cookies()) == 0 {
+			c.Next()
+			return
+		}
+		if !browsersecurity.IsTrustedOrigin(origin, "", origins) {
 			abortSurface(c, http.StatusForbidden, "csrf validation failed")
 			return
 		}
 		if surface.CSRF != nil {
 			session, err := c.Cookie(surface.CSRF.SessionCookie)
-			if err == nil && session != "" {
-				cookieToken, _ := c.Cookie(SurfaceCSRFCookieName(surface.Name))
-				headerToken := strings.TrimSpace(c.GetHeader(SurfaceCSRFHeader))
-				if cookieToken == "" || headerToken == "" ||
-					subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 ||
-					!validSurfaceCSRFToken(headerToken, surface.Name, session, surface.CSRF.Key) {
-					abortSurface(c, http.StatusForbidden, "csrf validation failed")
-					return
-				}
+			sessionPresent := err == nil && session != ""
+			cookieAuthenticated := authenticated && principal.Credential == SurfaceCredentialCookie
+			if cookieAuthenticated && !sessionPresent {
+				// Authenticated by a cookie, but not by the declared session
+				// cookie: the token cannot be bound, so fail closed.
+				abortSurface(c, http.StatusForbidden, "csrf validation failed")
+				return
+			}
+			if sessionPresent && !surfaceCSRFTokenAccepted(c, surface, session) {
+				abortSurface(c, http.StatusForbidden, "csrf validation failed")
+				return
 			}
 		}
 		c.Next()
 	}
+}
+
+func surfaceCSRFTokenAccepted(c *gin.Context, surface SurfaceRegistration, session string) bool {
+	cookieToken, _ := c.Cookie(SurfaceCSRFCookieName(surface.Name))
+	headerToken := strings.TrimSpace(c.GetHeader(SurfaceCSRFHeader))
+	if cookieToken == "" || headerToken == "" ||
+		subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 {
+		return false
+	}
+	return validSurfaceCSRFToken(headerToken, surface.Name, session, surface.CSRF.Key)
 }

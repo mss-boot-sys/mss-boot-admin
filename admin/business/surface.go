@@ -1,10 +1,12 @@
 package business
 
 import (
+	"context"
 	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/browsersecurity"
 )
 
@@ -29,26 +32,136 @@ const (
 	SurfaceRouteAuthenticated SurfaceRouteCategory = "authenticated"
 )
 
+// SurfaceCredentialKind names how a SurfaceAuthenticator actually
+// authenticated the request. The core uses it, not the shape of request
+// headers, to decide whether browser CSRF protection applies.
+type SurfaceCredentialKind string
+
+const (
+	// SurfaceCredentialBearer means the credential was an explicit bearer
+	// token the client attached itself (not an ambient browser credential).
+	SurfaceCredentialBearer SurfaceCredentialKind = "bearer"
+	// SurfaceCredentialCookie means the credential was a cookie the browser
+	// attaches automatically; unsafe requests are subject to CSRF checks.
+	SurfaceCredentialCookie SurfaceCredentialKind = "cookie"
+)
+
 // SurfacePrincipal is the identity a SurfaceAuthenticator resolved. The core,
 // not the module, decides whether Audience and Issuer are acceptable.
+// Credential is required; any value other than bearer or cookie yields 401.
 type SurfacePrincipal struct {
-	Subject  string
-	Issuer   string
-	Audience []string
+	Subject    string
+	Issuer     string
+	Audience   []string
+	Credential SurfaceCredentialKind
 }
 
+// SurfaceRequest is the read-only view of an incoming request handed to a
+// SurfaceAuthenticator. It deliberately exposes no response writer and no way
+// to advance, abort or otherwise steer the handler chain, and no request body.
+// Every accessor returns a copy.
+type SurfaceRequest struct {
+	request  *http.Request
+	remoteIP string
+}
+
+func newSurfaceRequest(c *gin.Context) SurfaceRequest {
+	return SurfaceRequest{request: c.Request, remoteIP: c.ClientIP()}
+}
+
+// NewSurfaceRequest builds a SurfaceRequest for tests of module authenticators.
+func NewSurfaceRequest(request *http.Request, remoteIP string) SurfaceRequest {
+	return SurfaceRequest{request: request, remoteIP: remoteIP}
+}
+
+// Context returns the request context (never the gin context).
+func (r SurfaceRequest) Context() context.Context {
+	if r.request == nil {
+		return context.Background()
+	}
+	return r.request.Context()
+}
+
+// Method returns the HTTP method.
+func (r SurfaceRequest) Method() string {
+	if r.request == nil {
+		return ""
+	}
+	return r.request.Method
+}
+
+// URL returns a copy of the request URL.
+func (r SurfaceRequest) URL() *url.URL {
+	if r.request == nil || r.request.URL == nil {
+		return &url.URL{}
+	}
+	clone := *r.request.URL
+	if r.request.URL.User != nil {
+		user := *r.request.URL.User
+		clone.User = &user
+	}
+	return &clone
+}
+
+// Header returns the first value of the named request header.
+func (r SurfaceRequest) Header(name string) string {
+	if r.request == nil {
+		return ""
+	}
+	return r.request.Header.Get(name)
+}
+
+// Headers returns a copy of all request headers.
+func (r SurfaceRequest) Headers() http.Header {
+	if r.request == nil {
+		return http.Header{}
+	}
+	return r.request.Header.Clone()
+}
+
+// Cookie returns a copy of the named request cookie.
+func (r SurfaceRequest) Cookie(name string) (*http.Cookie, error) {
+	if r.request == nil {
+		return nil, http.ErrNoCookie
+	}
+	cookie, err := r.request.Cookie(name)
+	if err != nil {
+		return nil, err
+	}
+	clone := *cookie
+	return &clone, nil
+}
+
+// Cookies returns copies of all request cookies.
+func (r SurfaceRequest) Cookies() []*http.Cookie {
+	if r.request == nil {
+		return nil
+	}
+	cookies := r.request.Cookies()
+	out := make([]*http.Cookie, 0, len(cookies))
+	for _, cookie := range cookies {
+		clone := *cookie
+		out = append(out, &clone)
+	}
+	return out
+}
+
+// RemoteIP returns the client IP as resolved by the engine's trusted proxies.
+func (r SurfaceRequest) RemoteIP() string { return r.remoteIP }
+
 // SurfaceAuthenticator is implemented by the module and invoked by the core.
-// It must not write a response; returning an error yields 401.
+// It receives a read-only SurfaceRequest, so it cannot write a response or
+// run later handlers; returning an error yields 401.
 type SurfaceAuthenticator interface {
-	Authenticate(*gin.Context) (SurfacePrincipal, error)
+	Authenticate(SurfaceRequest) (SurfacePrincipal, error)
 }
 
 // SurfaceAuthenticatorFunc adapts a function to SurfaceAuthenticator.
-type SurfaceAuthenticatorFunc func(*gin.Context) (SurfacePrincipal, error)
+type SurfaceAuthenticatorFunc func(SurfaceRequest) (SurfacePrincipal, error)
 
 // Authenticate implements SurfaceAuthenticator.
-func (f SurfaceAuthenticatorFunc) Authenticate(c *gin.Context) (SurfacePrincipal, error) {
-	return f(c)
+func (f SurfaceAuthenticatorFunc) Authenticate(request SurfaceRequest) (SurfacePrincipal, error) {
+	return f(request)
 }
 
 // SurfaceCORS is independent of the Admin CORS configuration. An empty
@@ -238,16 +351,29 @@ func (r *Registry) MountSurfaces(root gin.IRouter, sink audit.Sink) (int, error)
 	mounted := 0
 	for _, registered := range entries {
 		for _, surface := range registered.surfaces {
+			if surface.CSRF != nil && surfaceCSRFKeyIsAdminKey(surface.CSRF.Key) {
+				return mounted, fmt.Errorf("surface %s: %w", surface.Name, errSurfaceCSRFAdminKey)
+			}
+		}
+	}
+	for _, registered := range entries {
+		for _, surface := range registered.surfaces {
 			mountSurface(root, surface, sink)
 			mounted++
 		}
+	}
+	if mounted > 0 {
+		// Mounting any surface forces strict Admin audience for every caller
+		// (server wrapper, embedded hosts, tests), so a surface token or a
+		// legacy token without aud can never authenticate an Admin API.
+		config.Cfg.Auth.RequireAdminAudience = true
 	}
 	return mounted, nil
 }
 
 func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink) {
 	group := root.Group("/" + surface.Name + "/api")
-	group.Use(surfaceCORS(surface.CORS))
+	group.Use(surfaceCORS(surface.CORS, surface.CSRF != nil))
 	group.Use(func(c *gin.Context) {
 		c.Set(surfaceAuditKey, surfaceAudit{surface: surface.Name, sink: sink})
 		if surface.CSRF != nil {
@@ -268,7 +394,7 @@ func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink
 	}
 }
 
-func surfaceCORS(policy SurfaceCORS) gin.HandlerFunc {
+func surfaceCORS(policy SurfaceCORS, csrfTokens bool) gin.HandlerFunc {
 	configCors := cors.DefaultConfig()
 	configCors.AllowOrigins = append([]string(nil), policy.AllowOrigins...)
 	if len(configCors.AllowOrigins) == 0 {
@@ -280,10 +406,24 @@ func surfaceCORS(policy SurfaceCORS) gin.HandlerFunc {
 	} else {
 		configCors.AddAllowHeaders("Authorization")
 	}
+	if csrfTokens && !surfaceHeaderListed(configCors.AllowHeaders, SurfaceCSRFHeader) {
+		// Cross-origin unsafe requests carry the double-submit header; without
+		// it the browser preflight fails before the core can verify the token.
+		configCors.AddAllowHeaders(SurfaceCSRFHeader)
+	}
 	if policy.MaxAge > 0 {
 		configCors.MaxAge = policy.MaxAge
 	}
 	return cors.New(configCors)
+}
+
+func surfaceHeaderListed(headers []string, name string) bool {
+	for _, header := range headers {
+		if strings.EqualFold(strings.TrimSpace(header), name) {
+			return true
+		}
+	}
+	return false
 }
 
 func abortSurface(c *gin.Context, status int, message string) {
@@ -292,13 +432,8 @@ func abortSurface(c *gin.Context, status int, message string) {
 
 func surfaceAuthentication(surface SurfaceRegistration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		principal, err := surface.Authenticator.Authenticate(c)
-		if c.IsAborted() || c.Writer.Written() {
-			// An authenticator must not decide the response itself.
-			c.Abort()
-			return
-		}
-		if err != nil || !surfaceAudienceAccepted(principal, surface) {
+		principal, err := surface.Authenticator.Authenticate(newSurfaceRequest(c))
+		if err != nil || !surfaceCredentialKnown(principal.Credential) || !surfaceAudienceAccepted(principal, surface) {
 			abortSurface(c, http.StatusUnauthorized, "unauthorized")
 			return
 		}
@@ -306,6 +441,10 @@ func surfaceAuthentication(surface SurfaceRegistration) gin.HandlerFunc {
 		c.Set(SurfacePrincipalKey, principal)
 		c.Next()
 	}
+}
+
+func surfaceCredentialKnown(kind SurfaceCredentialKind) bool {
+	return kind == SurfaceCredentialBearer || kind == SurfaceCredentialCookie
 }
 
 // surfaceAudienceAccepted requires aud to contain exactly the surface name and
