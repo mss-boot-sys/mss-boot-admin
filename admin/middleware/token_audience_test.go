@@ -91,3 +91,22 @@ func TestSharesAdminSigningKeyIsBoolean(t *testing.T) {
 		t.Fatal("empty admin key must never match")
 	}
 }
+
+func TestLegacyAudienceTokensAreCountedInCompatMode(t *testing.T) {
+	withAudienceConfig(t, "", false, "k")
+	sessions, pats := LegacyAudienceTokenCounts()
+	if !AdminTokenAudienceAccepted(jwt.MapClaims{"uid": "u"}) ||
+		!AdminTokenAudienceAccepted(jwt.MapClaims{"uid": "u", "personAccessToken": "p"}) {
+		t.Fatal("legacy tokens must be accepted in compat mode")
+	}
+	AdminTokenAudienceAccepted(jwt.MapClaims{"aud": "admin"})
+	gotSessions, gotPATs := LegacyAudienceTokenCounts()
+	if gotSessions-sessions != 1 || gotPATs-pats != 1 {
+		t.Fatalf("legacy counters delta = %d/%d, want 1/1", gotSessions-sessions, gotPATs-pats)
+	}
+	config.Cfg.Auth.RequireAdminAudience = true
+	AdminTokenAudienceAccepted(jwt.MapClaims{"uid": "u"})
+	if s2, _ := LegacyAudienceTokenCounts(); s2 != gotSessions {
+		t.Fatal("strict-mode rejections must not count as accepted legacy tokens")
+	}
+}
