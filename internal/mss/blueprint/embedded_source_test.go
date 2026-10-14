@@ -119,8 +119,8 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, expected := range []string{
-		"releases/download/v1.5.0/install-mss.sh",
-		"--version v1.5.0",
+		"releases/download/v1.6.0/install-mss.sh",
+		"--version v1.6.0",
 		"mss doctor --strict",
 		"mss verify --all",
 	} {
@@ -172,7 +172,7 @@ func TestGenerateEmbeddedWorksOutsideGitAndIsIdempotent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(goModuleData), "github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.5.0 // indirect") {
+	if !strings.Contains(string(goModuleData), "github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.6.0 // indirect") {
 		t.Fatal("generated Go module does not keep the exact Framework pin in tidy readonly form")
 	}
 	for _, forbidden := range []string{"\nreplace ", "\nexclude ", "file:", "127.0.0.1", "localhost", "__MSS_"} {
@@ -221,7 +221,7 @@ func TestGenerateEmbeddedRejectsIncompleteBuildProvenance(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = "v1.5.0", "deadbeef", "2026-08-25T12:34:56Z"
+	buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = "v1.6.0", "deadbeef", "2026-08-25T12:34:56Z"
 	_, err := GenerateEmbedded(context.Background(), t.TempDir(), Options{
 		Application: Application{Name: "invalid", DisplayName: "Invalid", Module: "github.com/acme/invalid", Repository: "acme/invalid"},
 	})
@@ -278,7 +278,7 @@ func TestUpgradeEmbeddedUsesMatchingSourceAndPreservesBusinessFiles(t *testing.T
 
 	options := UpgradeOptions{
 		ApplicationRoot:              applicationRoot,
-		RequestedDistributionVersion: "v1.5.0",
+		RequestedDistributionVersion: "v1.6.0",
 		PreservedBusinessPaths:       []string{"internal/modules"},
 		FrontendRegistryURL:          registry,
 	}
@@ -321,7 +321,7 @@ func setEmbeddedReleaseBuild(t *testing.T) {
 	t.Cleanup(func() {
 		buildinfo.Version, buildinfo.Commit, buildinfo.Timestamp = originalVersion, originalCommit, originalTimestamp
 	})
-	buildinfo.Version = "v1.5.0"
+	buildinfo.Version = "v1.6.0"
 	buildinfo.Commit = strings.Repeat("a", 40)
 	buildinfo.Timestamp = "2026-08-25T12:34:56Z"
 }

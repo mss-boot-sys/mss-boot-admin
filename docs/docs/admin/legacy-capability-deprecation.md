@@ -67,7 +67,7 @@ mss verify --changed
 
 ## `mss` 为什么继续保留
 
-v1.5.0 将 `mss` 作为 Root Release 工具交付，供 Thin Host 开发期使用；以实际 Release 资产核验身份。
+v1.6.0 将 `mss` 作为 Root Release 工具交付，供 Thin Host 开发期使用；以实际 Release 资产核验身份。
 它与已移除的 Admin 浏览器生成器有不同的信任边界：
 
 | `mss` 确定性生成器 | 已移除的 Admin 浏览器生成器 |

@@ -2,18 +2,18 @@
 title: mss-boot Admin
 hero:
   title: mss-boot Admin
-  description: v1.5.0 · UI 刷新 · 完整 Admin 发行版
+  description: v1.6.0 · UI 刷新 · 完整 Admin 发行版
   actions:
     - text: 快速开始
       link: /getting-started
-    - text: v1.5.0 发布与迁移
+    - text: v1.6.0 发布与迁移
       link: /releases/v1-5-0
     - text: GitHub Packages 配置
       link: /getting-started/packages
 features:
   - title: 完整发行
     emoji: 📦
-    description: Go Framework、Admin、完整前端、工具与镜像使用同一 v1.5.0 基线。
+    description: Go Framework、Admin、完整前端、工具与镜像使用同一 v1.6.0 基线。
   - title: 新仓库
     emoji: 🏠
     description: 代码与包迁至 mss-boot-sys，旧组织版本保留为历史记录。
@@ -24,13 +24,13 @@ features:
 
 # mss-boot Admin
 
-**v1.5.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）。 v1.3.8 及更早版本
+**v1.6.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）。 v1.3.8 及更早版本
 发布于原 `mss-boot-io` 组织。当前指南统一使用新 Go 模块路径、GitHub Packages 上的
 `@mss-boot-sys/admin-web` 和新镜像地址。
 
 安装前阅读[快速开始](/getting-started)与[包认证指南](/getting-started/packages)。
 升级涉及命名空间、Go 1.27.2、Casbin v3 和 GitHub Packages 认证，完整步骤见
-[v1.5.0 发布说明](/releases/v1-5-0)。发行是否完成以实际 Release 与包资产为准；
+[v1.6.0 发布说明](/releases/v1-5-0)。发行是否完成以实际 Release 与包资产为准；
 网站保留原域名，以 `/release.json` 标识部署版本和源码提交。
 
 ## 人类文档与 Agent 合同

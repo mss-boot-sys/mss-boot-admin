@@ -2,29 +2,29 @@
 
 [English](./README.md)
 
-mss-boot 是面向 Agent 的管理系统基础设施。**v1.5.0 是
+mss-boot 是面向 Agent 的管理系统基础设施。**v1.6.0 是
 `mss-boot-sys/mss-boot-admin` 的当前完整 Admin Distribution**（v1.3.9 为本仓库首发）。 v1.3.8 及更早版本
 发布于原 `mss-boot-io` 组织；保留历史记录，不在新仓库补建旧标签或制品。
 
-以下命令说明 v1.5.0 发行合同，适用于对应
-[Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.5.0)
+以下命令说明 v1.6.0 发行合同，适用于对应
+[Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.6.0)
 和包可用之后。所有组件绑定同一个经过完整本地验证的 merged `main` 提交；实际发布状态
 以 Release、包和镜像资产为准。
 
 ## Distribution 身份
 
-| 发布面 | v1.5.0 身份 |
+| 发布面 | v1.6.0 身份 |
 | --- | --- |
-| Root 工具、后端镜像与 GitHub Release | `v1.5.0` |
-| 可复用 Go Framework | `mss-boot/v1.5.0` |
-| 可导入 Admin Go Module | `admin/v1.5.0` |
+| Root 工具、后端镜像与 GitHub Release | `v1.6.0` |
+| 可复用 Go Framework | `mss-boot/v1.6.0` |
+| 可导入 Admin Go Module | `admin/v1.6.0` |
 | 完整 Admin Web | `web/antd-v6/v1.6.0` / `@mss-boot-sys/admin-web@1.6.0` |
-| Docs 网站 | `docs/v1.5.0`，继续使用 https://docs.mss-boot-io.top |
+| Docs 网站 | `docs/v1.6.0`，继续使用 https://docs.mss-boot-io.top |
 
 Admin Web 仅发布到 GitHub Packages（`npm.pkg.github.com`），下载需要 GitHub 认证。
 Docs 部署以公开 `/release.json` 中的版本与完整提交以及页面实测为准。
 
-## 安装 v1.5.0 工具
+## 安装 v1.6.0 工具
 
 版本化安装器会校验 Release 摘要并同时安装 `mss` 与 `mss-mcp`；它不会使用 `sudo`，
 也不会修改 Shell Profile。
@@ -33,8 +33,8 @@ Linux 或 macOS：
 
 ```shell
 curl -fL -o install-mss.sh \
-  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.5.0/install-mss.sh
-bash ./install-mss.sh --version v1.5.0
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.6.0/install-mss.sh
+bash ./install-mss.sh --version v1.6.0
 export PATH="$HOME/.local/bin:$PATH"
 mss --version
 mss-mcp --version
@@ -44,9 +44,9 @@ Windows PowerShell：
 
 ```powershell
 Invoke-WebRequest `
-  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.5.0/install-mss.ps1 `
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.6.0/install-mss.ps1 `
   -OutFile install-mss.ps1
-& .\install-mss.ps1 -Version v1.5.0
+& .\install-mss.ps1 -Version v1.6.0
 $env:Path = "$env:LOCALAPPDATA\Programs\mss\bin;$env:Path"
 mss --version
 mss-mcp --version
@@ -63,8 +63,8 @@ Thin Host 中通常为 `web/`）运行。
 Go Module 根目录：
 
 ```shell
-go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.5.0
-go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0
+go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.0
+go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0
 ```
 
 Frontend package 根目录：
@@ -100,22 +100,22 @@ mss dev --detach
 `github.com/mss-boot-sys/mss-boot-admin`，npm 作用域迁到 `@mss-boot-sys` 并配置 registry
 认证。Go 基线为 1.27.2；引用 Casbin 类型的扩展须适配 Casbin v3 并重新编译验证。
 
-先备份代码、配置和数据库，安装目标 v1.5.0 工具，并在规划前核对两个二进制版本。
+先备份代码、配置和数据库，安装目标 v1.6.0 工具，并在规划前核对两个二进制版本。
 受支持的三方升级必须保留生成的 `.mss/blueprint-manifest.json`：
 
 ```shell
 mss --version
 mss-mcp --version
-mss upgrade admin v1.5.0 --format json
-mss upgrade admin v1.5.0 --apply --yes --format json
+mss upgrade admin v1.6.0 --format json
+mss upgrade admin v1.6.0 --apply --yes --format json
 mss doctor --strict
 mss verify --all
-mss upgrade admin v1.5.0 --format json
+mss upgrade admin v1.6.0 --format json
 ```
 
 第一次和最后一次命令都是只读计划；最终计划不得包含 create、update、delete 或 conflict。
 升级引擎只修改 Blueprint 管理文件，并保留业务自有文件和未知文件。手工拼装或缺少
-manifest 的仓库必须在新目录生成干净的 v1.5.0 基线，再迁入业务规格和自有文件，不能
+manifest 的仓库必须在新目录生成干净的 v1.6.0 基线，再迁入业务规格和自有文件，不能
 伪造 manifest。
 
 ## 架构边界
@@ -143,7 +143,7 @@ manifest 的仓库必须在新目录生成干净的 v1.5.0 基线，再迁入业
 可执行指令源。采用者请从[快速开始](./docs/docs/getting-started/index.md)、
 [包边界](./docs/docs/getting-started/packages.md)、
 [工具契约](./docs/docs/getting-started/tooling.md)与
-[v1.5.0 发布记录](./docs/docs/releases/v1-5-0.md)开始。
+[v1.6.0 发布记录](./docs/docs/releases/v1-5-0.md)开始。
 
 Foundation 贡献者应按 [`CONTRIBUTING.md`](./CONTRIBUTING.md) 与最近的
 `AGENTS.md` 使用源码检出命令和验证流程。

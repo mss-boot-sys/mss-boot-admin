@@ -4,7 +4,7 @@ title: Native OIDC Provider and Proxmox VE
 
 # Native OIDC Provider and Proxmox VE
 
-This page describes the OIDC provider included in the v1.5.0 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
+This page describes the OIDC provider included in the v1.6.0 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
 
 Admin remains the account and policy authority. No separate identity service is required. Core authentication reuses its password verification, browser cookies, durable sessions, disabled-account checks and audit. `admin/oidc` owns the OIDC protocol; it uses the existing `golang-jwt/jwt/v4` library and Go crypto for RS256 and AES-GCM. It does not hand PVE an Admin JWT.
 

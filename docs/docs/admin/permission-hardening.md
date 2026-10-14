@@ -10,7 +10,7 @@ keywords: [admin authorization rbac casbin etag session migration]
 
 ## 目标
 
-适用基线：发行版 **mss-boot-admin v1.5.0**。
+适用基线：发行版 **mss-boot-admin v1.6.0**。
 
 Admin 权限链路遵循“后端权威、默认拒绝、最小权限、变更可追踪”四项原则。前端菜单、路由和按钮只负责体验投影，不能替代 API 鉴权。
 
@@ -99,7 +99,7 @@ MongoDB 策略适配器使用 `github.com/apache/casbin-mongodb-adapter/v4` 的�
 
 源码验证需同时使用修改后的 Framework 和 Admin：运行 `make test-all build`，以及
 `make compatibility-admin` 验证关闭 workspace 的外部消费者。
-安装型 Thin Host 通过发行升级流程将完整依赖锁更新到 v1.5.0。
+安装型 Thin Host 通过发行升级流程将完整依赖锁更新到 v1.6.0。
 如需回滚，通过后续 PR 一并回滚引擎与适配器变更，保留策略数据。
 
 ## 前端投影

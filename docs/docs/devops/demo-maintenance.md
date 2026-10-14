@@ -116,13 +116,13 @@ demo 缓存以清除候选版本的临时状态；旧版本的公网登录和协
 正常重试用新的运行编号；同一版本仍要通过完整制品和数据保护检查。也可执行：
 
 ```sh
-gh workflow run demo-deploy.yml --repo mss-boot-sys/mss-boot-admin --ref main -f version=v1.5.0
+gh workflow run demo-deploy.yml --repo mss-boot-sys/mss-boot-admin --ref main -f version=v1.6.0
 ```
 
 本地先执行只读计划，输出仅限仓库 `.mss/run`：
 
 ```sh
-python3 tools/demo/resolve_release.py --version v1.5.0 \
+python3 tools/demo/resolve_release.py --version v1.6.0 \
   --output .mss/run/demo/release.json --assets-dir .mss/run/demo/assets --write
 python3 tools/demo/deploy.py --release .mss/run/demo/release.json \
   --state-dir .mss/run/demo/transaction --transaction manual-review
