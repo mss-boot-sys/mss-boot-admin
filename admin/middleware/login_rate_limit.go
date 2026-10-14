@@ -52,7 +52,7 @@ func ConfigureLoginRateLimit(cfg config.AdminLoginRateLimit) error {
 	return nil
 }
 
-// AdminLoginRateLimit limits sign-in attempts per client IP. Exceeding the
+// AdminLoginRateLimit limits sign-in attempts per client IP (LoginClientIP). Exceeding the
 // budget returns 429 with Retry-After and writes a login audit record. It is
 // a no-op when no limiter is installed (the default).
 func AdminLoginRateLimit() gin.HandlerFunc {
@@ -62,7 +62,7 @@ func AdminLoginRateLimit() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		decision, err := limiter.Allow(c.Request.Context(), "admin-login:ip:"+c.ClientIP())
+		decision, err := limiter.Allow(c.Request.Context(), "admin-login:ip:"+LoginClientIP(c))
 		if err != nil {
 			if errors.Is(err, c.Request.Context().Err()) {
 				c.Abort()
@@ -80,7 +80,7 @@ func AdminLoginRateLimit() gin.HandlerFunc {
 				seconds = 1
 			}
 			c.Header("Retry-After", strconv.Itoa(seconds))
-			if logErr := service.Audit.LogLogin(center.Default.GetDB(c, nil), "", "", c.ClientIP(),
+			if logErr := service.Audit.LogLogin(center.Default.GetDB(c, nil), "", "", LoginClientIP(c),
 				c.GetHeader("User-Agent"), "admin login rate limited", false); logErr != nil {
 				slog.Warn("write login log failed")
 			}

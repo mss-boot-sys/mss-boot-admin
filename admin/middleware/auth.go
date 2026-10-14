@@ -61,6 +61,9 @@ func Init() error {
 	if err := ConfigureLoginRateLimit(config.Cfg.Auth.AdminLogin.RateLimit); err != nil {
 		return err
 	}
+	if err := ConfigureLoginClientIP(config.Cfg.Auth.AdminLogin.ClientIP, config.Cfg.Application.TrustedProxies); err != nil {
+		return err
+	}
 	Auth = &jwt.GinJWTMiddleware{
 		Realm:       config.Cfg.Auth.Realm,
 		Key:         []byte(config.Cfg.Auth.Key),
@@ -210,7 +213,7 @@ func AuthenticateVerifier(c *gin.Context, loginVals security.Verifier) (security
 	loginContext.Clear()
 	api := response.Make(c)
 	ok, user, err := loginVals.Verify(c)
-	ip := c.ClientIP()
+	ip := LoginClientIP(c)
 	userAgent := c.GetHeader("User-Agent")
 	db := center.Default.GetDB(c, nil)
 
