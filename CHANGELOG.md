@@ -18,6 +18,23 @@ tag namespaces.
   Denials are recorded in the login audit with provider, login and id only.
   `auth.adminLogin.secondFactor` is reserved and only accepts `off`; invalid
   configuration fails startup.
+- Add optional Admin login rate limiting `auth.adminLogin.rateLimit`
+  (`limit` per `window` per client IP) on password login and the OAuth
+  callback, built on `keyedlimit`. Off by default. When exceeded it returns
+  429 with `Retry-After` and writes a login audit record; an unavailable
+  limiter store fails closed with 503. `middleware.SetLoginRateLimiter`
+  accepts a shared-store implementation for multi-replica deployments.
+  OpenAPI declares 429 on both endpoints (baseline regenerated).
+
+### Framework
+
+- Add `mss-boot/pkg/keyedlimit`: the storage-agnostic per-key `KeyedLimiter`
+  interface with an injectable clock, a process-local in-memory fixed-window
+  implementation (lazy expiry, no background goroutine), and the reusable
+  contract suite `keyedlimit/limittest` that every store implementation must
+  pass (limit, window boundary, key isolation, reset, empty key, cancelled
+  context, concurrent exactness under `-race`). No new dependencies; no
+  Redis implementation in core.
 
 ### Verification
 

@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestAdminLoginDisabledByDefaultAllowsEveryone(t *testing.T) {
@@ -57,11 +58,17 @@ func TestAdminLoginValidateFailsClosed(t *testing.T) {
 		{SecondFactor: "required"},
 		{SecondFactor: "optional"},
 		{SecondFactor: "sometimes"},
+		{RateLimit: AdminLoginRateLimit{Limit: 5}},
+		{RateLimit: AdminLoginRateLimit{Window: time.Minute}},
+		{RateLimit: AdminLoginRateLimit{Limit: -1, Window: time.Minute}},
 	}
 	for index, policy := range bad {
 		if err := policy.Validate(); err == nil {
 			t.Errorf("case %d: expected validation error for %+v", index, policy)
 		}
+	}
+	if err := (AdminLogin{RateLimit: AdminLoginRateLimit{Limit: 10, Window: time.Minute}}).Validate(); err != nil {
+		t.Fatalf("valid rate limit rejected: %v", err)
 	}
 	if err := (AdminLogin{SecondFactor: " OFF "}).Validate(); err != nil {
 		t.Fatalf("off must validate: %v", err)

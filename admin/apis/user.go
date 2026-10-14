@@ -124,7 +124,7 @@ var defaultEmailChallengeSendSlots = make(chan struct{}, 32)
 
 // Other handler
 func (e *User) Other(r *gin.RouterGroup) {
-	r.POST("/user/session/login", middleware.RequireTrustedBrowserOrigin(), e.SessionLogin)
+	r.POST("/user/session/login", middleware.RequireTrustedBrowserOrigin(), middleware.AdminLoginRateLimit(), e.SessionLogin)
 	r.POST("/user/session/refresh-token", middleware.RequireTrustedBrowserOrigin(), e.SessionRefreshToken)
 	r.POST("/user/auth-cookie/clear", middleware.RequireTrustedBrowserOrigin(), e.ClearAuthCookie)
 	r.POST("/user/reset-password", middleware.OptionalAuth(), e.ResetPassword)
@@ -139,7 +139,7 @@ func (e *User) Other(r *gin.RouterGroup) {
 	r.PUT("/user/security/password", response.AuthHandler, e.ChangeAccountPassword)
 	r.POST("/user/session/oauth2/authorize", middleware.RequireTrustedBrowserOrigin(), middleware.OptionalAuth(), e.SessionOAuthAuthorize)
 	r.DELETE("/user/oauth2/:provider", response.AuthHandler, e.DisconnectOAuth)
-	r.POST("/user/session/:provider/callback", middleware.RequireTrustedBrowserOrigin(), middleware.OptionalAuth(), e.SessionCallback)
+	r.POST("/user/session/:provider/callback", middleware.RequireTrustedBrowserOrigin(), middleware.AdminLoginRateLimit(), middleware.OptionalAuth(), e.SessionCallback)
 }
 
 // SessionLogin establishes the V6 browser session without returning an
@@ -153,6 +153,7 @@ func (e *User) Other(r *gin.RouterGroup) {
 // @Failure 401 {object} response.Response
 // @Failure 403 {object} response.Response
 // @Failure 503 {object} response.Response
+// @Failure 429 {object} response.Response
 // @Router /admin/api/user/session/login [post]
 func (*User) SessionLogin(c *gin.Context) {
 	middleware.BrowserSessionLoginHandler(c)

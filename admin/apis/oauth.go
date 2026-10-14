@@ -119,6 +119,7 @@ func (e *User) SessionOAuthAuthorize(c *gin.Context) {
 // @Failure 401 {object} response.Response
 // @Failure 403 {object} response.Response
 // @Failure 503 {object} response.Response
+// @Failure 429 {object} response.Response
 // @Router /admin/api/user/session/{provider}/callback [post]
 func (e *User) SessionCallback(c *gin.Context) {
 	if !middleware.BrowserSessionAvailable() {

@@ -58,6 +58,9 @@ var ensureAuthorizationPolicyCurrent = func(c *gin.Context) error {
 }
 
 func Init() error {
+	if err := ConfigureLoginRateLimit(config.Cfg.Auth.AdminLogin.RateLimit); err != nil {
+		return err
+	}
 	Auth = &jwt.GinJWTMiddleware{
 		Realm:       config.Cfg.Auth.Realm,
 		Key:         []byte(config.Cfg.Auth.Key),
