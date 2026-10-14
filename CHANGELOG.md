@@ -15,8 +15,12 @@ tag namespaces.
   `authenticated`). Mounting any surface makes Admin token audience strict.
   With no surface, Admin routes and behaviour are unchanged.
   See `docs/adr/2026-10-14-surface-security-chain.md`.
-- ADRs for the v1.6.0 frontend extension mount point and the redacted
-  business audit sink.
+- Redacted business audit sink: `admin/business/audit` (`Sink`, `Event`,
+  `Redacting`), `business.Runtime.Audit` and `business.RecordSurfaceEvent`.
+  Events land in the operation audit log as `type=business`; tokens, OAuth
+  code/state, PKCE verifiers, cookies and Authorization values are never
+  stored. `Registry.MountSurfaces` now takes the audit sink.
+- ADR for the v1.6.0 frontend extension mount point.
 
 ## [v1.5.0] - 2026-10-14
 

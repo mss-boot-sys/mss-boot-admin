@@ -17,6 +17,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/middleware"
 	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
@@ -112,7 +113,7 @@ func TestNoSurfaceKeepsAdminBaselineAndAudienceBehaviour(t *testing.T) {
 	registry := composeSurfaceRegistry(t)
 	engine := gin.New()
 	InitRouter(engine.Group("/admin"))
-	mounted, err := registry.MountSurfaces(engine)
+	mounted, err := registry.MountSurfaces(engine, nil)
 	require.NoError(t, err)
 	require.Zero(t, mounted)
 	require.Empty(t, registry.Surfaces())
@@ -139,7 +140,7 @@ func TestSurfaceTokensNeverReachAdminRoutes(t *testing.T) {
 	engine := newAudienceAcceptanceEngine(t, false)
 	var hits []string
 	registry := composeSurfaceRegistry(t, portalSurface(&hits))
-	mounted, err := registry.MountSurfaces(engine)
+	mounted, err := registry.MountSurfaces(engine, nil)
 	require.NoError(t, err)
 	require.Equal(t, 1, mounted)
 	// Mirrors server.mountBusinessSurfaces (tested in internal/cmd/server).
@@ -180,7 +181,7 @@ func TestModuleCannotBypassSurfaceChain(t *testing.T) {
 	var hits []string
 	registry := composeSurfaceRegistry(t, portalSurface(&hits))
 	engine := gin.New()
-	_, err := registry.MountSurfaces(engine)
+	_, err := registry.MountSurfaces(engine, nil)
 	require.NoError(t, err)
 
 	for _, principal := range []string{"", "admin", "multi", "wrong-iss", "no-subject"} {
@@ -254,4 +255,38 @@ func TestSurfaceRegistrationRejectsUnsafeDeclarations(t *testing.T) {
 		surfaceTestModule{name: "other", id: "202610140002", surfaces: []business.SurfaceRegistration{base()}},
 	)
 	require.ErrorContains(t, err, "already registered")
+}
+
+func TestSurfaceAuditEventsAreScopedAndRedactedByCore(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var recorded []audit.Event
+	sink := audit.SinkFunc(func(_ context.Context, e audit.Event) error { recorded = append(recorded, e); return nil })
+	surface := business.SurfaceRegistration{
+		Name: "portal", Issuer: surfaceTestIssuer, Authenticator: headerAuthenticator,
+		Routes: []business.SurfaceRoute{{Method: http.MethodGet, Path: "/me", Category: business.SurfaceRouteAuthenticated,
+			Handlers: []gin.HandlerFunc{func(c *gin.Context) {
+				err := business.RecordSurfaceEvent(c, audit.Event{
+					Surface: "admin", ActorID: "spoofed", Action: "profile.view", Result: "success",
+					Detail: map[string]string{"access_token": "at-leak-value"},
+				})
+				if err != nil {
+					c.Status(http.StatusInternalServerError)
+					return
+				}
+				c.Status(http.StatusOK)
+			}}}},
+	}
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, sink)
+	require.NoError(t, err)
+	res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "portal"})
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Len(t, recorded, 1)
+	require.Equal(t, "portal", recorded[0].Surface)
+	require.Equal(t, "c1", recorded[0].ActorID)
+	require.Equal(t, audit.Redacted, recorded[0].Detail["access_token"])
+
+	outside, _ := gin.CreateTestContext(httptest.NewRecorder())
+	require.ErrorIs(t, business.RecordSurfaceEvent(outside, audit.Event{Action: "a", Result: "b"}), business.ErrNoSurfaceAudit)
 }

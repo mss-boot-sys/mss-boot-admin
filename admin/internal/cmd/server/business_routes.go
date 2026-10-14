@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
 	"gorm.io/gorm"
@@ -50,8 +51,8 @@ func (businessEventLogger) Collect(ctx context.Context, event business.Event) {
 // after Admin routes and before SPA delivery, and switches Admin APIs to
 // strict audience mode when at least one surface exists. With no surface the
 // Admin route table and audience behaviour are unchanged.
-func mountBusinessSurfaces(registry *business.Registry, root gin.IRouter) error {
-	mounted, err := registry.MountSurfaces(root)
+func mountBusinessSurfaces(registry *business.Registry, root gin.IRouter, sink audit.Sink) error {
+	mounted, err := registry.MountSurfaces(root, sink)
 	if err != nil {
 		return err
 	}

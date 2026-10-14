@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business/audit"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg/browsersecurity"
 )
 
@@ -203,7 +204,7 @@ func (r *Registry) Surfaces() []string {
 //
 // It must be called on the engine root after the Admin routes and before the
 // SPA fallback. It returns the number of mounted surfaces.
-func (r *Registry) MountSurfaces(root gin.IRouter) (int, error) {
+func (r *Registry) MountSurfaces(root gin.IRouter, sink audit.Sink) (int, error) {
 	if r == nil {
 		return 0, errors.New("business module registry is required")
 	}
@@ -220,19 +221,24 @@ func (r *Registry) MountSurfaces(root gin.IRouter) (int, error) {
 	}
 	entries := append([]entry(nil), r.entries...)
 	r.mu.RUnlock()
+	sink = audit.Redacting(sink)
 	mounted := 0
 	for _, registered := range entries {
 		for _, surface := range registered.surfaces {
-			mountSurface(root, surface)
+			mountSurface(root, surface, sink)
 			mounted++
 		}
 	}
 	return mounted, nil
 }
 
-func mountSurface(root gin.IRouter, surface SurfaceRegistration) {
+func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink) {
 	group := root.Group("/" + surface.Name + "/api")
 	group.Use(surfaceCORS(surface.CORS))
+	group.Use(func(c *gin.Context) {
+		c.Set(surfaceAuditKey, surfaceAudit{surface: surface.Name, sink: sink})
+		c.Next()
+	})
 	group.OPTIONS("/*path", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 	for _, route := range surface.Routes {
 		chain := make([]gin.HandlerFunc, 0, 3+len(surface.Middleware)+len(route.Handlers))
@@ -327,4 +333,41 @@ func surfaceCSRF(origins []string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+const surfaceAuditKey = "mss.surface.audit"
+
+type surfaceAudit struct {
+	surface string
+	sink    audit.Sink
+}
+
+// ErrNoSurfaceAudit is returned when RecordSurfaceEvent is called outside a
+// surface request.
+var ErrNoSurfaceAudit = errors.New("request is not served by a business surface")
+
+// RecordSurfaceEvent writes a redacted audit event for the current surface
+// request. The core fills Surface, IP, UserAgent and RequestID and, when the
+// request was authenticated, ActorID; a module cannot attribute an event to
+// another surface or another actor.
+func RecordSurfaceEvent(c *gin.Context, e audit.Event) error {
+	value, ok := c.Get(surfaceAuditKey)
+	if !ok {
+		return ErrNoSurfaceAudit
+	}
+	scope, ok := value.(surfaceAudit)
+	if !ok {
+		return ErrNoSurfaceAudit
+	}
+	e.Surface = scope.surface
+	e.IP = c.ClientIP()
+	e.UserAgent = c.Request.UserAgent()
+	if requestID := c.GetHeader("X-Request-Id"); requestID != "" {
+		e.RequestID = requestID
+	}
+	if principal, ok := SurfacePrincipalFrom(c); ok {
+		e.ActorKind = scope.surface
+		e.ActorID = principal.Subject
+	}
+	return scope.sink.Record(c.Request.Context(), e)
 }

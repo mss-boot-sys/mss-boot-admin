@@ -19,6 +19,9 @@ const (
 	AuditLogTypeImport   AuditLogType = "import"
 	AuditLogTypeConfig   AuditLogType = "config"
 	AuditLogTypeSecurity AuditLogType = "security"
+	// AuditLogTypeBusiness marks events recorded by business modules and
+	// surfaces through business.Runtime.Audit (v1.6.0).
+	AuditLogTypeBusiness AuditLogType = "business"
 )
 
 type AuditLog struct {
