@@ -8,7 +8,7 @@ description: Thin Host 业务国际化缺失、键名漂移与运行时语言快
 keywords: [react-intl i18n missing message thin host]
 ---
 
-适用基线：发行版 **mss-boot-admin v1.4.0** 生成的 Thin Host。
+适用基线：发行版 **mss-boot-admin v1.5.0** 生成的 Thin Host。
 
 本文档从生成的 Thin Host 根目录处理：
 

@@ -6,7 +6,7 @@ description: Feature 与 AdminModule 规格的职责、命令和审查要求
 
 # 规格
 
-适用基线：发行版 **mss-boot-admin v1.4.0** 的 Agent 协作合同。
+适用基线：发行版 **mss-boot-admin v1.5.0** 的 Agent 协作合同。
 
 规格是人和 Agent 都可审查的变更合同；生成文件不是需求来源。
 

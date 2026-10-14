@@ -80,10 +80,10 @@ class CurrentDocsContractTest(unittest.TestCase):
             complete = (
                 "Back up code and database. Hand-assembled repositories missing their manifest migrate to a clean baseline.\n"
                 "mss --version\nmss-mcp --version\n.mss/blueprint-manifest.json\n"
-                "mss upgrade admin v1.4.0\n"
-                "mss upgrade admin v1.4.0 --apply --yes\n"
+                "mss upgrade admin v1.5.0\n"
+                "mss upgrade admin v1.5.0 --apply --yes\n"
                 "mss doctor --strict\nmss verify --all\n"
-                "mss upgrade admin v1.4.0\n"
+                "mss upgrade admin v1.5.0\n"
             )
             for relative in check_current_docs.UPGRADE_CONTRACT_FILES:
                 path = root / relative
@@ -92,7 +92,7 @@ class CurrentDocsContractTest(unittest.TestCase):
             self.assertEqual(check_current_docs.upgrade_contract_errors(root), [])
 
             incomplete = root / check_current_docs.UPGRADE_CONTRACT_FILES[0]
-            incomplete.write_text("mss upgrade admin v1.4.0\n", encoding="utf-8")
+            incomplete.write_text("mss upgrade admin v1.5.0\n", encoding="utf-8")
             errors = check_current_docs.upgrade_contract_errors(root)
             self.assertTrue(any("blueprint-manifest" in error for error in errors))
             self.assertTrue(any("final no-op" in error for error in errors))
@@ -176,8 +176,8 @@ class CurrentDocsContractTest(unittest.TestCase):
             packages = root / "docs/docs/getting-started/packages.md"
             packages.parent.mkdir(parents=True)
             packages.write_text(
-                "go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.4.0\n"
-                "go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.4.0\n"
+                "go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0\n"
+                "go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.5.0\n"
                 "set -eu\n"
                 "mktemp -d\n"
                 "trap - EXIT INT TERM\n"
@@ -293,7 +293,7 @@ class CurrentDocsContractTest(unittest.TestCase):
     def test_historical_pages_are_excluded_from_current_identity_scan(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            for relative in ("docs/docs/releases/v1-3-7.md", "docs/docs/releases/archive/v1-3-2.md", "docs/docs/releases/v1-3-9.md", "docs/docs/releases/v1-4-0.md"):
+            for relative in ("docs/docs/releases/v1-3-7.md", "docs/docs/releases/archive/v1-3-2.md", "docs/docs/releases/v1-4-0.md", "docs/docs/releases/v1-5-0.md"):
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("historical evidence")
@@ -301,7 +301,8 @@ class CurrentDocsContractTest(unittest.TestCase):
             self.assertNotIn(Path("docs/docs/releases/v1-3-7.md"), paths)
             self.assertNotIn(Path("docs/docs/releases/archive/v1-3-2.md"), paths)
             self.assertNotIn(Path("docs/docs/releases/v1-3-9.md"), paths)
-            self.assertIn(Path("docs/docs/releases/v1-4-0.md"), paths)
+            self.assertNotIn(Path("docs/docs/releases/v1-4-0.md"), paths)
+            self.assertIn(Path("docs/docs/releases/v1-5-0.md"), paths)
 
     def test_migration_prose_allowed_but_old_commands_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

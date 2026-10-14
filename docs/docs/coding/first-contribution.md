@@ -6,7 +6,7 @@ description: 明确隔离的 mss-boot-admin 源码贡献流程
 
 # Foundation 贡献者入门
 
-> 版本范围：**v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+> 版本范围：**v1.5.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 > 本页只适用于修改 Foundation 的贡献者；采用者从[快速开始](/getting-started)进入。Docs 网站
 > 可异步候补，不阻断组件、稳定别名或采用。
 

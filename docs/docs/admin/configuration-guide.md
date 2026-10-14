@@ -6,7 +6,7 @@ description: Thin Host 的配置来源、安全优先级和部署检查
 
 # 配置指南
 
-适用基线：发行版 **mss-boot-admin v1.4.0**。
+适用基线：发行版 **mss-boot-admin v1.5.0**。
 
 生成仓库的 `config/` 只保存可公开的默认值和说明。环境差异与密钥由部署平台注入，
 不要提交真实 DSN、密码、OAuth secret、Cookie key 或云凭据。

@@ -1,20 +1,20 @@
 ---
 title: Complete Admin Distribution 与 Thin Host
 order: 2
-description: v1.4.0 稳定 Admin 发行架构与 新仓库组件边界
+description: v1.5.0 稳定 Admin 发行架构与 新仓库组件边界
 ---
 
 # Complete Admin Distribution 与 Thin Host
 
 ## 当前版本范围
 
-v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.3.9 为首次发行），v1.3.8 及更早版本属于
+v1.5.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.4.0 为首次发行），v1.3.8 及更早版本属于
 原 `mss-boot-io` 组织。安装和升级从[快速开始](/getting-started)进入，历史事实见
 [发布归档](/releases)。
 
 ## 架构决策
 
-v1.4.0 Admin Distribution 由 Root 工具、Framework、Admin、Admin Web 与 Blueprint
+v1.5.0 Admin Distribution 由 Root 工具、Framework、Admin、Admin Web 与 Blueprint
 使用一个协调版本，同时保留独立发布身份。Docs 源码说明同一稳定基线，但网站发布是
 独立异步链路，不属于 Distribution 的完整性或采用门禁。下游应用是 Thin Host，不是
 Foundation 源码副本。
@@ -50,7 +50,7 @@ route guard 只改善体验，不能替代后端授权。完整包从 GitHub Pac
 
 ## Blueprint 与三方升级
 
-v1.4.0 Root Release 将单一 Blueprint 源嵌入工具，并绑定版本、源提交、构建时间和仓库。
+v1.5.0 Root Release 将单一 Blueprint 源嵌入工具，并绑定版本、源提交、构建时间和仓库。
 创建流程先产生只读计划，再检查路径与未知文件、原子写入受管文件、固定同一完整版本的
 公共依赖，并写入 manifest、lock 与同源快照；第二次生成必须无差异。
 

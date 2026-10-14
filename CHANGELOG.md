@@ -6,6 +6,16 @@ tag namespaces.
 
 ## [Unreleased]
 
+No unreleased changes are recorded.
+
+## [v1.5.0] - 2026-10-14
+
+Release scope: coordinated minor release of Root, Framework, Admin and
+`@mss-boot-sys/admin-web` from one merged-main commit. Publication results are
+recorded by the corresponding tags, Releases and registry assets. No database
+schema migration. All new security controls are opt-in or backward compatible
+by default; the only removed routes are the unauthenticated root stubs below.
+
 ### Security
 
 - Remove dead default-action stubs mounted at the Admin API root by
@@ -14,24 +24,25 @@ tag namespaces.
   They had no resource, were absent from OpenAPI and the frontend, and the
   `:id` variants answered 501 without authentication. Model-less controllers
   now contribute only their explicit routes. Route baseline regenerated
-  (5 routes removed per mode); OpenAPI unchanged.
+  (5 routes removed per mode); OpenAPI unchanged (#31).
 - Add the optional Admin login allowlist `auth.adminLogin.allowlist` for
   external identities (GitHub strictly by numeric user id; `login` is an
   optional label that is never matched, and login-only GitHub entries fail
-  startup; Lark by open id). No network resolution at startup. Empty by default, keeping v1.4.0 behaviour. When set, unlisted
+  startup; Lark by open id). No network resolution at startup. Empty by
+  default, keeping v1.4.0 behaviour. When set, unlisted
   identities are denied before provisioning or token issuance (OAuth callback
   403, no user, no session cookie), regardless of `security:registerEnabled`;
   local password and email-code sign-in stay exempt so root can always recover.
   Denials are recorded in the login audit with provider, login and id only.
   `auth.adminLogin.secondFactor` is reserved and only accepts `off`; invalid
-  configuration fails startup.
+  configuration fails startup (#28).
 - Add optional Admin login rate limiting `auth.adminLogin.rateLimit`
   (`limit` per `window` per client IP) on password login and the OAuth
   callback, built on `keyedlimit`. Off by default. When exceeded it returns
   429 with `Retry-After` and writes a login audit record; an unavailable
   limiter store fails closed with 503. `middleware.SetLoginRateLimiter`
   accepts a shared-store implementation for multi-replica deployments.
-  OpenAPI declares 429 on both endpoints (baseline regenerated).
+  OpenAPI declares 429 on both endpoints (baseline regenerated) (#29).
 - Login rate limiting and login audit resolve the client address through a
   dedicated rule, `auth.adminLogin.clientIP` (`trustedProxies` CIDR/IP list,
   optional `header` such as `CF-Connecting-IP`). Forwarding headers are
@@ -41,7 +52,7 @@ tag namespaces.
   default only RemoteAddr is used and spoofed headers cannot rotate a
   rate-limit bucket or forge an audit IP. Invalid entries fail startup. gin's
   global `ClientIP()` behaviour is unchanged; making global trust-none
-  stricter is deferred to 2.0.
+  stricter is deferred to 2.0 (#29).
 
 ### Admin API
 
@@ -54,7 +65,7 @@ tag namespaces.
   mode (default); `auth.requireAdminAudience: true` enables strict mode.
   `middleware.SharesAdminSigningKey` reports key sharing as a boolean only.
   Acceptance: `aud=portal`/`aud=user` tokens signed with the same key are
-  rejected on every non-public route of the P1 baseline route table.
+  rejected on every non-public route of the P1 baseline route table (#30).
 - Upgrade note for strict mode: browser sessions refresh with their original
   claims, so pre-upgrade sessions stay aud-less until `auth.maxRefresh`
   (default `2160h`) plus `auth.timeout` (default `12h`) have elapsed since the
@@ -64,7 +75,7 @@ tag namespaces.
   or revoked before enabling `auth.requireAdminAudience`. Compatibility mode
   counts accepted aud-less tokens (`middleware.LegacyAudienceTokenCounts`)
   and logs a rate-limited WARN (once per minute, kind and totals only). See
-  the security baseline docs.
+  the security baseline docs (#30).
 
 ### Framework
 
@@ -74,7 +85,7 @@ tag namespaces.
   contract suite `keyedlimit/limittest` that every store implementation must
   pass (limit, window boundary, key isolation, reset, empty key, cancelled
   context, concurrent exactness under `-race`). No new dependencies; no
-  Redis implementation in core.
+  Redis implementation in core (#29).
 
 ### Verification
 
@@ -83,7 +94,20 @@ tag namespaces.
   `admin/router/testdata/baseline/`. `go test ./router` and
   `tools/verification/check_openapi_baseline.py` fail on unintended drift;
   intentional changes regenerate the snapshot in the same PR. No runtime
-  behaviour change.
+  behaviour change (#27).
+
+### Upgrade notes
+
+- Run the standard `mss upgrade admin v1.5.0` plan → apply → verify → empty
+  plan sequence. No database migration.
+- Nothing changes until you opt in: `auth.adminLogin.allowlist`,
+  `auth.adminLogin.rateLimit`, `auth.adminLogin.clientIP` and
+  `auth.requireAdminAudience` are all off/empty by default.
+- Clients that called `GET/POST /admin/api` or `/admin/api/:id` directly
+  received no data and now get 404.
+- Plan the move to `auth.requireAdminAudience: true`: reissue or revoke PATs
+  created before v1.5.0 and wait for pre-upgrade browser sessions to expire
+  (see the security baseline docs).
 
 ## [v1.4.0] - 2026-10-14
 

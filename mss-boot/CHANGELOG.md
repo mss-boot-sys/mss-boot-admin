@@ -8,6 +8,18 @@ and the project uses semantic versioning for nested-module releases.
 
 No unreleased changes are recorded.
 
+## [mss-boot/v1.5.0] - 2026-10-14
+
+Coordinated version with the v1.5.0 Admin Distribution.
+
+### Added
+
+- `pkg/keyedlimit`: storage-agnostic per-key `KeyedLimiter` interface with an
+  injectable clock, a process-local in-memory fixed-window implementation
+  (lazy expiry, no background goroutine), and the reusable contract suite
+  `keyedlimit/limittest` that every store implementation must pass. No new
+  dependencies.
+
 ## [mss-boot/v1.4.0] - 2026-10-14
 
 Coordinated version with the v1.4.0 Admin Distribution. No Framework API or

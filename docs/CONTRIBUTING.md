@@ -8,7 +8,7 @@ repository. It is an independently publishable component, not a separate source
 repository. Product prose, implementation, tests, and `.mss/` machine contracts
 must describe the same behavior.
 
-This guide targets v1.4.0; v1.3.9 was the first release under the new organization. Earlier
+This guide targets v1.5.0; v1.4.0 was the first release under the new organization. Earlier
 versions belong to `mss-boot-io` and retain their historical records. Validate
 locally on the exact merged-main commit, publish artifact tags, then deploy Docs
 and verify the public `/release.json` plus browser-visible content. Source changes
@@ -32,7 +32,7 @@ newer train.
   `release.json`, and browser verification without making those checks a
   Distribution release prerequisite.
 - Use a Conventional Commits title, for example
-  `docs(release): reconcile v1.4.0 stable guidance`.
+  `docs(release): reconcile v1.5.0 stable guidance`.
 - State the applicable version, branch, or commit for current-behavior claims.
 - Use repository-relative source paths and links. Public GitHub links must point
   to `mss-boot-sys/mss-boot-admin` unless the target is genuinely external.

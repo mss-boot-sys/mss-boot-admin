@@ -1,13 +1,13 @@
 ---
 title: 安全基线
 order: 7
-description: v1.4.0 发行版 Admin 身份、授权、密钥、浏览器与供应链最低要求
+description: v1.5.0 发行版 Admin 身份、授权、密钥、浏览器与供应链最低要求
 ---
 
-# v1.4.0 发行版安全基线
+# v1.5.0 发行版安全基线
 
 :::warning
-版本范围：**v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.5.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 
@@ -19,7 +19,7 @@ Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或�
 - WebSocket 使用一次性短期 ticket，不在 URL 放长期凭据；
 - 生产使用 HTTPS、Secure Cookie 和精确 origin。
 
-### 后台登录白名单（`auth.adminLogin`，main 分支，尚未发布）
+### 后台登录白名单（`auth.adminLogin`，v1.5.0 起）
 
 外部身份（GitHub、飞书）登录后台可以用白名单限制：
 
@@ -48,7 +48,7 @@ auth:
 - 登录限流和登录审计用独立的客户端 IP 规则：只有直连对端在可信代理列表内时才读取转发头，X-Forwarded-For 从右往左取第一个非可信地址；默认（未配置任何可信代理）只用 RemoteAddr，伪造的转发头无法换限流桶或篡改审计 IP。该规则不改变 gin 全局 `ClientIP()` 的行为（全局仍由 `application.trustedProxies` 控制）；
 - 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off、`rateLimit` 只填了一半或为负数、可信代理不是合法 IP/CIDR、header 名非法）时启动失败。
 
-### 令牌受众（`iss` / `aud=admin`，main 分支，尚未发布）
+### 令牌受众（`iss` / `aud=admin`，v1.5.0 起）
 
 - 后台签发的浏览器会话令牌和个人访问令牌（PAT）都写入 `iss`（`auth.issuer`，默认 `mss-boot-admin`）和 `aud=admin`；PAT 无论自定义 PayloadFunc 怎么写都强制 `aud=admin`；
 - 后台接口、会话刷新和 OIDC 浏览器会话只接受 `aud` 含 `admin` 的令牌；`aud` 为其他值（如 `portal`、`user`）或 `iss` 不匹配时一律 401，即使用的是同一把签名密钥；比较为常量时间，只返回布尔结果；
@@ -91,7 +91,7 @@ auth:
 
 ## 供应链与发布
 
-- v1.4.0 的 Root 工具、Go Module、GitHub Packages 包和镜像绑定同一精确 merged-main
+- v1.5.0 的 Root 工具、Go Module、GitHub Packages 包和镜像绑定同一精确 merged-main
   提交；安装固定版本或 digest，并核验 checksum、tarball integrity 与来源；
 - 发布前本地完整验证；标签流水线构建和发布产物，不以单一绿色检查冒充全部验证；
 - GitHub Packages 下载使用只读认证，发布工作流只授予必要的 `contents` 与 `packages`
@@ -102,7 +102,7 @@ auth:
 ## 上线门禁
 
 Foundation 贡献者按 `.mss/commands.yaml` 运行源码诊断与验证；一般 `doctor`、`verify`
-合同可以保留，但这些结果不能替代 v1.4.0 公共制品证据，也不能证明已停止列车可用。
+合同可以保留，但这些结果不能替代 v1.5.0 公共制品证据，也不能证明已停止列车可用。
 
 同时完成迁移、权限正反例、真实业务流程、浏览器控制台和回滚演练。任何绕过项必须明确
 记录为阻断或剩余风险。
