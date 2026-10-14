@@ -52,7 +52,7 @@ func TestMountBusinessSurfacesTogglesStrictAudienceOnlyWithSurfaces(t *testing.T
 	withSurface, err := business.Compose(migration.New(), surfaceModule{surfaces: []business.SurfaceRegistration{{
 		Name:   "portal",
 		Issuer: "example-portal",
-		Authenticator: business.SurfaceAuthenticatorFunc(func(*gin.Context) (business.SurfacePrincipal, error) {
+		Authenticator: business.SurfaceAuthenticatorFunc(func(business.SurfaceRequest) (business.SurfacePrincipal, error) {
 			return business.SurfacePrincipal{}, errors.New("none")
 		}),
 		Routes: []business.SurfaceRoute{{Method: http.MethodGet, Path: "/me", Category: business.SurfaceRouteAuthenticated,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -50,21 +51,36 @@ const surfaceTestIssuer = "example-portal"
 
 // headerAuthenticator lets the test choose the principal the module reports.
 // The module is deliberately permissive: the core must still reject.
-var headerAuthenticator = business.SurfaceAuthenticatorFunc(func(c *gin.Context) (business.SurfacePrincipal, error) {
-	switch c.GetHeader("X-Test-Principal") {
+func portalPrincipal(credential business.SurfaceCredentialKind) business.SurfacePrincipal {
+	return business.SurfacePrincipal{
+		Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal"}, Credential: credential,
+	}
+}
+
+// headerAuthenticator lets the test choose the principal the module reports.
+// The module is deliberately permissive: the core must still reject. It receives
+// only a SurfaceRequest, so it cannot write a response or call Next/Abort.
+var headerAuthenticator = business.SurfaceAuthenticatorFunc(func(req business.SurfaceRequest) (business.SurfacePrincipal, error) {
+	credential := business.SurfaceCredentialBearer
+	if len(req.Cookies()) > 0 {
+		credential = business.SurfaceCredentialCookie
+	}
+	switch req.Header("X-Test-Principal") {
 	case "portal":
-		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
+		return portalPrincipal(credential), nil
 	case "admin":
-		return business.SurfacePrincipal{Subject: "u1", Issuer: "mss-boot-admin", Audience: []string{"admin"}}, nil
+		return business.SurfacePrincipal{Subject: "u1", Issuer: "mss-boot-admin", Audience: []string{"admin"}, Credential: credential}, nil
 	case "multi":
-		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal", "admin"}}, nil
+		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal", "admin"}, Credential: credential}, nil
 	case "wrong-iss":
-		return business.SurfacePrincipal{Subject: "c1", Issuer: "mss-boot-admin", Audience: []string{"portal"}}, nil
+		return business.SurfacePrincipal{Subject: "c1", Issuer: "mss-boot-admin", Audience: []string{"portal"}, Credential: credential}, nil
 	case "no-subject":
-		return business.SurfacePrincipal{Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
-	case "writes":
-		c.String(http.StatusOK, "module decided")
+		return business.SurfacePrincipal{Issuer: surfaceTestIssuer, Audience: []string{"portal"}, Credential: credential}, nil
+	case "no-credential":
 		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
+	case "bearer-spoof":
+		// Reports cookie auth even though the request carries a bearer header.
+		return portalPrincipal(business.SurfaceCredentialCookie), nil
 	}
 	return business.SurfacePrincipal{}, errors.New("no credential")
 })
@@ -164,6 +180,7 @@ func TestSurfaceTokensNeverReachAdminRoutes(t *testing.T) {
 
 func serveSurface(engine *gin.Engine, method, path string, headers map[string]string) *httptest.ResponseRecorder {
 	request := httptest.NewRequest(method, path, strings.NewReader("{}"))
+	request.RemoteAddr = "127.0.0.1:12345"
 	for key, value := range headers {
 		request.Header.Set(key, value)
 	}
@@ -191,16 +208,16 @@ func TestModuleCannotBypassSurfaceChain(t *testing.T) {
 	}
 
 	hits = nil
-	res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "writes"})
-	require.Equal(t, "module decided", res.Body.String())
-	require.Empty(t, hits, "an authenticator that writes a response must abort the chain")
+	res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "no-credential"})
+	require.Equal(t, http.StatusUnauthorized, res.Code)
+	require.Empty(t, hits, "a principal without Credential must be rejected")
 
 	hits = nil
 	res = serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "portal"})
 	require.Equal(t, http.StatusOK, res.Code)
 	require.Equal(t, []string{"mw", "me"}, hits)
 
-	// CSRF: unsafe cookie-authenticated requests need the exact surface origin.
+	// CSRF: cookie-authenticated unsafe requests need the exact surface origin.
 	cookie := map[string]string{"X-Test-Principal": "portal", "Cookie": "portal_session=x"}
 	hits = nil
 	require.Equal(t, http.StatusForbidden, serveSurface(engine, http.MethodPost, "/portal/api/orders", cookie).Code)
@@ -211,6 +228,22 @@ func TestModuleCannotBypassSurfaceChain(t *testing.T) {
 	require.Empty(t, hits)
 	cookie["Origin"] = "https://shop.example.com"
 	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/orders", cookie).Code)
+
+	// Bearer exemption follows the credential the authenticator reported, not
+	// the Authorization header shape. A cookie-authenticated request that also
+	// carries a bearer header still needs Origin.
+	spoof := map[string]string{
+		"X-Test-Principal": "bearer-spoof",
+		"Authorization":    "Bearer anything",
+		"Cookie":           "portal_session=x",
+	}
+	require.Equal(t, http.StatusForbidden, serveSurface(engine, http.MethodPost, "/portal/api/orders", spoof).Code)
+	spoof["Origin"] = "https://shop.example.com"
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/orders", spoof).Code)
+
+	// A true bearer credential skips CSRF even without Origin.
+	bearer := map[string]string{"X-Test-Principal": "portal", "Authorization": "Bearer anything"}
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/orders", bearer).Code)
 
 	// Public route skips authentication only because it was declared public.
 	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/sign-in",
@@ -254,4 +287,54 @@ func TestSurfaceRegistrationRejectsUnsafeDeclarations(t *testing.T) {
 		surfaceTestModule{name: "other", id: "202610140002", surfaces: []business.SurfaceRegistration{base()}},
 	)
 	require.ErrorContains(t, err, "already registered")
+
+	_, err = business.Compose(migration.New(), surfaceTestModule{
+		name: "shop", id: "202610140001",
+		surfaces: []business.SurfaceRegistration{base(), base()},
+	})
+	require.ErrorContains(t, err, "declared twice")
+}
+
+// An authenticator receives only SurfaceRequest: no Next, Abort or response
+// writer. Compile-time shape plus a runtime proof that the chain still runs
+// under core control after Authenticate returns.
+func TestSurfaceAuthenticatorCannotAdvanceChain(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var hits []string
+	var sawRequest bool
+	auth := business.SurfaceAuthenticatorFunc(func(req business.SurfaceRequest) (business.SurfacePrincipal, error) {
+		sawRequest = true
+		require.Equal(t, http.MethodGet, req.Method())
+		require.Equal(t, "/portal/api/me", req.URL().Path)
+		require.Equal(t, "ok", req.Header("X-Probe"))
+		require.NotEmpty(t, req.RemoteIP())
+		require.NotNil(t, req.Context())
+		headers := req.Headers()
+		headers.Set("X-Probe", "mutated")
+		require.Equal(t, "ok", req.Header("X-Probe"), "Headers() must return a copy")
+		return portalPrincipal(business.SurfaceCredentialBearer), nil
+	})
+	surface := portalSurface(&hits)
+	surface.Authenticator = auth
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine)
+	require.NoError(t, err)
+
+	res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Probe": "ok"})
+	require.Equal(t, http.StatusOK, res.Code)
+	require.True(t, sawRequest)
+	require.Equal(t, []string{"mw", "me"}, hits)
+
+	// SurfaceRequest has no Next/Abort/Writer methods (compile-time contract).
+	var _ interface {
+		Context() context.Context
+		Method() string
+		URL() *url.URL
+		Header(string) string
+		Headers() http.Header
+		Cookie(string) (*http.Cookie, error)
+		Cookies() []*http.Cookie
+		RemoteIP() string
+	} = business.NewSurfaceRequest(httptest.NewRequest(http.MethodGet, "/", nil), "127.0.0.1")
 }
