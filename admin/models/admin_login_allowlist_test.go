@@ -67,7 +67,7 @@ func TestAdminLoginAllowlistDeniesAlreadyProvisionedUnlistedAccount(t *testing.T
 	require.True(t, ok)
 	requireGithubRegistrationCount(t, database, 1, 1)
 
-	withAdminLoginPolicy(t, config.AdminLogin{Allowlist: []config.AdminLoginAllowEntry{{Provider: "github", Login: "someone-else"}}})
+	withAdminLoginPolicy(t, config.AdminLogin{Allowlist: []config.AdminLoginAllowEntry{{Provider: "github", ID: "7", Login: "former-user"}}})
 	again := &UserLogin{Provider: pkg.GithubLoginProvider, Password: "token"}
 	ok, verifier, err := again.Verify(newGithubVerifyContext(server.URL))
 	require.ErrorIs(t, err, ErrAdminLoginNotAllowed)
@@ -78,8 +78,8 @@ func TestAdminLoginAllowlistDeniesAlreadyProvisionedUnlistedAccount(t *testing.T
 
 func TestAdminLoginAllowlistAdmitsListedGithubAccount(t *testing.T) {
 	for name, entry := range map[string]config.AdminLoginAllowEntry{
-		"by id":    {Provider: "github", ID: "42"},
-		"by login": {Provider: "github", Login: "OctoCat"},
+		"by id":                  {Provider: "github", ID: "42"},
+		"by id with stale label": {Provider: "github", ID: "42", Login: "old-name"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			database := setupGithubVerifyTest(t, allowlistRegistrationConfig)
@@ -127,4 +127,18 @@ func TestAdminLoginAllowlistDoesNotAffectRootLocalLogin(t *testing.T) {
 	require.True(t, ok)
 	require.NotNil(t, verifier)
 	require.Equal(t, root.ID, verifier.GetUserID())
+}
+
+// GitHub logins are recyclable; a label that equals the caller's login must
+// never admit a different numeric id.
+func TestAdminLoginAllowlistNeverMatchesGithubByLogin(t *testing.T) {
+	database := setupGithubVerifyTest(t, allowlistRegistrationConfig)
+	withAdminLoginPolicy(t, config.AdminLogin{Allowlist: []config.AdminLoginAllowEntry{{Provider: "github", ID: "1", Login: "octocat"}}})
+	server := githubUserServer(t, `{"id":42,"login":"octocat"}`)
+	login := &UserLogin{Provider: pkg.GithubLoginProvider, Password: "token"}
+	ok, verifier, err := login.Verify(newGithubVerifyContext(server.URL))
+	require.ErrorIs(t, err, ErrAdminLoginNotAllowed)
+	require.False(t, ok)
+	require.Nil(t, verifier)
+	requireGithubRegistrationCount(t, database, 0, 0)
 }

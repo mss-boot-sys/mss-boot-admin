@@ -28,9 +28,8 @@ const (
 //	  adminLogin:
 //	    allowlist:
 //	      - provider: github
-//	        id: "583231"        # numeric GitHub user id (recommended, immutable)
-//	      - provider: github
-//	        login: octocat      # GitHub login, case-insensitive
+//	        id: "583231"        # numeric GitHub user id (required, immutable)
+//	        login: octocat      # optional label only, never used for matching
 //	    secondFactor: off
 //
 // An empty allowlist disables the restriction (v1.4.0 behaviour). A non-empty
@@ -41,8 +40,13 @@ type AdminLogin struct {
 	SecondFactor string                 `yaml:"secondFactor" json:"secondFactor"`
 }
 
-// AdminLoginAllowEntry matches one external identity by provider subject id
-// and/or login. When both are set, both must match.
+// AdminLoginAllowEntry matches one external identity.
+//
+// GitHub entries match ONLY by the immutable numeric user id; Login is an
+// optional human-readable label and is never used for matching, because
+// GitHub logins can be renamed and re-registered by someone else. Ids are
+// never resolved over the network at startup. Lark entries match by open id
+// and/or login (both must match when both are set).
 type AdminLoginAllowEntry struct {
 	Provider string `yaml:"provider" json:"provider"`
 	ID       string `yaml:"id" json:"id"`
@@ -69,6 +73,12 @@ func (a AdminLogin) Allows(provider, id, login string) bool {
 		}
 		wantID := strings.TrimSpace(entry.ID)
 		wantLogin := strings.TrimSpace(entry.Login)
+		if provider == AdminLoginProviderGithub {
+			if wantID != "" && id == wantID {
+				return true
+			}
+			continue
+		}
 		if wantID != "" && (id == "" || wantID != id) {
 			continue
 		}
@@ -111,8 +121,13 @@ func (a AdminLogin) Validate() error {
 		if id == "" && strings.TrimSpace(entry.Login) == "" {
 			return fmt.Errorf("auth.adminLogin.allowlist[%d] requires id or login", index)
 		}
-		if provider == AdminLoginProviderGithub && id != "" && strings.Trim(id, "0123456789") != "" {
-			return fmt.Errorf("auth.adminLogin.allowlist[%d].id must be the numeric GitHub user id", index)
+		if provider == AdminLoginProviderGithub {
+			if id == "" {
+				return fmt.Errorf("auth.adminLogin.allowlist[%d]: github entries must set id to the numeric GitHub user id (login %q is only a label and is never matched; look the id up via https://api.github.com/users/<login>)", index, strings.TrimSpace(entry.Login))
+			}
+			if strings.Trim(id, "0123456789") != "" {
+				return fmt.Errorf("auth.adminLogin.allowlist[%d].id must be the numeric GitHub user id", index)
+			}
 		}
 	}
 	return nil

@@ -28,17 +28,17 @@ auth:
   adminLogin:
     allowlist:
       - provider: github
-        id: "583231"     # GitHub 数字用户 ID，推荐，改名不受影响
-      - provider: github
-        login: octocat   # GitHub 登录名，不区分大小写
+        id: "583231"     # 必填：GitHub 数字用户 ID，改名不受影响
+        login: octocat   # 可选：仅作备注，不参与匹配
     secondFactor: off    # 本版只接受 off；TOTP 另行提供
 ```
 
+- GitHub 条目**只按数字用户 ID 匹配**：登录名可以改名、被他人重新注册，因此 `login` 只是备注；只写 `login` 不写 `id` 的条目启动即报错。启动时不联网解析 ID，可用 `https://api.github.com/users/<login>` 自行查询；
 - 名单为空（默认）时行为与 v1.4.0 完全一致；
 - 名单非空时，名单外的外部身份在建号和签发令牌之前被拒绝，OAuth 回调返回 403，不建用户、不写会话 Cookie，与 `security:registerEnabled` 无关；已绑定但不在名单内的账号同样被拒绝；
 - 本地用户名密码与邮箱验证码登录不受白名单约束，Root 账号始终可以用本地凭据恢复访问；
 - 拒绝写入登录审计，只记录 provider、登录名和数字 ID，不记录 provider token 或授权码；
-- 配置非法（未知 provider、条目缺少 id 和 login、GitHub id 非数字、`secondFactor` 不是 off）时启动失败。
+- 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off）时启动失败。
 
 ## 授权
 

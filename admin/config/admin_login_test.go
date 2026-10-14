@@ -1,6 +1,9 @@
 package config
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestAdminLoginDisabledByDefaultAllowsEveryone(t *testing.T) {
 	var policy AdminLogin
@@ -18,8 +21,7 @@ func TestAdminLoginDisabledByDefaultAllowsEveryone(t *testing.T) {
 func TestAdminLoginAllowsOnlyListedIdentities(t *testing.T) {
 	policy := AdminLogin{Allowlist: []AdminLoginAllowEntry{
 		{Provider: "github", ID: "42"},
-		{Provider: "GitHub", Login: "Octo-Admin"},
-		{Provider: "github", ID: "7", Login: "both"},
+		{Provider: "GitHub", ID: "43", Login: "label-only"},
 		{Provider: "lark", ID: "ou_x"},
 	}}
 	if err := policy.Validate(); err != nil {
@@ -30,12 +32,10 @@ func TestAdminLoginAllowsOnlyListedIdentities(t *testing.T) {
 		want                bool
 	}{
 		{"github", "42", "renamed", true},
-		{"github", "43", "octo-admin", true},
-		{"github", "43", "OCTO-ADMIN", true},
-		{"github", "7", "both", true},
-		{"github", "7", "other", false},
-		{"github", "8", "both", false},
-		{"github", "43", "intruder", false},
+		{"github", "43", "anything", true},
+		{"github", "44", "label-only", false},
+		{"github", "", "label-only", false},
+		{"github", "45", "intruder", false},
 		{"github", "", "", false},
 		{"lark", "42", "", false},
 		{"lark", "ou_x", "", true},
@@ -53,6 +53,7 @@ func TestAdminLoginValidateFailsClosed(t *testing.T) {
 		{Allowlist: []AdminLoginAllowEntry{{Provider: "gitlab", ID: "1"}}},
 		{Allowlist: []AdminLoginAllowEntry{{Provider: "github"}}},
 		{Allowlist: []AdminLoginAllowEntry{{Provider: "github", ID: "octocat"}}},
+		{Allowlist: []AdminLoginAllowEntry{{Provider: "github", Login: "octocat"}}},
 		{SecondFactor: "required"},
 		{SecondFactor: "optional"},
 		{SecondFactor: "sometimes"},
@@ -64,5 +65,12 @@ func TestAdminLoginValidateFailsClosed(t *testing.T) {
 	}
 	if err := (AdminLogin{SecondFactor: " OFF "}).Validate(); err != nil {
 		t.Fatalf("off must validate: %v", err)
+	}
+}
+
+func TestAdminLoginRejectsGithubLoginOnlyEntryWithClearError(t *testing.T) {
+	err := AdminLogin{Allowlist: []AdminLoginAllowEntry{{Provider: "github", Login: "octocat"}}}.Validate()
+	if err == nil || !strings.Contains(err.Error(), "numeric GitHub user id") || !strings.Contains(err.Error(), "never matched") {
+		t.Fatalf("login-only github entry error = %v", err)
 	}
 }
