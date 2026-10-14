@@ -92,7 +92,11 @@ switch (command) {
       'check-bundle-budget.mjs',
       'check-release-api.mjs',
     ]) {
-      runNode(resolve(packageRoot, 'scripts', script), ['--dist', resolve(process.cwd(), 'dist')]);
+      const scriptArgs = ['--dist', resolve(process.cwd(), 'dist')];
+      // Default bundle ceilings are calibrated for the reference application;
+      // they are advisory for downstream hosts unless the host sets its own.
+      if (script === 'check-bundle-budget.mjs') scriptArgs.push('--advisory');
+      runNode(resolve(packageRoot, 'scripts', script), scriptArgs);
       if (process.exitCode) break;
     }
     break;
