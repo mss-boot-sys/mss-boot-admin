@@ -1,6 +1,6 @@
 # ADR: Frontend extension mount point via defineBusinessAdmin({ extensions })
 
-- Status: Accepted for v1.6.0 (implementation in a later v1.6.0 PR)
+- Status: Accepted for v1.6.0
 - Date: 2026-10-14
 - Scope: `web/antd-v6` business host API
 - Exception to: AGENTS.md "Do not create a second SPA or split auth, layout, runtime, or contracts into independently versioned packages"
@@ -26,6 +26,24 @@ versioned packages.
    routes cannot be overridden.
 4. With no extension registered, the Admin build output is byte-identical to the
    build without this feature; CI asserts this.
+
+## v1.6.0 implementation boundary
+
+- Option shape: `extensions: [{ surface, routes, layout? }]`; any other key is
+  rejected, so an extension cannot pass its own request client, auth or Admin
+  layout through the host API.
+- Surface names follow the backend surface rules and additionally reserve
+  Admin page prefixes (`user`, `users`, `workplace`).
+- Every route path must stay below `/<surface>` and must not overlap
+  `/<surface>/api`; overlaps with Admin or business routes fail the build.
+- Pages mount at `/<surface>` with `layout: false` (or the extension's own
+  layout module) before the Admin fail-closed fallbacks. In development the
+  proxy forwards `/<surface>/api/` to the API target.
+- Contract test: with no or empty `extensions`, the generated configuration is
+  identical to the configuration without the option.
+- Deferred to a follow-up: locale namespaces (`zh-CN`/`en-US`), example
+  extension e2e, thin-host template and doctor updates, and a byte-level
+  build-artifact comparison in CI.
 
 ## Consequences
 

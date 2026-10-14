@@ -24,7 +24,10 @@ tag namespaces.
   `business.CommandFactory`, mounted next to `server` and `migrate`; reserved,
   aliased and duplicate names fail composition.
   See `docs/adr/2026-10-14-module-host-commands.md`.
-- ADR for the v1.6.0 frontend extension mount point.
+- Admin Web `defineBusinessAdmin({ extensions })`: mount an optional module's
+  pages under `/<surface>` in the single SPA, with closed options and route
+  confinement. No extension leaves the configuration unchanged.
+  See `docs/adr/2026-10-14-admin-web-extensions-mount-point.md`.
 
 ## [v1.5.0] - 2026-10-14
 
