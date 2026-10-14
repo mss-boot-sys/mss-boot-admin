@@ -1,23 +1,23 @@
 ---
-title: Admin 运行合同与 v1.3.9 稳定状态
+title: Admin 运行合同与 v1.4.0 稳定状态
 order: 19
 nav:
   order: 1
   title: admin
-description: v1.3.9 稳定 Thin Host 的安全运行合同与部分列车永久停止状态
-keywords: [v1.3.9 v1.3.5 v1.3.6 admin operations monitoring rollback immutable partial]
+description: v1.4.0 稳定 Thin Host 的安全运行合同与部分列车永久停止状态
+keywords: [v1.4.0 v1.3.5 v1.3.6 admin operations monitoring rollback immutable partial]
 ---
 
-# Admin 运行合同与 v1.3.9 稳定状态
+# Admin 运行合同与 v1.4.0 稳定状态
 
 :::warning
-版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 
 ## 运行入口边界
 
-v1.3.9 项目工具应检查 Distribution、锁文件、Blueprint 与本地依赖，管理且只
+v1.4.0 项目工具应检查 Distribution、锁文件、Blueprint 与本地依赖，管理且只
 管理当前 Thin Host 的开发进程，并按改动范围执行验证。工具存在、进程运行或容器健康
 都不等于业务成功，仍需验证 `/healthz`、`/readyz`、登录、权限拒绝和关键写操作。
 
@@ -51,7 +51,7 @@ SecretRef。配置变更通过受保护的 Admin API、部署配置或可审查�
 
 ## 初始化与迁移合同
 
-v1.3.9 Thin Host 的首次交互式初始化必须通过隐藏输入读取管理员密码；非交互自动化
+v1.4.0 Thin Host 的首次交互式初始化必须通过隐藏输入读取管理员密码；非交互自动化
 只向初始化进程注入一次性 `MSS_ADMIN_INITIAL_PASSWORD`。密码不进入命令行、生成文件、
 日志或长期服务环境，迁移只存一向验证值，且系统没有默认密码。
 

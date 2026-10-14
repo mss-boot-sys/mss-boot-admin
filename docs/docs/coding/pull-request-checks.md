@@ -4,7 +4,7 @@ title: Pull request checks
 
 # Pull request checks after the repository migration
 
-Development uses `mss-boot-sys/mss-boot-admin`. The v1.3.9 release migrates Go
+Development uses `mss-boot-sys/mss-boot-admin`. The v1.4.0 release migrates Go
 import paths and the package identity to `@mss-boot-sys/admin-web`; consumers must
 update imports and configure GitHub Packages authentication.
 

@@ -10,7 +10,7 @@ description: Thin Host 日常开发、配置、验证、部署与故障排查入
 # 使用指南
 
 :::warning
-版本范围：**v1.3.9 是 `mss-boot-sys/mss-boot-admin` 的首发基线**；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 安装、创建或升级从[快速开始](/getting-started)进入。Docs 网站 Tag 与部署可异步候补，
 不阻断 Framework、Admin、前端、镜像、npm、稳定别名或采用。
 :::
@@ -30,4 +30,4 @@ description: Thin Host 日常开发、配置、验证、部署与故障排查入
 
 Foundation 源码中的业务模块先修改 `.mss/modules/<name>.yaml`，再按仓库
 `.mss/commands.yaml` 生成并检查确定性变更。不要手改生成区，也不要把源码生成结果
-称为 v1.3.5 或 v1.3.6 下游应用；新 Thin Host 必须精确采用 v1.3.9 协调版本。
+称为 v1.3.5 或 v1.3.6 下游应用；新 Thin Host 必须精确采用 v1.4.0 协调版本。

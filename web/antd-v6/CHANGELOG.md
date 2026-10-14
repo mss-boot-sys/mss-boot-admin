@@ -6,6 +6,15 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+No unreleased changes are recorded.
+
+## [web/antd-v6/v1.4.0] - 2026-10-14
+
+- Default theme changed from dark to light; saved personal themes are kept.
+- Side-layout desktop header renders by breakpoint (no CSS-hidden duplicate of
+  host header contributions) and stays on route-level 403 pages, which now use
+  `PageForbidden` (#24).
+
 - Consistency pass ("所有页面风格要统一"):
   - `tokens.ts` is now the single token source.
   - The CSS is split into `shared/design-system/styles/*.css`. It has no raw

@@ -1,6 +1,6 @@
 {
   "schema": "mss.io/release-qualification/v1",
-  "targetVersion": "v1.3.9",
+  "targetVersion": "v1.4.0",
   "features": [
     ".mss/features/foundation-v1-3-9-release.yaml",
     ".mss/features/native-oidc-provider.yaml",

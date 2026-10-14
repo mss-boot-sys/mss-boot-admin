@@ -1,6 +1,6 @@
 # Business content on the workplace
 
-Version scope: v1.3.9 compile-time extension. External integration acceptance must be verified for the consuming host.
+Version scope: v1.4.0 compile-time extension. External integration acceptance must be verified for the consuming host.
 
 For other shared interface regions, see [avatar, header, and footer customization](./avatar-panel-customization.md).
 

@@ -81,7 +81,7 @@ class RootReleaseWorkflowTest(unittest.TestCase):
                     runtime = root / f"mss-boot-admin-{platform}-{arch}"
                     runtime.mkdir()
                     (runtime / "BUILD-INFO").write_text(
-                        f"version=v1.3.9\ncommit={sha}\ntimestamp={timestamp}\n"
+                        f"version=v1.4.0\ncommit={sha}\ntimestamp={timestamp}\n"
                     )
                     (runtime / "LICENSE").write_text("MIT License\n")
                     for command in ("admin", "mss", "mss-mcp"):
@@ -93,7 +93,7 @@ class RootReleaseWorkflowTest(unittest.TestCase):
             frontend.mkdir()
             release = {
                 "application": "mss-boot-admin-antd-v6",
-                "version": "v1.3.9",
+                "version": "v1.4.0",
                 "commit": sha,
             }
             with tarfile.open(frontend / "dist-v6.tar.gz", "w:gz") as archive:
@@ -114,7 +114,7 @@ class RootReleaseWorkflowTest(unittest.TestCase):
                 )
             )
             env = os.environ.copy()
-            env.update(RELEASE_VERSION="v1.3.9", RELEASE_COMMIT=sha)
+            env.update(RELEASE_VERSION="v1.4.0", RELEASE_COMMIT=sha)
             result = subprocess.run(
                 ["bash", "-c", script],
                 cwd=root,
@@ -141,10 +141,10 @@ class RootReleaseWorkflowTest(unittest.TestCase):
                         )
             self.assertEqual(len((root / "SHA256SUMS").read_text().splitlines()), 6)
             self.assertEqual(
-                len((root / "SHA256SUMS.tools-v1.3.9").read_text().splitlines()), 8
+                len((root / "SHA256SUMS.tools-v1.4.0").read_text().splitlines()), 8
             )
             first_checksums = (root / "SHA256SUMS").read_text()
-            first_tools = (root / "SHA256SUMS.tools-v1.3.9").read_text()
+            first_tools = (root / "SHA256SUMS.tools-v1.4.0").read_text()
             shutil.rmtree(root / "tool-staging")
             shutil.rmtree(root / "frontend-v6-extracted")
             for runtime in root.glob("mss-boot-admin-*"):
@@ -163,18 +163,18 @@ class RootReleaseWorkflowTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual((root / "SHA256SUMS").read_text(), first_checksums)
             self.assertEqual(
-                (root / "SHA256SUMS.tools-v1.3.9").read_text(), first_tools
+                (root / "SHA256SUMS.tools-v1.4.0").read_text(), first_tools
             )
 
     def test_immutable_asset_identity_rejects_changed_source_and_bytes(self):
         release = {
-            "tagName": "v1.3.9",
+            "tagName": "v1.4.0",
             "targetCommitish": "a" * 40,
             "isPrerelease": False,
         }
-        validate_release(release, "v1.3.9", "a" * 40)
+        validate_release(release, "v1.4.0", "a" * 40)
         with self.assertRaises(ValueError):
-            validate_release(release, "v1.3.9", "b" * 40)
+            validate_release(release, "v1.4.0", "b" * 40)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             local = root / "local"
