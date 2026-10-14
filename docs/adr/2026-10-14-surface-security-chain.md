@@ -28,18 +28,24 @@ core owns authentication, CORS and CSRF.
    apply. Unknown or empty categories fail registration.
 4. The surface name is the only accepted audience. The core accepts a principal
    only if `aud` is exactly `[name]` and `iss` equals the declared issuer
-   (constant-time). An authenticator that writes a response aborts the chain.
+   (constant-time). The authenticator receives a read-only `SurfaceRequest`
+   (method, URL, headers, cookies, remote IP, `context.Context`) with no
+   response writer and no `Next`/`Abort`, so it cannot advance or abort the
+   chain. Every principal must report a `Credential` of `bearer` or `cookie`.
 5. Names match `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`, must be unique across modules
-   and may not be reserved (`admin`, `api`, `oidc`, `.well-known`, `swagger`,
-   static/SPA paths and health endpoints). Conflicts fail startup.
-6. Mounting at least one surface switches Admin APIs to strict audience mode for
-   the process (same effect as `auth.requireAdminAudience: true`). With no
-   surface, the Admin route table, security contract and audience behaviour are
-   unchanged and covered by the P1 baseline snapshot.
+   and within one registration, and may not be reserved (`admin`, `api`,
+   `oidc`, `.well-known`, `swagger`, static/SPA paths and health endpoints).
+   Conflicts fail startup.
+6. Mounting at least one surface switches Admin APIs to strict audience mode
+   inside `Registry.MountSurfaces` itself (same effect as
+   `auth.requireAdminAudience: true`), so every server wrapper path is covered.
+   With no surface, the Admin route table, security contract and audience
+   behaviour are unchanged and covered by the P1 baseline snapshot.
 7. Surface CSRF in v1.6.0 is an exact-Origin check against the surface's CORS
-   origins for unsafe cookie-bearing requests; bearer-only API clients are
-   exempt. A derived double-submit cookie may be added later without changing
-   the registration API.
+   origins for unsafe cookie-authenticated requests. The bearer exemption
+   follows the credential the authenticator reported, never the shape of the
+   `Authorization` header. A derived double-submit cookie may be added later
+   without changing the registration API.
 
 ## Consequences
 
@@ -47,8 +53,9 @@ core owns authentication, CORS and CSRF.
   CORS or CSRF for Admin **or** for any surface; they only implement the
   credential lookup that the core calls and checks.
 - New public API: `SurfaceRegistration`, `SurfaceRoute`, `SurfaceRouteCategory`,
-  `SurfaceAuthenticator`, `SurfacePrincipal`, `SurfaceCORS`,
-  `Registry.MountSurfaces`, `Registry.Surfaces`. Field-name construction of
-  `Registration` stays source compatible.
+  `SurfaceAuthenticator`, `SurfaceRequest`, `SurfacePrincipal`,
+  `SurfaceCredentialKind`, `SurfaceCORS`, `Registry.MountSurfaces`,
+  `Registry.Surfaces`. Field-name construction of `Registration` stays source
+  compatible.
 - Operators who install a surface must expect pre-v1.5.0 Admin tokens without
   `aud` to stop working.
