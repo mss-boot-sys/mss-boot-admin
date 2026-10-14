@@ -29,6 +29,13 @@ and 940 KiB for the complete JavaScript corpus. The
 records the reference application, external host and cold-route measurements
 behind this dependency refresh.
 
+These ceilings are enforced for this repository's release build. In a
+downstream Thin Host, `mss-admin-web build` reports them as a warning unless the
+host sets its own ceilings with `MSS_V6_ENTRY_GZIP_BUDGET_KB`,
+`MSS_V6_CHUNK_GZIP_BUDGET_KB` or `MSS_V6_TOTAL_JS_GZIP_BUDGET_KB` (KiB of gzip),
+or sets `MSS_V6_BUNDLE_BUDGET=enforce`. `MSS_V6_BUNDLE_BUDGET=warn` makes any
+build advisory.
+
 Admin Web is the Distribution's single complete browser application: React 19,
 Ant Design 6, Umi Max, React Query, generated API contracts, authentication
 shell, page states, locales, and the narrow business-route extension.
