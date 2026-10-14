@@ -373,7 +373,7 @@ func (r *Registry) MountSurfaces(root gin.IRouter, sink audit.Sink) (int, error)
 
 func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink) {
 	group := root.Group("/" + surface.Name + "/api")
-	group.Use(surfaceCORS(surface.CORS, surface.CSRF != nil))
+	group.Use(surfaceCORS(surface.CORS, surfaceCSRFHeaderFor(surface.CSRF)))
 	group.Use(func(c *gin.Context) {
 		c.Set(surfaceAuditKey, surfaceAudit{surface: surface.Name, sink: sink})
 		if surface.CSRF != nil {
@@ -394,7 +394,7 @@ func mountSurface(root gin.IRouter, surface SurfaceRegistration, sink audit.Sink
 	}
 }
 
-func surfaceCORS(policy SurfaceCORS, csrfTokens bool) gin.HandlerFunc {
+func surfaceCORS(policy SurfaceCORS, csrfHeader string) gin.HandlerFunc {
 	configCors := cors.DefaultConfig()
 	configCors.AllowOrigins = append([]string(nil), policy.AllowOrigins...)
 	if len(configCors.AllowOrigins) == 0 {
@@ -406,10 +406,10 @@ func surfaceCORS(policy SurfaceCORS, csrfTokens bool) gin.HandlerFunc {
 	} else {
 		configCors.AddAllowHeaders("Authorization")
 	}
-	if csrfTokens && !surfaceHeaderListed(configCors.AllowHeaders, SurfaceCSRFHeader) {
+	if csrfHeader != "" && !surfaceHeaderListed(configCors.AllowHeaders, csrfHeader) {
 		// Cross-origin unsafe requests carry the double-submit header; without
 		// it the browser preflight fails before the core can verify the token.
-		configCors.AddAllowHeaders(SurfaceCSRFHeader)
+		configCors.AddAllowHeaders(csrfHeader)
 	}
 	if policy.MaxAge > 0 {
 		configCors.MaxAge = policy.MaxAge

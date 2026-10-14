@@ -558,3 +558,170 @@ func TestSurfaceCSRFKeyMustNotBeAdminKey(t *testing.T) {
 	_, err = registry.MountSurfaces(gin.New(), nil)
 	require.ErrorContains(t, err, "Admin auth key")
 }
+
+// Session cookie presence is read from the raw Cookie header: duplicates,
+// empty, undecodable or malformed values never skip the token check, and a
+// rejected request never reaches module middleware or handlers.
+func TestSurfaceCSRFRawSessionCookieHandling(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	key := []byte("portal-csrf-key-0123456789abcdef-0123")
+	hits := 0
+	var issued string
+	handler := func(c *gin.Context) { hits++; c.Status(http.StatusOK) }
+	surface := business.SurfaceRegistration{
+		Name: "portal", Issuer: surfaceTestIssuer, Authenticator: headerAuthenticator,
+		CORS:       business.SurfaceCORS{AllowOrigins: []string{"https://shop.example.com"}},
+		CSRF:       &business.SurfaceCSRF{SessionCookie: "__Host-portal-session", Key: key},
+		Middleware: []gin.HandlerFunc{func(c *gin.Context) { hits++; c.Next() }},
+		Routes: []business.SurfaceRoute{
+			{Method: http.MethodPost, Path: "/issue", Category: business.SurfaceRoutePublic, Handlers: []gin.HandlerFunc{func(c *gin.Context) {
+				issued, _ = business.SetSurfaceCSRFCookie(c, c.GetHeader("X-Session"), time.Now().Add(time.Hour))
+				c.Status(http.StatusOK)
+			}}},
+			{Method: http.MethodPost, Path: "/public", Category: business.SurfaceRoutePublic, Handlers: []gin.HandlerFunc{handler}},
+			{Method: http.MethodPost, Path: "/orders", Category: business.SurfaceRouteAuthenticated, Handlers: []gin.HandlerFunc{handler}},
+		},
+	}
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, nil)
+	require.NoError(t, err)
+	origin := "https://shop.example.com"
+	csrfName := business.SurfaceCSRFCookieName("portal")
+
+	mint := func(session string) string {
+		res := serveSurface(engine, http.MethodPost, "/portal/api/issue", map[string]string{"Origin": origin, "X-Session": session})
+		require.Equal(t, http.StatusOK, res.Code)
+		return issued
+	}
+	call := func(path, cookie, header string, principal bool) int {
+		headers := map[string]string{"Origin": origin, "Cookie": cookie}
+		if principal {
+			headers["X-Test-Principal"] = "portal"
+		}
+		if header != "" {
+			headers[business.SurfaceCSRFHeader] = header
+		}
+		return serveSurface(engine, http.MethodPost, path, headers).Code
+	}
+
+	// Raw binding: a percent-encoded session value is bound as sent.
+	raw := "abc%2Fdef"
+	token := mint(raw)
+	hits = 0
+	require.Equal(t, http.StatusOK, call("/portal/api/orders", "__Host-portal-session="+raw+"; "+csrfName+"="+token, token, true))
+	require.Equal(t, 2, hits)
+	// The decoded form is a different session and does not validate.
+	hits = 0
+	require.Equal(t, http.StatusForbidden, call("/portal/api/orders", "__Host-portal-session=abc/def; "+csrfName+"="+token, token, true))
+
+	for name, cookie := range map[string]string{
+		"undecodable":     "__Host-portal-session=%zz",
+		"malformed quote": `__Host-portal-session="x`,
+		"empty":           "__Host-portal-session=",
+		"duplicate":       "__Host-portal-session=" + raw + "; __Host-portal-session=other",
+		"duplicate same":  "__Host-portal-session=" + raw + "; __Host-portal-session=" + raw,
+		"duplicate csrf":  "__Host-portal-session=" + raw + "; " + csrfName + "=" + token + "; " + csrfName + "=" + token,
+	} {
+		for _, path := range []string{"/portal/api/public", "/portal/api/orders"} {
+			full := cookie
+			if !strings.Contains(full, csrfName) {
+				full += "; " + csrfName + "=" + token
+			}
+			require.Equal(t, http.StatusForbidden, call(path, full, token, path == "/portal/api/orders"), "%s %s", name, path)
+		}
+	}
+	require.Zero(t, hits, "rejected requests must not reach module middleware or handlers")
+}
+
+func TestMountSurfacesEnablesStrictAudience(t *testing.T) {
+	restoreSurfaceEnforcement(t)
+	var hits []string
+	registry := composeSurfaceRegistry(t, portalSurface(&hits))
+	require.False(t, config.Cfg.Auth.RequireAdminAudience)
+	mounted, err := registry.MountSurfaces(gin.New(), nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, mounted)
+	require.True(t, config.Cfg.Auth.RequireAdminAudience, "MountSurfaces itself must enable strict audience")
+	require.False(t, middleware.AdminTokenAudienceAccepted(jwt.MapClaims{"uid": "u1"}))
+}
+
+func TestSurfaceCSRFCustomHeaderName(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	key := []byte("portal-csrf-key-0123456789abcdef-0123")
+	hits := 0
+	var issued string
+	surface := business.SurfaceRegistration{
+		Name: "portal", Issuer: surfaceTestIssuer, Authenticator: headerAuthenticator,
+		CORS: business.SurfaceCORS{AllowOrigins: []string{"https://shop.example.com"}, AllowHeaders: []string{"Content-Type"}},
+		CSRF: &business.SurfaceCSRF{SessionCookie: "__Host-portal-session", Key: key, HeaderName: "X-CSRF-Token"},
+		Routes: []business.SurfaceRoute{
+			{Method: http.MethodPost, Path: "/issue", Category: business.SurfaceRoutePublic, Handlers: []gin.HandlerFunc{func(c *gin.Context) {
+				issued, _ = business.SetSurfaceCSRFCookie(c, "s1", time.Now().Add(time.Hour))
+				c.Status(http.StatusOK)
+			}}},
+			{Method: http.MethodPost, Path: "/orders", Category: business.SurfaceRouteAuthenticated,
+				Handlers: []gin.HandlerFunc{func(c *gin.Context) { hits++; c.Status(http.StatusOK) }}},
+		},
+	}
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, nil)
+	require.NoError(t, err)
+	origin := "https://shop.example.com"
+
+	pre := serveSurface(engine, http.MethodOptions, "/portal/api/orders", map[string]string{
+		"Origin": origin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "x-csrf-token"})
+	allowed := strings.ToLower(pre.Header().Get("Access-Control-Allow-Headers"))
+	require.Contains(t, allowed, "x-csrf-token")
+	require.NotContains(t, allowed, "x-mss-csrf-token")
+
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/issue", map[string]string{"Origin": origin}).Code)
+	cookie := "__Host-portal-session=s1; " + business.SurfaceCSRFCookieName("portal") + "=" + issued
+	post := func(header string) int {
+		return serveSurface(engine, http.MethodPost, "/portal/api/orders", map[string]string{
+			"Origin": origin, "X-Test-Principal": "portal", "Cookie": cookie, header: issued}).Code
+	}
+	require.Equal(t, http.StatusForbidden, post(business.SurfaceCSRFHeader), "default header ignored when custom is set")
+	require.Zero(t, hits)
+	require.Equal(t, http.StatusOK, post("X-CSRF-Token"))
+	require.Equal(t, 1, hits)
+
+	// Empty or blank HeaderName falls back to the default header: CSRF stays
+	// on and X-MSS-CSRF-Token is both allowed by CORS and required.
+	for _, blank := range []string{"", "  "} {
+		s := surface
+		csrf := *surface.CSRF
+		csrf.HeaderName = blank
+		s.CSRF = &csrf
+		reg := composeSurfaceRegistry(t, s)
+		eng := gin.New()
+		_, err := reg.MountSurfaces(eng, nil)
+		require.NoError(t, err)
+		pre := serveSurface(eng, http.MethodOptions, "/portal/api/orders", map[string]string{
+			"Origin": origin, "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "x-mss-csrf-token"})
+		require.Contains(t, strings.ToLower(pre.Header().Get("Access-Control-Allow-Headers")), "x-mss-csrf-token")
+		res := serveSurface(eng, http.MethodPost, "/portal/api/issue", map[string]string{"Origin": origin})
+		token := res.Result().Cookies()[0].Value
+		ck := "__Host-portal-session=s1; " + business.SurfaceCSRFCookieName("portal") + "=" + token
+		send := func(headers map[string]string) int {
+			headers["Origin"], headers["X-Test-Principal"], headers["Cookie"] = origin, "portal", ck
+			return serveSurface(eng, http.MethodPost, "/portal/api/orders", headers).Code
+		}
+		hits = 0
+		require.Equal(t, http.StatusForbidden, send(map[string]string{}), "blank %q must not disable CSRF", blank)
+		require.Equal(t, http.StatusForbidden, send(map[string]string{"X-CSRF-Token": token}))
+		require.Zero(t, hits)
+		require.Equal(t, http.StatusOK, send(map[string]string{business.SurfaceCSRFHeader: token}))
+		require.Equal(t, 1, hits)
+	}
+
+	for _, bad := range []string{"Authorization", "cookie", " Cookie ", "X Bad", "X-Bad:"} {
+		s := surface
+		csrf := *surface.CSRF
+		csrf.HeaderName = bad
+		s.CSRF = &csrf
+		_, err := business.Compose(migration.New(), surfaceTestModule{name: "shop", id: "202610140001", surfaces: []business.SurfaceRegistration{s}})
+		require.Error(t, err, bad)
+	}
+}

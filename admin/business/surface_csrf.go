@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -28,7 +29,25 @@ type SurfaceCSRF struct {
 	SessionCookie string
 	// Key signs tokens. At least 32 bytes; must not be the Admin auth key.
 	Key []byte
+	// HeaderName carries the token on unsafe requests. Empty means
+	// SurfaceCSRFHeader (X-MSS-CSRF-Token). Must be a valid header token and
+	// not Authorization or Cookie.
+	HeaderName string
 }
+
+// surfaceCSRFHeaderFor returns the configured CSRF header, or "" when the
+// surface did not opt into CSRF tokens.
+func surfaceCSRFHeaderFor(options *SurfaceCSRF) string {
+	if options == nil {
+		return ""
+	}
+	if name := strings.TrimSpace(options.HeaderName); name != "" {
+		return http.CanonicalHeaderKey(name)
+	}
+	return SurfaceCSRFHeader
+}
+
+var headerNamePattern = regexp.MustCompile("^[A-Za-z0-9!#$%&'*+.^_|~-]{1,64}$")
 
 const (
 	surfaceCSRFVersion    = "s1"
@@ -68,6 +87,16 @@ func validateSurfaceCSRF(options SurfaceCSRF) error {
 	}
 	if surfaceCSRFKeyIsAdminKey(options.Key) {
 		return errSurfaceCSRFAdminKey
+	}
+	// Validate the same resolved name that CORS and the check use; an empty
+	// HeaderName resolves to the default and never disables CSRF.
+	header := surfaceCSRFHeaderFor(&options)
+	if !headerNamePattern.MatchString(header) {
+		return errors.New("CSRF header name is not a valid header token")
+	}
+	switch strings.ToLower(header) {
+	case "authorization", "cookie":
+		return errors.New("CSRF header name must not be Authorization or Cookie")
 	}
 	return nil
 }
@@ -116,8 +145,8 @@ func validSurfaceCSRFToken(value, surface, session string, key []byte) bool {
 // not opt into double-submit CSRF.
 var ErrSurfaceCSRFDisabled = errors.New("surface did not enable CSRF tokens")
 
-// SetSurfaceCSRFCookie issues a CSRF token bound to session (the value the
-// module just wrote to its session cookie) and sets the readable
+// SetSurfaceCSRFCookie issues a CSRF token bound to session (the raw,
+// undecoded value the module just wrote to its session cookie) and sets the readable
 // __Host- cookie. Call it from the sign-in or session-refresh handler.
 // It returns the token so the module may also return it in the body.
 func SetSurfaceCSRFCookie(c *gin.Context, session string, expiresAt time.Time) (string, error) {
@@ -173,7 +202,7 @@ func surfaceCSRFCheck(surface SurfaceRegistration) gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		if !authenticated && origin == "" && len(c.Request.Cookies()) == 0 {
+		if !authenticated && origin == "" && len(c.Request.Header.Values("Cookie")) == 0 {
 			c.Next()
 			return
 		}
@@ -182,16 +211,19 @@ func surfaceCSRFCheck(surface SurfaceRegistration) gin.HandlerFunc {
 			return
 		}
 		if surface.CSRF != nil {
-			session, err := c.Cookie(surface.CSRF.SessionCookie)
-			sessionPresent := err == nil && session != ""
+			sessions := rawRequestCookies(c.Request, surface.CSRF.SessionCookie)
 			cookieAuthenticated := authenticated && principal.Credential == SurfaceCredentialCookie
-			if cookieAuthenticated && !sessionPresent {
-				// Authenticated by a cookie, but not by the declared session
-				// cookie: the token cannot be bound, so fail closed.
-				abortSurface(c, http.StatusForbidden, "csrf validation failed")
-				return
-			}
-			if sessionPresent && !surfaceCSRFTokenAccepted(c, surface, session) {
+			if len(sessions) == 0 {
+				if cookieAuthenticated {
+					// Authenticated by a cookie, but not by the declared session
+					// cookie: the token cannot be bound, so fail closed.
+					abortSurface(c, http.StatusForbidden, "csrf validation failed")
+					return
+				}
+			} else if len(sessions) != 1 || !rawCookieValueWellFormed(sessions[0]) ||
+				!surfaceCSRFTokenAccepted(c, surface, sessions[0]) {
+				// Any session cookie present (duplicate, empty or malformed
+				// included) requires a valid token bound to the raw value.
 				abortSurface(c, http.StatusForbidden, "csrf validation failed")
 				return
 			}
@@ -200,9 +232,49 @@ func surfaceCSRFCheck(surface SurfaceRegistration) gin.HandlerFunc {
 	}
 }
 
+// rawRequestCookies returns every raw (undecoded) value sent for name across
+// all Cookie headers. It does not use net/http or gin parsing, which drop or
+// decode values, so presence is never hidden from the CSRF check.
+func rawRequestCookies(request *http.Request, name string) []string {
+	values := []string{}
+	for _, header := range request.Header.Values("Cookie") {
+		for _, part := range strings.Split(header, ";") {
+			part = strings.TrimSpace(part)
+			if part == "" {
+				continue
+			}
+			key, value, _ := strings.Cut(part, "=")
+			if strings.TrimSpace(key) == name {
+				values = append(values, strings.TrimSpace(value))
+			}
+		}
+	}
+	return values
+}
+
+// rawCookieValueWellFormed accepts non-empty RFC 6265 cookie-octets whose
+// percent-encoding (if any) decodes. The raw value is what gets bound.
+func rawCookieValueWellFormed(value string) bool {
+	if value == "" {
+		return false
+	}
+	for i := 0; i < len(value); i++ {
+		b := value[i]
+		if b < 0x21 || b > 0x7e || b == '"' || b == ',' || b == ';' || b == '\\' {
+			return false
+		}
+	}
+	_, err := url.QueryUnescape(value)
+	return err == nil
+}
+
 func surfaceCSRFTokenAccepted(c *gin.Context, surface SurfaceRegistration, session string) bool {
-	cookieToken, _ := c.Cookie(SurfaceCSRFCookieName(surface.Name))
-	headerToken := strings.TrimSpace(c.GetHeader(SurfaceCSRFHeader))
+	tokens := rawRequestCookies(c.Request, SurfaceCSRFCookieName(surface.Name))
+	if len(tokens) != 1 {
+		return false
+	}
+	cookieToken := tokens[0]
+	headerToken := strings.TrimSpace(c.GetHeader(surfaceCSRFHeaderFor(surface.CSRF)))
 	if cookieToken == "" || headerToken == "" ||
 		subtle.ConstantTimeCompare([]byte(cookieToken), []byte(headerToken)) != 1 {
 		return false

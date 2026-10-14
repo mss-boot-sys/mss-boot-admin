@@ -52,8 +52,14 @@ core owns authentication, CORS and CSRF.
    cookie `__Host-mss-<name>-csrf` (constant time), and an HMAC-SHA256 over
    (surface, nonce, session cookie value) under the surface key (>= 32 bytes;
    a key equal to the Admin auth key fails registration and mounting).
-   `X-MSS-CSRF-Token` is always added to the surface CORS allowed headers,
-   including custom `AllowHeaders`. Modules issue tokens with
+   The session and token cookies are read raw from the `Cookie` header (no
+   decoding); any session cookie present (duplicate, empty, undecodable or
+   malformed included) requires a valid token bound to that raw value, and
+   duplicates or malformed values are rejected. The token header defaults to
+   `X-MSS-CSRF-Token`; `SurfaceCSRF.HeaderName` may override it (valid header
+   token, not `Authorization`/`Cookie`; empty falls back to the default). The
+   resolved name is validated, checked, and always added to the surface CORS
+   allowed headers, including custom `AllowHeaders`. Modules issue tokens with
    `business.SetSurfaceCSRFCookie` after sign-in or refresh.
 
 ## Consequences
