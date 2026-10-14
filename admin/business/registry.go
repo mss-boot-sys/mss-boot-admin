@@ -543,7 +543,14 @@ func (r *Registry) Register(registration Registration) error {
 	}
 
 	surfaces := make([]SurfaceRegistration, 0, len(registration.Surfaces))
+	surfaceNames := map[string]struct{}{}
 	for _, surface := range registration.Surfaces {
+		if _, dup := surfaceNames[surface.Name]; dup {
+			return transaction.failRegistration(fmt.Errorf(
+				"business module %s: surface %q is declared twice", transaction.module, surface.Name,
+			))
+		}
+		surfaceNames[surface.Name] = struct{}{}
 		if err := validateSurface(surface); err != nil {
 			return transaction.failRegistration(fmt.Errorf(
 				"business module %s: %w", transaction.module, err,
