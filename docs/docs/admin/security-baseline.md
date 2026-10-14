@@ -48,6 +48,24 @@ auth:
 - 登录限流和登录审计用独立的客户端 IP 规则：只有直连对端在可信代理列表内时才读取转发头，X-Forwarded-For 从右往左取第一个非可信地址；默认（未配置任何可信代理）只用 RemoteAddr，伪造的转发头无法换限流桶或篡改审计 IP。该规则不改变 gin 全局 `ClientIP()` 的行为（全局仍由 `application.trustedProxies` 控制）；
 - 配置非法（未知 provider、条目缺少 id 和 login、GitHub 条目缺少 id 或 id 非数字、`secondFactor` 不是 off、`rateLimit` 只填了一半或为负数、可信代理不是合法 IP/CIDR、header 名非法）时启动失败。
 
+### 令牌受众（`iss` / `aud=admin`，main 分支，尚未发布）
+
+- 后台签发的浏览器会话令牌和个人访问令牌（PAT）都写入 `iss`（`auth.issuer`，默认 `mss-boot-admin`）和 `aud=admin`；PAT 无论自定义 PayloadFunc 怎么写都强制 `aud=admin`；
+- 后台接口、会话刷新和 OIDC 浏览器会话只接受 `aud` 含 `admin` 的令牌；`aud` 为其他值（如 `portal`、`user`）或 `iss` 不匹配时一律 401，即使用的是同一把签名密钥；比较为常量时间，只返回布尔结果；
+- 兼容模式（默认）：升级前签发、没有 `aud` 的旧令牌在过渡期内仍可用，旧会话在下次登录后换成新令牌，旧 PAT 建议轮换；设置 `auth.requireAdminAudience: true` 进入严格模式，拒绝没有 `aud` 的令牌；
+- 新增的其他 surface 不应与后台共用签名密钥，可用 `middleware.SharesAdminSigningKey` 做布尔检查（不暴露密钥指纹）。
+
+#### 升级后何时可以开启严格模式（`auth.requireAdminAudience: true`）
+
+开启严格模式前，必须确认已经没有不带 `aud` 的旧令牌在用：
+
+1. **浏览器会话**：会话令牌有效期是 `auth.timeout`（默认 `12h`）。刷新时会沿用旧令牌的声明，所以升级前登录的会话可以一直不带 `aud` 地刷新，最长刷新窗口是 `auth.maxRefresh`（默认 `2160h`，即 90 天）。从升级部署时间算起，等满 `auth.maxRefresh + auth.timeout`，旧会话就会自然失效。想提前开启，可以让用户重新登录：Root 在"安全 → 在线会话"（`/security/online-sessions`，接口 `GET /admin/api/ws/online`）里逐个撤销旧会话，或者轮换 `auth.key`，这样所有人都要重新登录。
+2. **个人访问令牌（PAT）**：创建时如果没填有效期，默认约 100 年，等不到它过期，所以升级前签发的 PAT 必须重新签发或撤销：
+   - 界面：账号设置 → 访问令牌（`/account/settings?tab=tokens`），对每个令牌点"刷新"拿到新令牌（新令牌带 `aud=admin`），或者点"撤销"；
+   - 接口（必须用浏览器会话调用，PAT 不能给自己续期）：`PUT /admin/api/user-auth-token/{id}/refresh` 重新签发，`PUT /admin/api/user-auth-token/{id}/revoke` 撤销，`GET /admin/api/user-auth-tokens` 列出当前用户的令牌；
+   - 注意：重新签发出来的 PAT，有效期是 `auth.timeout`；需要长期有效的令牌，请用 `POST /admin/api/user-auth-tokens?validityPeriod=<时长>` 新建一个，再撤销旧的。
+3. **确认已经没有旧令牌**：兼容模式下，每接受一次不带 `aud` 的令牌，服务端都会计数，最多每分钟打一条 WARN 日志 `accepted legacy admin token without aud (compatibility mode)`，带上 `kind`（session 或 pat）和累计数 `legacy_sessions_total`、`legacy_pats_total`。日志里不含令牌，也不含用户信息。宿主程序也可以调用 `middleware.LegacyAudienceTokenCounts()` 把计数接到自己的监控上。连续一个刷新窗口都没有出现这条日志，就可以开启严格模式。
+
 ## 授权
 
 - 每个受保护 API 在后端执行 Casbin 或业务授权；

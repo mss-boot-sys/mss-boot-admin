@@ -98,6 +98,11 @@ func BrowserSessionRefreshHandler(c *gin.Context) {
 		return
 	}
 	claims := jwt.ExtractClaimsFromToken(parsed)
+	if !AdminTokenAudienceAccepted(claims) {
+		ClearBrowserSessionCookies(c)
+		writeUnauthorizedAuthResponse(c, http.StatusUnauthorized, "browser session refresh failed")
+		return
+	}
 	if cast.ToBool(claims["refreshTokenDisabled"]) {
 		ClearBrowserSessionCookies(c)
 		writeUnauthorizedAuthResponse(c, http.StatusUnauthorized, "browser session refresh is disabled")

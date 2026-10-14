@@ -36,6 +36,29 @@ tag namespaces.
   global `ClientIP()` behaviour is unchanged; making global trust-none
   stricter is deferred to 2.0.
 
+### Admin API
+
+- Admin tokens (browser session and PAT) now carry `iss` (`auth.issuer`,
+  default `mss-boot-admin`) and `aud=admin`; PATs force `aud=admin` regardless
+  of a custom PayloadFunc. Admin APIs, session refresh and OIDC browser SSO
+  reject any token whose `aud` lacks `admin` or whose `iss` differs, even when
+  signed with the Admin key (401), using constant-time boolean checks.
+  Tokens without `aud` issued before this change stay valid in compatibility
+  mode (default); `auth.requireAdminAudience: true` enables strict mode.
+  `middleware.SharesAdminSigningKey` reports key sharing as a boolean only.
+  Acceptance: `aud=portal`/`aud=user` tokens signed with the same key are
+  rejected on every non-public route of the P1 baseline route table.
+- Upgrade note for strict mode: browser sessions refresh with their original
+  claims, so pre-upgrade sessions stay aud-less until `auth.maxRefresh`
+  (default `2160h`) plus `auth.timeout` (default `12h`) have elapsed since the
+  upgrade, unless sessions are revoked or `auth.key` is rotated. PATs default
+  to ~100-year validity and must be reissued (`PUT
+  /admin/api/user-auth-token/{id}/refresh`, Account settings → Access tokens)
+  or revoked before enabling `auth.requireAdminAudience`. Compatibility mode
+  counts accepted aud-less tokens (`middleware.LegacyAudienceTokenCounts`)
+  and logs a rate-limited WARN (once per minute, kind and totals only). See
+  the security baseline docs.
+
 ### Framework
 
 - Add `mss-boot/pkg/keyedlimit`: the storage-agnostic per-key `KeyedLimiter`
