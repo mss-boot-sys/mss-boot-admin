@@ -1,0 +1,758 @@
+[
+  {
+    "Method": "GET",
+    "Path": "/admin/api/app-configs/:group",
+    "Class": "Authorized",
+    "Permission": "config:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/app-configs/:group",
+    "Class": "Authorized",
+    "Permission": "config:write",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/app-configs/profile",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/app-configs/theme",
+    "Class": "Authorized",
+    "Permission": "config:write",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/audit-logs/login",
+    "Class": "Authorized",
+    "Permission": "audit:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/audit-logs/operation",
+    "Class": "Authorized",
+    "Permission": "audit:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/departments",
+    "Class": "Authorized",
+    "Permission": "department:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/language/profile",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/languages",
+    "Class": "Authorized",
+    "Permission": "language:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/languages",
+    "Class": "Authorized",
+    "Permission": "language:create",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/languages/:id",
+    "Class": "Authorized",
+    "Permission": "language:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/languages/:id",
+    "Class": "Authorized",
+    "Permission": "language:update",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/languages/public",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/logs",
+    "Class": "Authorized",
+    "Permission": "log:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/logs/export",
+    "Class": "Authorized",
+    "Permission": "log:export",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/logs/files",
+    "Class": "Authorized",
+    "Permission": "log:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/menu/api/:id",
+    "Class": "Authorized",
+    "Permission": "menu:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/menu/authorize",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/menu/authorize/:roleID",
+    "Class": "Authorized",
+    "Permission": "menu:authorize",
+    "RootOnly": true,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/menu/bind-api",
+    "Class": "Authorized",
+    "Permission": "menu:bind-api",
+    "RootOnly": true,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/menu/tree",
+    "Class": "Authorized",
+    "Permission": "menu:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/menus",
+    "Class": "Authorized",
+    "Permission": "menu:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/monitor",
+    "Class": "Authorized",
+    "Permission": "monitor:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/notice/read/:id",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/notice/read/:id",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/notice/unread",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/online-sessions",
+    "Class": "Authorized",
+    "Permission": "session:read",
+    "RootOnly": true,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/online-sessions/:id",
+    "Class": "Authorized",
+    "Permission": "session:revoke",
+    "RootOnly": true,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/online-sessions/:id",
+    "Class": "Authorized",
+    "Permission": "session:read",
+    "RootOnly": true,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/online-sessions/logout",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/online-sessions/user/:userID",
+    "Class": "Authorized",
+    "Permission": "session:revoke",
+    "RootOnly": true,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/options",
+    "Class": "Authorized",
+    "Permission": "option:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/options",
+    "Class": "Authorized",
+    "Permission": "option:create",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/options/:id",
+    "Class": "Authorized",
+    "Permission": "option:delete",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/options/:id",
+    "Class": "Authorized",
+    "Permission": "option:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/options/:id",
+    "Class": "Authorized",
+    "Permission": "option:update",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/posts",
+    "Class": "Authorized",
+    "Permission": "post:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation-capabilities",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation-profiles",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/presentation-profiles",
+    "Class": "Authorized",
+    "Permission": "presentation:draft-write",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation-profiles/:id",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/presentation-profiles/:id/draft",
+    "Class": "Authorized",
+    "Permission": "presentation:draft-write",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/presentation-profiles/:id/publish",
+    "Class": "Authorized",
+    "Permission": "presentation:publish",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation-profiles/:id/revisions",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation-profiles/:id/revisions/:revision",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/presentation-profiles/:id/rollback",
+    "Class": "Authorized",
+    "Permission": "presentation:rollback",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/presentation-profiles/validate",
+    "Class": "Authorized",
+    "Permission": "presentation:read",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/presentation/effective/:pageKey",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/role/authorize/:roleID",
+    "Class": "Authorized",
+    "Permission": "role:authorize",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/role/authorize/:roleID",
+    "Class": "Authorized",
+    "Permission": "role:authorize",
+    "RootOnly": true,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/statistics/:name",
+    "Class": "Authorized",
+    "Permission": "statistics:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/storage/upload",
+    "Class": "Authorized",
+    "Permission": "storage:upload",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/system-configs",
+    "Class": "Authorized",
+    "Permission": "config:read",
+    "RootOnly": true,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/task/func-list",
+    "Class": "Authorized",
+    "Permission": "task:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/tasks",
+    "Class": "Authorized",
+    "Permission": "task:read",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/tasks/:id/actions/:operate",
+    "Class": "Authorized",
+    "Permission": "task:operate",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user-auth-token/:id/refresh",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user-auth-token/:id/revoke",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user-auth-tokens",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user-auth-tokens",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user-configs/:group",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user-configs/:group",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user-configs/profile",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/user-configs/theme",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user/:userID/password-reset",
+    "Class": "Authorized",
+    "Permission": "user:password-reset",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/auth-cookie/clear",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/avatar",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/fakeCaptcha",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user/oauth2",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "DELETE",
+    "Path": "/admin/api/user/oauth2/:provider",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user/overview",
+    "Class": "Authorized",
+    "Permission": "session:read",
+    "RootOnly": true,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/reset-password",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user/security",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user/security/password",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/security/reauthenticate",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/session/:provider/callback",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/session/login",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/session/oauth2/authorize",
+    "Class": "OptionalAuthenticated",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/user/session/refresh-token",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/user/userInfo",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "PUT",
+    "Path": "/admin/api/user/userInfo",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/ws/connect",
+    "Class": "Public",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": false,
+    "ConstrainedPublicGET": true
+  },
+  {
+    "Method": "GET",
+    "Path": "/admin/api/ws/online",
+    "Class": "Authorized",
+    "Permission": "session:read",
+    "RootOnly": true,
+    "Mutation": false,
+    "ConstrainedPublicGET": false
+  },
+  {
+    "Method": "POST",
+    "Path": "/admin/api/ws/tickets",
+    "Class": "AuthenticatedSelf",
+    "Permission": "",
+    "RootOnly": false,
+    "Mutation": true,
+    "ConstrainedPublicGET": false
+  }
+]

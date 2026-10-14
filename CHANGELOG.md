@@ -6,7 +6,14 @@ tag namespaces.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+### Verification
+
+- Add the v1.5.0 Admin API baseline snapshot: golden route tables (prod/dev),
+  the security route contract and a normalized OpenAPI operation summary under
+  `admin/router/testdata/baseline/`. `go test ./router` and
+  `tools/verification/check_openapi_baseline.py` fail on unintended drift;
+  intentional changes regenerate the snapshot in the same PR. No runtime
+  behaviour change.
 
 ## [v1.4.0] - 2026-10-14
 
