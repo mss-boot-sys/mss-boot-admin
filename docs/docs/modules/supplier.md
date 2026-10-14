@@ -21,7 +21,7 @@ This checked-in page documents the Foundation reference projection. Its
 `admin/modules/**` and `web/antd-v6/**` paths are contributor evidence, not a
 downstream application layout. The v1.3.9 Distribution is the first release from
 `mss-boot-sys/mss-boot-admin`; v1.3.8 and earlier belong to the former
-`mss-boot-io` organization. Adopt v1.4.0 through its versioned Root tools,
+`mss-boot-io` organization. Adopt v1.3.9 through its versioned Root tools,
 coordinated Go modules, and `@mss-boot-sys/admin-web` on GitHub Packages.
 Documentation is aligned with this release and published with its Docs tag.
 The commands below validate the Foundation source projection. Generated
@@ -92,7 +92,7 @@ The checked-in test is an executable contract, not proof that a browser run occu
 
 ## Generate and validate
 
-From the Foundation source repository root; these are not v1.4.0 adopter
+From the Foundation source repository root; these are not v1.3.9 adopter
 commands:
 
 ```shell
