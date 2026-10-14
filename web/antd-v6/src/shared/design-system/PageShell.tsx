@@ -5,6 +5,13 @@ export interface PageShellProps {
   title?: ReactNode;
   /** Short description rendered under the title. */
   content?: ReactNode;
+  /**
+   * @deprecated Since v1.4.0 page descriptions use `content`. `subTitle` is
+   * kept as a compatibility alias for business pages written against the
+   * ProComponents-based `PageContainer` (v1.3.x) and is rendered as `content`
+   * when `content` is not set. It will be removed in a future major release.
+   */
+  subTitle?: ReactNode;
   /** Page-level actions aligned to the right of the title. */
   extra?: ReactNode;
   children?: ReactNode;
@@ -34,7 +41,8 @@ export function PageHeaderActions({ children }: { children: ReactNode }) {
  * Application page frame: semantic h1, description, right-aligned actions and
  * the page-enter motion. Every routed page renders exactly one PageShell.
  */
-export function PageShell({ title, content, extra, children }: PageShellProps) {
+export function PageShell({ title, content, subTitle, extra, children }: PageShellProps) {
+  const description = content ?? subTitle;
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   return (
     <PageHeaderActionsContext.Provider value={slot}>
@@ -43,7 +51,7 @@ export function PageShell({ title, content, extra, children }: PageShellProps) {
           <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pb-1">
             <div className="min-w-0">
               <h1 className="mss-page-title">{title}</h1>
-              {content ? <div className="mss-page-description">{content}</div> : null}
+              {description ? <div className="mss-page-description">{description}</div> : null}
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               {extra}

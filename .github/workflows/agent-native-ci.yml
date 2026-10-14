@@ -187,6 +187,7 @@ jobs:
         run: |
           python3 -m unittest \
             tools/ci/test_detect_component_scope.py \
+            tools/release/test_check_published_module_sums.py \
             tools/release/test_check_release_policy.py \
             tools/release/test_generate_admin_web_sbom.py \
             tools/release/test_npm_release_workflow.py \
@@ -195,6 +196,9 @@ jobs:
             tools/release/test_verify_admin_web_package.py \
             tools/release/test_verify_release_source.py \
             tools/release/test_workflow_governance.py
+
+      - name: Verify pinned Foundation module sums against sum.golang.org
+        run: python3 tools/release/check_published_module_sums.py
 
       - name: Verify package-first installers and current documentation contract
         run: |
