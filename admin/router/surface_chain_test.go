@@ -1,0 +1,256 @@
+package router
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+
+	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
+
+	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/config"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/middleware"
+	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/migration"
+)
+
+// v1.6.0 E1 acceptance for the core-enforced surface security chain.
+
+type surfaceTestRecord struct{}
+
+type surfaceTestModule struct {
+	name     string
+	id       migration.MigrationID
+	surfaces []business.SurfaceRegistration
+}
+
+func (m surfaceTestModule) Name() string { return m.name }
+
+func (m surfaceTestModule) Register(registry *business.Registry) error {
+	return registry.Register(business.Registration{
+		Descriptor: business.Descriptor{Name: m.name, DisplayName: strings.ToUpper(m.name), Model: new(surfaceTestRecord)},
+		Migrations: func(runner *migration.Migration) error {
+			return runner.Register(m.id, func(*gorm.DB, string) error { return nil })
+		},
+		Readiness: func(context.Context, *gorm.DB) error { return nil },
+		Routes:    func(*gin.RouterGroup, business.Runtime) error { return nil },
+		Surfaces:  m.surfaces,
+	})
+}
+
+const surfaceTestIssuer = "example-portal"
+
+// headerAuthenticator lets the test choose the principal the module reports.
+// The module is deliberately permissive: the core must still reject.
+var headerAuthenticator = business.SurfaceAuthenticatorFunc(func(c *gin.Context) (business.SurfacePrincipal, error) {
+	switch c.GetHeader("X-Test-Principal") {
+	case "portal":
+		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
+	case "admin":
+		return business.SurfacePrincipal{Subject: "u1", Issuer: "mss-boot-admin", Audience: []string{"admin"}}, nil
+	case "multi":
+		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal", "admin"}}, nil
+	case "wrong-iss":
+		return business.SurfacePrincipal{Subject: "c1", Issuer: "mss-boot-admin", Audience: []string{"portal"}}, nil
+	case "no-subject":
+		return business.SurfacePrincipal{Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
+	case "writes":
+		c.String(http.StatusOK, "module decided")
+		return business.SurfacePrincipal{Subject: "c1", Issuer: surfaceTestIssuer, Audience: []string{"portal"}}, nil
+	}
+	return business.SurfacePrincipal{}, errors.New("no credential")
+})
+
+func portalSurface(hits *[]string) business.SurfaceRegistration {
+	record := func(tag string) gin.HandlerFunc {
+		return func(c *gin.Context) { *hits = append(*hits, tag); c.Status(http.StatusOK) }
+	}
+	return business.SurfaceRegistration{
+		Name:          "portal",
+		Issuer:        surfaceTestIssuer,
+		Authenticator: headerAuthenticator,
+		CORS:          business.SurfaceCORS{AllowOrigins: []string{"https://shop.example.com"}},
+		Middleware:    []gin.HandlerFunc{func(c *gin.Context) { *hits = append(*hits, "mw"); c.Next() }},
+		Routes: []business.SurfaceRoute{
+			{Method: http.MethodGet, Path: "/me", Category: business.SurfaceRouteAuthenticated, Handlers: []gin.HandlerFunc{record("me")}},
+			{Method: http.MethodPost, Path: "/orders", Category: business.SurfaceRouteAuthenticated, Handlers: []gin.HandlerFunc{record("orders")}},
+			{Method: http.MethodPost, Path: "/sign-in", Category: business.SurfaceRoutePublic, Handlers: []gin.HandlerFunc{record("sign-in")}},
+		},
+	}
+}
+
+func composeSurfaceRegistry(t *testing.T, surfaces ...business.SurfaceRegistration) *business.Registry {
+	t.Helper()
+	registry, err := business.Compose(migration.New(), surfaceTestModule{name: "shop", id: "202610140001", surfaces: surfaces})
+	require.NoError(t, err)
+	return registry
+}
+
+func restoreSurfaceEnforcement(t *testing.T) {
+	previous := middleware.AdminAudienceEnforcedBySurfaces()
+	t.Cleanup(func() { middleware.SetAdminAudienceEnforcedBySurfacesForTest(previous) })
+	middleware.SetAdminAudienceEnforcedBySurfacesForTest(false)
+}
+
+// 1. No surface registered: Admin route table equals the frozen baseline and
+// audience compatibility mode is untouched.
+func TestNoSurfaceKeepsAdminBaselineAndAudienceBehaviour(t *testing.T) {
+	restoreSurfaceEnforcement(t)
+	previousMode := config.Cfg.Application.Mode
+	t.Cleanup(func() { config.Cfg.Application.Mode = previousMode })
+	gin.SetMode(gin.TestMode)
+	config.Cfg.Application.Mode = config.ModeProd
+
+	registry := composeSurfaceRegistry(t)
+	engine := gin.New()
+	InitRouter(engine.Group("/admin"))
+	mounted, err := registry.MountSurfaces(engine)
+	require.NoError(t, err)
+	require.Zero(t, mounted)
+	require.Empty(t, registry.Surfaces())
+	require.False(t, middleware.AdminAudienceEnforcedBySurfaces())
+
+	lines := []string{}
+	for _, route := range engine.Routes() {
+		lines = append(lines, route.Method+" "+route.Path)
+	}
+	sort.Strings(lines)
+	golden, err := os.ReadFile(filepath.Join("testdata", "baseline", "routes-prod.txt"))
+	require.NoError(t, err)
+	require.Equal(t, string(golden), strings.Join(lines, "\n")+"\n")
+
+	// Compatibility mode still accepts a pre-v1.5.0 token without aud.
+	config.Cfg.Auth.RequireAdminAudience = false
+	require.True(t, middleware.AdminTokenAudienceAccepted(jwt.MapClaims{"uid": "u1"}))
+}
+
+// 2. Surface tokens never reach Admin routes, and mounting a surface forces
+// strict Admin audience even when auth.requireAdminAudience is false.
+func TestSurfaceTokensNeverReachAdminRoutes(t *testing.T) {
+	restoreSurfaceEnforcement(t)
+	engine := newAudienceAcceptanceEngine(t, false)
+	var hits []string
+	registry := composeSurfaceRegistry(t, portalSurface(&hits))
+	mounted, err := registry.MountSurfaces(engine)
+	require.NoError(t, err)
+	require.Equal(t, 1, mounted)
+	middleware.EnforceAdminAudienceForSurfaces()
+
+	tokens := map[string]jwt.MapClaims{
+		"surface aud=portal":         {"aud": "portal", "iss": surfaceTestIssuer},
+		"surface aud=[portal]":       {"aud": []any{"portal"}, "iss": surfaceTestIssuer},
+		"surface aud, admin iss":     {"aud": "portal", "iss": "mss-boot-admin"},
+		"legacy no aud (now strict)": {},
+	}
+	routes := nonPublicBaselineRoutes(t)
+	require.NotEmpty(t, routes)
+	for name, claims := range tokens {
+		token := signAudienceTestToken(t, claims)
+		for _, route := range routes {
+			requireRejected(t, name, route, callWithBearer(engine, route, token))
+		}
+	}
+	require.Empty(t, hits, "no surface handler may run for Admin requests")
+}
+
+func serveSurface(engine *gin.Engine, method, path string, headers map[string]string) *httptest.ResponseRecorder {
+	request := httptest.NewRequest(method, path, strings.NewReader("{}"))
+	for key, value := range headers {
+		request.Header.Set(key, value)
+	}
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, request)
+	return recorder
+}
+
+// 3. A module cannot bypass the chain: the core enforces aud/iss whatever the
+// authenticator reports, CSRF and CORS stay on, module middleware only runs
+// after authentication, and registration rejects unsafe declarations.
+func TestModuleCannotBypassSurfaceChain(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var hits []string
+	registry := composeSurfaceRegistry(t, portalSurface(&hits))
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine)
+	require.NoError(t, err)
+
+	for _, principal := range []string{"", "admin", "multi", "wrong-iss", "no-subject"} {
+		hits = nil
+		res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": principal})
+		require.Equal(t, http.StatusUnauthorized, res.Code, "principal %q", principal)
+		require.Empty(t, hits, "module middleware/handler ran for rejected principal %q", principal)
+	}
+
+	hits = nil
+	res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "writes"})
+	require.Equal(t, "module decided", res.Body.String())
+	require.Empty(t, hits, "an authenticator that writes a response must abort the chain")
+
+	hits = nil
+	res = serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "portal"})
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Equal(t, []string{"mw", "me"}, hits)
+
+	// CSRF: unsafe cookie-authenticated requests need the exact surface origin.
+	cookie := map[string]string{"X-Test-Principal": "portal", "Cookie": "portal_session=x"}
+	hits = nil
+	require.Equal(t, http.StatusForbidden, serveSurface(engine, http.MethodPost, "/portal/api/orders", cookie).Code)
+	cookie["Origin"] = "https://evil.example.net"
+	require.Equal(t, http.StatusForbidden, serveSurface(engine, http.MethodPost, "/portal/api/orders", cookie).Code)
+	require.Equal(t, http.StatusForbidden, serveSurface(engine, http.MethodPost, "/portal/api/sign-in", map[string]string{"Cookie": "a=b"}).Code,
+		"public routes still pass CSRF")
+	require.Empty(t, hits)
+	cookie["Origin"] = "https://shop.example.com"
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/orders", cookie).Code)
+
+	// Public route skips authentication only because it was declared public.
+	require.Equal(t, http.StatusOK, serveSurface(engine, http.MethodPost, "/portal/api/sign-in",
+		map[string]string{"Authorization": "Bearer anything"}).Code)
+
+	// CORS is per surface and default-deny for other origins.
+	preflight := map[string]string{"Origin": "https://evil.example.net", "Access-Control-Request-Method": "POST"}
+	require.Empty(t, serveSurface(engine, http.MethodOptions, "/portal/api/orders", preflight).Header().Get("Access-Control-Allow-Origin"))
+	preflight["Origin"] = "https://shop.example.com"
+	require.Equal(t, "https://shop.example.com",
+		serveSurface(engine, http.MethodOptions, "/portal/api/orders", preflight).Header().Get("Access-Control-Allow-Origin"))
+
+	// Undeclared paths do not exist on the surface.
+	require.Equal(t, http.StatusNotFound, serveSurface(engine, http.MethodGet, "/portal/api/undeclared", nil).Code)
+}
+
+func TestSurfaceRegistrationRejectsUnsafeDeclarations(t *testing.T) {
+	base := func() business.SurfaceRegistration { var hits []string; return portalSurface(&hits) }
+	cases := map[string]func(*business.SurfaceRegistration){
+		"reserved admin":   func(s *business.SurfaceRegistration) { s.Name = "admin" },
+		"reserved api":     func(s *business.SurfaceRegistration) { s.Name = "api" },
+		"invalid name":     func(s *business.SurfaceRegistration) { s.Name = "Portal/x" },
+		"no authenticator": func(s *business.SurfaceRegistration) { s.Authenticator = nil },
+		"no issuer":        func(s *business.SurfaceRegistration) { s.Issuer = " " },
+		"wildcard origin":  func(s *business.SurfaceRegistration) { s.CORS.AllowOrigins = []string{"*"} },
+		"unknown category": func(s *business.SurfaceRegistration) { s.Routes[0].Category = "internal" },
+		"empty category":   func(s *business.SurfaceRegistration) { s.Routes[0].Category = "" },
+		"traversal path":   func(s *business.SurfaceRegistration) { s.Routes[0].Path = "/../../admin/api/users" },
+		"nil middleware":   func(s *business.SurfaceRegistration) { s.Middleware = append(s.Middleware, nil) },
+		"no routes":        func(s *business.SurfaceRegistration) { s.Routes = nil },
+	}
+	for name, mutate := range cases {
+		surface := base()
+		mutate(&surface)
+		_, err := business.Compose(migration.New(), surfaceTestModule{name: "shop", id: "202610140001", surfaces: []business.SurfaceRegistration{surface}})
+		require.Error(t, err, name)
+	}
+
+	_, err := business.Compose(migration.New(),
+		surfaceTestModule{name: "shop", id: "202610140001", surfaces: []business.SurfaceRegistration{base()}},
+		surfaceTestModule{name: "other", id: "202610140002", surfaces: []business.SurfaceRegistration{base()}},
+	)
+	require.ErrorContains(t, err, "already registered")
+}

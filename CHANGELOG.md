@@ -6,7 +6,17 @@ tag namespaces.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+### Added
+
+- Optional business API surfaces (`business.Registration.Surfaces`) served at
+  `/<name>/api` behind a core-enforced chain: per-surface CORS, module
+  authenticator with core `aud`/`iss` enforcement, exact-Origin CSRF, then
+  module middleware. Route categories are a closed set (`public`,
+  `authenticated`). Mounting any surface makes Admin token audience strict.
+  With no surface, Admin routes and behaviour are unchanged.
+  See `docs/adr/2026-10-14-surface-security-chain.md`.
+- ADRs for the v1.6.0 frontend extension mount point and the redacted
+  business audit sink.
 
 ## [v1.5.0] - 2026-10-14
 

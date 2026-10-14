@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/business"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/center"
+	"github.com/mss-boot-sys/mss-boot-admin/admin/middleware"
 	"gorm.io/gorm"
 )
 
@@ -43,4 +44,20 @@ func (businessEventLogger) Collect(ctx context.Context, event business.Event) {
 		return
 	}
 	slog.InfoContext(ctx, "business domain event committed", "event", event.EventName())
+}
+
+// mountBusinessSurfaces mounts optional module surfaces at the engine root,
+// after Admin routes and before SPA delivery, and switches Admin APIs to
+// strict audience mode when at least one surface exists. With no surface the
+// Admin route table and audience behaviour are unchanged.
+func mountBusinessSurfaces(registry *business.Registry, root gin.IRouter) error {
+	mounted, err := registry.MountSurfaces(root)
+	if err != nil {
+		return err
+	}
+	if mounted > 0 {
+		middleware.EnforceAdminAudienceForSurfaces()
+		slog.Info("business surfaces mounted; Admin API audience is strict", "surfaces", registry.Surfaces())
+	}
+	return nil
 }
