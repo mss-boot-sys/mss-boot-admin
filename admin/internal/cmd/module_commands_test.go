@@ -114,3 +114,33 @@ func TestModuleCommandsRejectUnsafeDeclarations(t *testing.T) {
 		t.Fatalf("cross-module duplicate: %v", err)
 	}
 }
+
+func TestModuleCommandErrorsBlockHostCommands(t *testing.T) {
+	unfrozen, err := business.NewRegistry(migration.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := 0
+	flaky := func() *cobra.Command {
+		calls++
+		if calls > 1 {
+			return &cobra.Command{Use: "other"}
+		}
+		return &cobra.Command{Use: "portal"}
+	}
+	invalid, err := business.Compose(migration.New(), commandModule{name: "shop", id: "202610140301", commands: []business.CommandFactory{flaky}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, registry := range map[string]*business.Registry{"unfrozen": unfrozen, "invalid": invalid} {
+		for _, sub := range []string{"server", "migrate"} {
+			root := New(registry)
+			root.SetOut(new(bytes.Buffer))
+			root.SetErr(new(bytes.Buffer))
+			root.SetArgs([]string{sub, "--help=false"})
+			if err := root.ExecuteContext(context.Background()); err == nil || !strings.Contains(err.Error(), "business module commands") {
+				t.Fatalf("%s/%s: expected loud failure, got %v", name, sub, err)
+			}
+		}
+	}
+}

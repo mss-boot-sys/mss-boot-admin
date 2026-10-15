@@ -5,10 +5,14 @@ package audit
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // Event is one audit record. Detail is free-form context and always passes the
@@ -87,6 +91,51 @@ func RedactValue(value string) string {
 	return schemePattern.ReplaceAllString(value, Redacted)
 }
 
+// Detail limits. When there are more than MaxDetailEntries entries, only the
+// first MaxDetailEntries-1 (sorted key order) are kept and DetailTruncatedKey
+// is set, so the result never exceeds MaxDetailEntries; longer keys and values are truncated.
+const (
+	MaxDetailEntries    = 32
+	MaxDetailKeyBytes   = 64
+	MaxDetailValueBytes = 1024
+	DetailTruncatedKey  = "_truncated"
+)
+
+// MaxRequestIDBytes bounds a client supplied X-Request-Id.
+const MaxRequestIDBytes = 128
+
+var requestIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]+$`)
+
+// ValidRequestID reports whether a client supplied request id is short and
+// uses only [A-Za-z0-9._:-].
+func ValidRequestID(id string) bool {
+	return id != "" && len(id) <= MaxRequestIDBytes && requestIDPattern.MatchString(id)
+}
+
+// RequestID returns the client id when it is valid, otherwise a fresh
+// server-generated id.
+func RequestID(clientID string) string {
+	if ValidRequestID(clientID) {
+		return clientID
+	}
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return "srv-" + time.Now().UTC().Format("20060102T150405.000000000")
+	}
+	return "srv-" + hex.EncodeToString(b[:])
+}
+
+func truncateUTF8(value string, limit int) string {
+	if len(value) <= limit {
+		return value
+	}
+	value = value[:limit]
+	for !utf8.ValidString(value) && len(value) > 0 {
+		value = value[:len(value)-1]
+	}
+	return value
+}
+
 // Redact returns a copy of e that is safe to persist. It never mutates e.
 func Redact(e Event) Event {
 	out := e
@@ -94,14 +143,28 @@ func Redact(e Event) Event {
 		*field = RedactValue(*field)
 	}
 	if e.Detail != nil {
-		out.Detail = make(map[string]string, len(e.Detail))
-		for key, value := range e.Detail {
+		keys := make([]string, 0, len(e.Detail))
+		for key := range e.Detail {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		out.Detail = make(map[string]string, min(len(keys), MaxDetailEntries))
+		for index, key := range keys {
+			if len(keys) > MaxDetailEntries && index >= MaxDetailEntries-1 {
+				out.Detail[DetailTruncatedKey] = "true"
+				break
+			}
+			value := e.Detail[key]
+			storedKey := truncateUTF8(key, MaxDetailKeyBytes)
 			if SensitiveKey(key) {
-				out.Detail[key] = Redacted
+				out.Detail[storedKey] = Redacted
 				continue
 			}
-			out.Detail[key] = RedactValue(value)
+			out.Detail[storedKey] = truncateUTF8(RedactValue(value), MaxDetailValueBytes)
 		}
+	}
+	if out.RequestID != "" && !ValidRequestID(out.RequestID) {
+		out.RequestID = RequestID("")
 	}
 	if out.At.IsZero() {
 		out.At = time.Now()

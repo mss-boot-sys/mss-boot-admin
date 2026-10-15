@@ -84,7 +84,8 @@ function validateBusinessAdminOptions(options) {
 }
 
 const extensionSurfacePattern = /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/;
-// Mirrors the reserved surface names enforced by the Admin backend.
+// Mirrors reservedSurfaceNames in admin/business/surface.go (names that cannot
+// match the surface pattern, such as .well-known, are omitted). Keep in sync.
 const reservedExtensionSurfaces = new Set([
   'admin',
   'api',
@@ -152,7 +153,12 @@ function extensionRoutes(extensions) {
           `Admin Web extension ${surface} route must stay below ${prefix}: ${routePath}`,
         );
       }
-      if (routePath.startsWith(`${prefix}/api`)) {
+      if (routePath.split('/').some((segment) => segment === '..' || segment === '.')) {
+        throw new Error(
+          `Admin Web extension ${surface} route must not contain . or .. segments: ${routePath}`,
+        );
+      }
+      if (routePath === `${prefix}/api` || routePath.startsWith(`${prefix}/api/`)) {
         throw new Error(`Admin Web extension ${surface} route overlaps its API: ${routePath}`);
       }
     }
