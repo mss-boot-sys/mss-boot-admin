@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +15,11 @@ SPEC.loader.exec_module(check_current_docs)
 
 
 class CurrentDocsContractTest(unittest.TestCase):
+    def test_faq_preserves_first_new_repository_release_identity(self) -> None:
+        faq = (SCRIPT.parents[2] / "docs/docs/guide/faq.md").read_text(encoding="utf-8")
+        claims = re.findall(r"(v\d+\.\d+\.\d+)\s*(?:为首发|是新仓库首发)", faq)
+        self.assertEqual(claims, ["v1.3.9", "v1.3.9"])
+
     def test_release_links_reject_mismatched_markdown_and_hero_versions(self) -> None:
         for text in (
             "[v1.6.0 release record](./docs/docs/releases/v1-5-0.md)",
