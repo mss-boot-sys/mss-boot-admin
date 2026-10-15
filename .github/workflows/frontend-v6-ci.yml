@@ -285,6 +285,7 @@ jobs:
         run: pnpm run test:e2e
 
       - name: Retain login theme contrast regression evidence
+        id: login_theme
         env:
           MSS_V6_E2E_EVIDENCE_ROOT: ${{ runner.temp }}/login-theme-evidence
           MSS_V6_E2E_RUN_ID: login-theme
@@ -292,19 +293,20 @@ jobs:
 
       - name: Verify portable login theme evidence
         id: portable_login_theme_evidence
-        if: always()
+        if: ${{ always() && steps.login_theme.outcome != 'skipped' }}
         run: >-
-          python3 ../../tools/release/check_portable_paths.py --allow-missing
-          "${RUNNER_TEMP}/login-theme-evidence/login-theme/test-results"
+          python3 ../../tools/release/check_portable_paths.py
+          "${RUNNER_TEMP}/login-theme-evidence/login-theme"
 
       - name: Upload login theme regression evidence
         if: ${{ always() && steps.portable_login_theme_evidence.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: login-theme-contrast-evidence
-          path: ${{ runner.temp }}/login-theme-evidence/login-theme/test-results
-          if-no-files-found: ignore
-          retention-days: 14
+          # Successful in-memory attachments are retained by the HTML reporter.
+          path: ${{ runner.temp }}/login-theme-evidence/login-theme
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Verify portable browser evidence paths
         id: portable_browser_evidence
