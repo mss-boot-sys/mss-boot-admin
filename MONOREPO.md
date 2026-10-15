@@ -34,7 +34,7 @@ make docs-install docs-build
 - Documentation: `docs/vX.Y.Z`
 
 Runtime components retain component-scoped tags but share one exact qualified
-merged-main commit and the v1.6.0 Distribution version. v1.4.0 was the first
+merged-main commit and the v1.6.1 Distribution version. v1.4.0 was the first
 release under `mss-boot-sys/mss-boot-admin`; v1.3.8 and earlier belong to
 `mss-boot-io` and are historical records, not prerequisites for the new release.
 
@@ -52,7 +52,7 @@ Consumers configure the scoped registry and supply a `read:packages` token via
 preview, or separate stable-promotion round is required. Root publication marks
 the new GitHub Release as Latest.
 
-Publish `docs/v1.6.0` using the existing Docs deployment workflow and domain
+Publish `docs/v1.6.1` using the existing Docs deployment workflow and domain
 `https://docs.mss-boot-io.top`. Verify `/release.json`, the homepage, a nested
 release route, console errors, and failed requests after deployment. A Docs
 failure requires a Docs repair; it does not invalidate already published

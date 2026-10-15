@@ -1,24 +1,24 @@
 ---
-title: v1.6.0 工具与 MCP
+title: v1.6.1 工具与 MCP
 order: 3
-description: v1.6.0 正式 mss、mss-mcp 安装来源、版本验证和客户端配置
-keywords: [v1.6.0 stable mss mss-mcp MCP stdio]
+description: v1.6.1 正式 mss、mss-mcp 安装来源、版本验证和客户端配置
+keywords: [v1.6.1 stable mss mss-mcp MCP stdio]
 ---
 
-# v1.6.0 工具与 MCP
+# v1.6.1 工具与 MCP
 
-v1.6.0 Root Release 同时发布 `mss` 与 `mss-mcp`。两个二进制内置同源
-`management-system` Blueprint，并在 `--version` 中报告 v1.6.0、完整提交和构建时间。
+v1.6.1 Root Release 同时发布 `mss` 与 `mss-mcp`。两个二进制内置同源
+`management-system` Blueprint，并在 `--version` 中报告 v1.6.1、完整提交和构建时间。
 安装器、归档与校验和必须来自同一个 Root Release；Docs 网站可独立候补，不参与工具
 完整性判断。
 
-v1.3.5 与 v1.3.6 已永久停止为不可变部分发布；它们的工具或缺失发布面不能与 v1.6.0
+v1.3.5 与 v1.3.6 已永久停止为不可变部分发布；它们的工具或缺失发布面不能与 v1.6.1
 混用，也不能用源码编译结果补齐。
 
 ## 安装与验证
 
 按照[快速开始](/getting-started)下载 `install-mss.sh` 或 `install-mss.ps1`。安装器先
-验证 `SHA256SUMS.tools-v1.6.0`，再同时替换两个命令。完成后运行：
+验证 `SHA256SUMS.tools-v1.6.1`，再同时替换两个命令。完成后运行：
 
 ```shell
 mss --version
@@ -74,7 +74,7 @@ mss verify --all
 在 Thin Host 内，Agent 先读该仓库自己的 `AGENTS.md`、`.mss/` 和本地 Skills，再选择
 工具；公共网页只是给人类解释这些合同。若客户端能启动但项目工具不可用，依次检查：
 
-1. `mss-mcp --version` 是否精确为 v1.6.0；
+1. `mss-mcp --version` 是否精确为 v1.6.1；
 2. `--root` 是否指向预期绝对目录；
 3. 目录是否包含有效 `.mss/project.yaml`；
 4. `tools/list` 返回的名称与当前工具一致；

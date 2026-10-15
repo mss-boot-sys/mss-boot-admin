@@ -1,17 +1,17 @@
 ---
-title: v1.6.0 页面展示配置发布治理
+title: v1.6.1 页面展示配置发布治理
 order: 16
 nav:
   order: 1
   title: Admin
-description: v1.6.0 发行版页面展示配置的草稿、发布、回滚、权限与恢复合同
-keywords: [v1.6.0 v1.3.5 v1.3.6 admin presentation configuration publish rollback recovery etag]
+description: v1.6.1 发行版页面展示配置的草稿、发布、回滚、权限与恢复合同
+keywords: [v1.6.1 v1.3.5 v1.3.6 admin presentation configuration publish rollback recovery etag]
 ---
 
 # 页面展示配置发布治理
 
 :::warning
-版本范围：**v1.6.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
 :::
 

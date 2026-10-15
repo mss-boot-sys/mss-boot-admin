@@ -8,6 +8,19 @@ and the root changelog, not as a current release surface.
 
 No unreleased changes are recorded.
 
+## [web/antd-v6/v1.6.1] - 2026-10-15
+
+Coordinated patch version with the v1.6.1 Admin Distribution; publication is
+verified from actual Release and GitHub Packages assets.
+
+- Keep the SSO application menu subject to its existing permissions when the
+  OIDC Provider is disabled. Interpret the protected client-list response
+  `503 / SSO_PROVIDER_DISABLED` as “SSO is not configured”, with administrator
+  guidance and no retry action or automatic retry for this deterministic state.
+- Preserve ordinary retryable errors, including network failures and generic
+  404 responses from older backends. Enabled-Provider behavior and all v1.6.0
+  frontend features remain unchanged. Update the backend and frontend together.
+
 ## [web/antd-v6/v1.6.0] - 2026-10-15
 
 Coordinated version with the v1.6.0 Admin Distribution.

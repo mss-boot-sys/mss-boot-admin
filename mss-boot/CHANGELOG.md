@@ -8,6 +8,12 @@ and the project uses semantic versioning for nested-module releases.
 
 No unreleased changes are recorded.
 
+## [mss-boot/v1.6.1] - 2026-10-15
+
+Coordinated patch version with the v1.6.1 Admin Distribution. No Framework API
+or runtime source changes since mss-boot/v1.6.0. Publication is verified from
+the corresponding release assets.
+
 ## [mss-boot/v1.6.0] - 2026-10-15
 
 Coordinated version with the v1.6.0 Admin Distribution. No Framework API or

@@ -10,7 +10,7 @@ keywords: [admin configuration cache redis revision consistency]
 
 # Configuration cache consistency
 
-Applicable baseline: **mss-boot-admin v1.6.0**, the new-repository Distribution.
+Applicable baseline: **mss-boot-admin v1.6.1**, the new-repository Distribution.
 
 Application, personal, and system configuration have different privacy and consistency needs. The
 database is the source of truth for all three. Redis is optional acceleration and never supplies

@@ -67,6 +67,14 @@ spec:
       type: operations
       statement: Real PVE 8.3 and 9.0 acceptance is a separate operator run and cannot be substituted with mocked protocol tests.
   acceptance:
+    - id: disabled-provider-state
+      requirement: sso-administration
+      statement: With OIDC disabled, retain the SSO menu and permission-protected client-list route; return exact SSO_PROVIDER_DISABLED without mounting protocol or write routes. The UI shows not-configured only for this code and does not retry it; normal authentication and transient retries remain unchanged.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: cd admin && go test ./oidc ./router
     - id: voluntary-acr
       requirement: oidc-protocol
       statement: GET and form POST requests accept ordinary ACR preferences through code exchange without asserting unverified acr or amr; essential claims, unsupported hints, invalid parameters, missing or stale sessions and removed grants remain denied.

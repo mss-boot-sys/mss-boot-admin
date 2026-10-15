@@ -4,7 +4,7 @@ title: 原生 OIDC Provider 与 Proxmox VE
 
 # 原生 OIDC Provider 与 Proxmox VE
 
-本文对应 `mss-boot-sys/mss-boot-admin` v1.6.0 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
+本文对应 `mss-boot-sys/mss-boot-admin` v1.6.1 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
 
 平台继续管理账号、身份和策略，不引入独立身份服务。核心认证复用密码校验、浏览器 cookie、数据库会话、账号禁用和审计。`admin/oidc` 使用已有的 JWT 库及 Go 密码学实现，独立签发 OIDC 凭证，不向 PVE 交付 Admin 自身 JWT。
 
@@ -35,7 +35,7 @@ Provider 默认关闭。开启后，issuer、cookie 策略、签名表或包装�
 
 ## Provider 未启用时的控制台状态
 
-应用 v1.6.0 之后的禁用状态修复后，SSO 菜单仍按原有菜单权限保留。`oidc.enabled` 为 false 时，已登录且具备原有客户端列表 API 权限的管理员访问 `GET /admin/api/sso/clients`，会收到 HTTP 503 和 `errorCode: SSO_PROVIDER_DISABLED`。控制台显示“SSO 尚未配置”，提示联系管理员完成配置。该响应不包含配置或密钥，协议路由和管理写入路由仍不注册。
+在 v1.6.1 中，SSO 菜单仍按原有菜单权限保留。`oidc.enabled` 为 false 时，已登录且具备原有客户端列表 API 权限的管理员访问 `GET /admin/api/sso/clients`，会收到 HTTP 503 和 `errorCode: SSO_PROVIDER_DISABLED`。控制台显示“SSO 尚未配置”，提示联系管理员完成配置。这一确定的禁用状态不显示重试操作，也不自动重试。本补丁不新增迁移、不启用 Provider；已启用时的行为保持不变。该响应不包含配置或密钥，协议路由和管理写入路由仍不注册。
 
 未登录请求仍返回 401，无 API 权限返回 403。网络故障、普通 404（包括旧版后端）及其他服务错误仍显示可重试的加载失败。应配套部署前后端修复，控制台不会根据路由不存在推断 Provider 未启用。
 

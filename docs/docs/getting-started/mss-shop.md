@@ -1,15 +1,15 @@
 ---
 title: mss-shop 范本边界
 order: 4
-description: 以 v1.6.0 发行版建立通用单租户商城范本的范围、所有权与验收合同
-keywords: [mss-shop v1.6.0 stable single tenant reference r1shop]
+description: 以 v1.6.1 发行版建立通用单租户商城范本的范围、所有权与验收合同
+keywords: [mss-shop v1.6.1 stable single tenant reference r1shop]
 ---
 
 # mss-shop 范本边界
 
-商城 Thin Host 范本应以 v1.6.0
+商城 Thin Host 范本应以 v1.6.1
 作为新的可复现生成基线。v1.3.5 与 v1.3.6 是永久停止的不可变部分发布，不得用它们的
-部分组件生成或补齐范本。Docs 网站通过独立 Tag 异步候补，不影响 v1.6.0 工具、包和
+部分组件生成或补齐范本。Docs 网站通过独立 Tag 异步候补，不影响 v1.6.1 工具、包和
 范本基线的有效性。
 
 本页定义范本应满足的产品边界，不把 Foundation 源码工作区的成功当成 mss-shop 已经
@@ -18,12 +18,12 @@ CI 和浏览器证据。
 
 ## 建立可复现基线
 
-在空目录安装 v1.6.0 Root Release 的 `mss` 与 `mss-mcp`，核对版本与源提交后，用
+在空目录安装 v1.6.1 Root Release 的 `mss` 与 `mss-mcp`，核对版本与源提交后，用
 `mss new app` 先查看只读计划，再显式生成 `github.com/acme/mss-shop`。未经业务
 修改的生成结果应单独提交，后续商城能力以独立提交进入，从 Git 历史清楚区分 Blueprint
 管理文件和业务自有文件。
 
-生成基线必须固定 v1.6.0 Admin Distribution 与GitHub Packages 包（安装需读取认证），保留
+生成基线必须固定 v1.6.1 Admin Distribution 与GitHub Packages 包（安装需读取认证），保留
 `.mss/blueprint-manifest.json` 和冻结锁，并在仓库外解析依赖。不得使用 Foundation
 checkout、本地 Go `replace`、本地 npm tarball 或历史候选命令替代公共发布身份。
 
@@ -76,5 +76,5 @@ mss-shop 会先盘点而后选择性重构以下项目的业务能力：
 
 完整交付需要后端、前端、生成漂移、权限正反例、升级保留和外部使用方检查全部通过，
 并用 Codex 内置浏览器验证桌面和窄屏关键流程、深链刷新、权限拒绝、网络错误与控制台
-零异常。验证报告必须绑定 mss-shop 精确提交和 v1.6.0 Distribution 身份；Docs 网站部署
+零异常。验证报告必须绑定 mss-shop 精确提交和 v1.6.1 Distribution 身份；Docs 网站部署
 状态只作为文档自己的发布证据，不得阻断或替代这些检查。
