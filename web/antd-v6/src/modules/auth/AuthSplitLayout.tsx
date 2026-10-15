@@ -46,7 +46,7 @@ export function AuthSplitLayout({
           ))}
         </div>
       </aside>
-      <main className="relative flex items-center justify-center bg-canvas px-4 py-10">
+      <main className="mss-auth-main relative flex items-center justify-center bg-canvas px-4 py-10">
         <div className="absolute right-4 top-4 z-10 rounded-lg bg-surface">
           <SelectLang />
         </div>
