@@ -135,6 +135,22 @@ type OptionalModule interface {
 	Enabled() bool
 }
 
+// moduleDisabled reports whether an OptionalModule is switched off. A panic
+// in Enabled is recovered into an error.
+func moduleDisabled(name string, module Module) (disabled bool, err error) {
+	optional, ok := module.(OptionalModule)
+	if !ok {
+		return false, nil
+	}
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			disabled = false
+			err = fmt.Errorf("business module %s Enabled panicked: %v", name, recovered)
+		}
+	}()
+	return !optional.Enabled(), nil
+}
+
 // AlwaysReady is the default ReadinessCheck for a module that owns no
 // migrations (no tables of its own). It always reports ready.
 func AlwaysReady(context.Context, *gorm.DB) error { return nil }
@@ -391,6 +407,12 @@ func (r *Registry) Add(module Module) error {
 	if name == "" {
 		return errors.New("business module name is required")
 	}
+	// Enabled is user code: read it exactly once, before any registry lock is
+	// taken, so a panic or a read back into the registry cannot deadlock it.
+	disabled, err := moduleDisabled(name, module)
+	if err != nil {
+		return err
+	}
 	if err := r.tryLockRegistration(); err != nil {
 		return err
 	}
@@ -406,7 +428,7 @@ func (r *Registry) Add(module Module) error {
 		r.mu.Unlock()
 		return fmt.Errorf("%w: %s", ErrDuplicateModule, name)
 	}
-	if optional, ok := module.(OptionalModule); ok && !optional.Enabled() {
+	if disabled {
 		// Imported but disabled: reserve the identity so duplicates are still
 		// rejected, but register nothing and skip its migrations entirely.
 		r.modules[name] = struct{}{}

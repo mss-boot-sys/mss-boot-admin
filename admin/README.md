@@ -47,7 +47,10 @@ Optional and table-less modules (v1.6.0):
 - A module that is imported but switched off implements
   `business.OptionalModule` and returns `false` from `Enabled()`. It is
   skipped: `Register` is not called and it contributes no migration, route,
-  surface or command, so startup migration is unaffected. An enabled module
+  surface or command, so startup migration is unaffected. `Enabled()` is read
+  exactly once at composition; toggling it at runtime has no effect, and it
+  must not call back into the registry. A panic in `Enabled()` fails
+  composition with an error. An enabled module
   that registers nothing still fails with `module did not provide a
   registration`.
 - A module without `Migrations` owns no tables and may leave `Readiness` nil;
