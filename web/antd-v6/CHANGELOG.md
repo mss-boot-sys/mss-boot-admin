@@ -10,6 +10,8 @@ No unreleased changes are recorded.
 
 ## [web/antd-v6/v1.6.1] - 2026-10-15
 
+- Restore semantic theme colors for login primary-button states and the mobile auth background; preserve authentication behavior.
+
 Coordinated patch version with the v1.6.1 Admin Distribution; publication is
 verified from actual Release and GitHub Packages assets.
 

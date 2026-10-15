@@ -18,6 +18,8 @@ migration, permission expansion, Provider enablement or demo deployment.
 
 ### Fixed
 
+- Restore semantic theme colors for login primary-button states and the mobile auth background; preserve authentication behavior.
+
 - Preserve the permission-controlled SSO menu when `oidc.enabled` is false.
   The client-list `GET /admin/api/sso/clients` retains authentication and API
   permission checks, returning HTTP 503 with `SSO_PROVIDER_DISABLED` to
