@@ -7,8 +7,8 @@ spec:
   publicationMode: direct
   releaseBranch: main
   requireMergedPullRequestSource: true
-  currentStableVersion: v1.5.0
-  currentStableCommit: e2878144bcc46ebe93ccce8a023208f4bdae5e4c
+  currentStableVersion: v1.6.0
+  currentStableCommit: 81d592a0e16ef210331249945baa63cb3dac6de4
   nextPublicVersion: v1.6.0
   distributionVersion: v1.6.0
   distributionComponents: "root,framework,admin,frontend"
