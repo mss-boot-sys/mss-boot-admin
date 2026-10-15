@@ -26,7 +26,6 @@ jobs:
       GOTOOLCHAIN: local
       COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
       EXPECTED_COMMIT: ${{ inputs.expected_commit }}
-      TMPDIR: ${{ runner.temp }}
     steps:
       - name: Check out the immutable requested source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -58,6 +57,8 @@ jobs:
         with:
           node-version: 24
       - name: Prepare exact package managers and dependencies
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           set -euo pipefail
           npm install --global --force corepack@0.34.0
@@ -72,6 +73,8 @@ jobs:
           docker info >/dev/null
           git diff --exit-code
       - name: Run the complete canonical qualification on this checkout
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: |
           set -euo pipefail
           GOWORK=off go run ./cmd/mss verify --all --release-evidence --expect-commit "$EXPECTED_COMMIT"

@@ -120,6 +120,10 @@ class WorkflowGovernanceTest(unittest.TestCase):
         self.assertIn("github.triggering_actor == 'mss-boot-sys'", job["if"])
         self.assertNotIn("environment", job)
         self.assertNotIn("GH_TOKEN", job["env"])
+        self.assertNotIn("TMPDIR", job["env"])
+        for name in ("Prepare exact package managers and dependencies", "Run the complete canonical qualification on this checkout"):
+            step = next(item for item in job["steps"] if item.get("name") == name)
+            self.assertEqual(step["env"]["TMPDIR"], "${{ runner.temp }}")
         checkout = job["steps"][0]["with"]
         self.assertEqual(checkout["ref"], "${{ inputs.expected_commit }}")
         self.assertEqual(checkout["persist-credentials"], "false")
