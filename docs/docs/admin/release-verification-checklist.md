@@ -84,5 +84,5 @@ npm 包只发布 GitHub Packages；Docs 源码与站点必须同时对齐。源�
 - [集成测试指南](/admin/integration-test-guide)
 - [v1.3.5 不可变部分发布记录](/releases/v1-3-5)
 - [v1.3.6 不可变部分发布记录](/releases/v1-3-6)
-- [v1.6.0 发行版说明](/releases/v1-4-0)
+- [v1.6.0 发行版说明](/releases/v1-6-0)
 - [v1.6.0 快速开始](/getting-started)

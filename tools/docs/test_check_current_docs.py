@@ -14,6 +14,17 @@ SPEC.loader.exec_module(check_current_docs)
 
 
 class CurrentDocsContractTest(unittest.TestCase):
+    def test_release_links_reject_mismatched_markdown_and_hero_versions(self) -> None:
+        for text in (
+            "[v1.6.0 release record](./docs/docs/releases/v1-5-0.md)",
+            "[v1.6.0 发布说明](/releases/v1-5-0)",
+            "    - text: v1.6.0 发布说明\n      link: /releases/v1-5-0\n",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(check_current_docs.release_link_version_errors(text))
+                self.assertEqual(check_current_docs.release_link_version_errors(text.replace("v1-5-0", "v1-6-0")), [])
+        self.assertEqual(check_current_docs.release_link_version_errors("[v1.5.0 历史记录](/releases/v1-5-0)"), [])
+
     def test_route_resolution_requires_real_page(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

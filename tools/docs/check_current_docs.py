@@ -569,6 +569,25 @@ def route_exists(root: Path, route: str) -> bool:
         or (base / "index.md").is_file()
     )
 
+def release_link_version_errors(text: str) -> list[str]:
+    """Reject release labels that point at a different version, including hero actions."""
+    patterns = (
+        r"\[([^\]\n]+)\]\(([^)\s]+)\)",
+        r"(?m)^\s*-?\s*text:\s*([^\n]+)\n\s+link:\s*([^\s]+)",
+    )
+    errors: list[str] = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, text):
+            label_version = re.search(r"\bv(\d+\.\d+\.\d+)\b", match.group(1))
+            target_version = re.search(r"/releases/v(\d+-\d+-\d+)(?:\.md)?(?:[?#].*)?$", match.group(2))
+            if label_version and target_version:
+                target = target_version.group(1).replace("-", ".")
+                if label_version.group(1) != target:
+                    line = text.count("\n", 0, match.start()) + 1
+                    errors.append(f"{line}: release link version mismatch: {match.group(1)} -> {match.group(2)}")
+    return errors
+
+
 def internal_link_errors(root: Path) -> list[str]:
     errors: list[str] = []
     docs_root = root / DOCS_ROOT
@@ -581,6 +600,7 @@ def internal_link_errors(root: Path) -> list[str]:
     for absolute in sorted(checked):
         relative = absolute.relative_to(root)
         text = absolute.read_text(encoding="utf-8")
+        errors.extend(f"{relative}:{error}" for error in release_link_version_errors(text))
         for match in MARKDOWN_LINK.finditer(text):
             raw = match.group(1).strip()
             if not raw or raw.startswith(("#", "http://", "https://", "mailto:")):
