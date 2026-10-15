@@ -6,10 +6,10 @@ COVERAGE_DIR ?= .coverage
 COVERAGE_POLICY := .mss/coverage.json
 
 .PHONY: build build-admin build-agent test test-agent test-admin test-admin-race \
-	coverage-admin vet-admin tidy-admin-check tidy-admin-prepublication-check verify-admin verify-admin-preview compatibility-admin compatibility-standalone-mss compatibility-foundation-next \
+	coverage-admin test-admin-race-coverage vet-admin tidy-admin-check tidy-admin-prepublication-check verify-admin verify-admin-preview compatibility-admin compatibility-standalone-mss compatibility-foundation-next \
 	deps deps-agent deps-admin deps-admin-workspace deps-framework deps-all deps-release-preview \
 	test-framework test-framework-race coverage-framework vet-framework \
-	tidy-framework-check verify-framework test-all generate lint fix-lint clean \
+	test-framework-race-coverage tidy-framework-check verify-framework test-all generate lint fix-lint clean \
 	web-install web-lint web-test web-build \
 	web-v6-install web-v6-lint web-v6-test web-v6-build web-v6-qualify \
 	docs-install docs-build verify-all verify-release-evidence
@@ -41,6 +41,13 @@ coverage-admin:
 	cd $(ADMIN_DIR) && go test -shuffle=on -count=1 -covermode=atomic -coverpkg=./... -coverprofile=../$(COVERAGE_DIR)/admin.out ./...
 	python3 scripts/check-go-coverage.py --profile $(COVERAGE_DIR)/admin.out --policy $(COVERAGE_POLICY) --component admin --summary
 
+# Qualification executes each test once with both race and atomic coverage.
+# Keep the standalone diagnostic targets above for focused local use.
+test-admin-race-coverage:
+	mkdir -p $(COVERAGE_DIR)
+	cd $(ADMIN_DIR) && go test -race -shuffle=on -count=1 -covermode=atomic -coverpkg=./... -coverprofile=../$(COVERAGE_DIR)/admin.out ./...
+	python3 scripts/check-go-coverage.py --profile $(COVERAGE_DIR)/admin.out --policy $(COVERAGE_POLICY) --component admin --summary
+
 vet-admin:
 	cd $(ADMIN_DIR) && go vet ./...
 
@@ -61,9 +68,9 @@ compatibility-standalone-mss:
 compatibility-foundation-next:
 	bash tools/compatibility/test-standalone-mss-consumer.sh --upgrade --next-foundation
 
-verify-admin: test-admin-race coverage-admin vet-admin tidy-admin-check compatibility-admin build-admin
+verify-admin: test-admin-race-coverage vet-admin tidy-admin-check compatibility-admin build-admin
 
-verify-admin-preview: test-admin-race coverage-admin vet-admin tidy-admin-prepublication-check compatibility-admin build-admin
+verify-admin-preview: test-admin-race-coverage vet-admin tidy-admin-prepublication-check compatibility-admin build-admin
 
 deps:
 	$(MAKE) deps-all
@@ -98,6 +105,11 @@ coverage-framework:
 	cd $(FRAMEWORK_DIR) && GOWORK=off go test -shuffle=on -count=1 -covermode=atomic -coverpkg=./... -coverprofile=../$(COVERAGE_DIR)/mss-boot.out ./...
 	python3 scripts/check-go-coverage.py --profile $(COVERAGE_DIR)/mss-boot.out --policy $(COVERAGE_POLICY) --component mss-boot --summary
 
+test-framework-race-coverage:
+	mkdir -p $(COVERAGE_DIR)
+	cd $(FRAMEWORK_DIR) && GOWORK=off go test -race -shuffle=on -count=1 -covermode=atomic -coverpkg=./... -coverprofile=../$(COVERAGE_DIR)/mss-boot.out ./...
+	python3 scripts/check-go-coverage.py --profile $(COVERAGE_DIR)/mss-boot.out --policy $(COVERAGE_POLICY) --component mss-boot --summary
+
 vet-framework:
 	cd $(FRAMEWORK_DIR) && GOWORK=off go vet ./...
 
@@ -105,7 +117,7 @@ tidy-framework-check:
 	cd $(FRAMEWORK_DIR) && GOWORK=off go mod tidy
 	git diff --exit-code -- $(FRAMEWORK_DIR)/go.mod $(FRAMEWORK_DIR)/go.sum
 
-verify-framework: test-framework-race coverage-framework vet-framework tidy-framework-check
+verify-framework: test-framework-race-coverage vet-framework tidy-framework-check
 
 test-all: test-agent test-admin test-framework
 

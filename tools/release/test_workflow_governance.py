@@ -147,7 +147,7 @@ class WorkflowGovernanceTest(unittest.TestCase):
             "commit": commit, "evidenceMode": True, "success": True,
             "planOnly": False, "trackedCleanBefore": True, "trackedCleanAfter": True,
             "plan": {"checks": [{"id": "root-tests"}, {"id": "docker-smoke"}]},
-            "results": [{"id": "root-tests", "exitCode": 0}, {"id": "docker-smoke", "exitCode": 0}],
+            "results": [{"id": "root-tests", "exitCode": 0, "duration": 123456}, {"id": "docker-smoke", "exitCode": 0, "duration": 987654}],
             "privateLog": "must-not-be-uploaded",
         }
         cases = {"valid": good}
@@ -172,6 +172,8 @@ class WorkflowGovernanceTest(unittest.TestCase):
                     summary = json.loads(output.read_text())
                     self.assertEqual(summary["commit"], commit)
                     self.assertEqual(summary["workflowRunAttempt"], "2")
+                    self.assertEqual(summary["checks"][0]["durationNanoseconds"], 123456)
+                    self.assertEqual(summary["checks"][1]["durationNanoseconds"], 987654)
                     self.assertEqual(summary["reportSHA256"], hashlib.sha256((root / ".mss/reports/verify.json").read_bytes()).hexdigest())
                     self.assertNotIn("must-not-be-uploaded", output.read_text())
                     self.assertEqual(set(summary), {"commit", "evidenceMode", "success", "trackedCleanBefore", "trackedCleanAfter", "reportSHA256", "checks", "docsBuild", "workflowRun", "workflowRunAttempt"})

@@ -1,0 +1,70 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: release-qualification-efficiency
+  displayName: Observable bounded release qualification
+  owner: foundation-maintainers
+spec:
+  problem: Exact-main qualification hides check progress and repeats backend test execution for race and coverage.
+  goals:
+  - Expose safe per-check progress and durations without publishing command output or secrets.
+  - Preserve every release gate while eliminating redundant test passes.
+  nonGoals:
+  - Merge during an active release, change publication order, or reuse evidence across commits.
+  actors:
+  - id: release-operator
+    displayName: Release operator
+  modules:
+  - name: qualification
+    kind: infrastructure
+    operation: extend
+  requirements:
+  - id: progress
+    title: Observable canonical qualification
+    description: Emit check start, bounded heartbeat, completion status and timing to stderr while preserving machine-readable stdout and evidence semantics.
+    priority: must
+    actor: release-operator
+    module: qualification
+    rules:
+    - Never stream child command output, arguments, paths, environment values or credentials into progress.
+    - Keep canonical complete verification and exact clean merged-main source checks.
+  - id: efficiency
+    title: Preserve gates while reducing duplicate execution
+    description: Combine race and atomic coverage instrumentation in qualification targets while retaining standalone diagnostic targets.
+    priority: must
+    actor: release-operator
+    module: qualification
+    rules:
+    - Preserve shuffle, count=1, all-package coverage, coverage thresholds, vet and module checks.
+    - Do not reuse artifacts or successful results from another commit or execution.
+  constraints:
+  - id: isolation
+    type: security
+    statement: No changes to credentials, permissions, active runs, tags or production deployment.
+  acceptance:
+  - id: progress-metadata
+    requirement: progress
+    statement: Check progress excludes child output and arguments, survives cancellation, and stops before return.
+    level: unit
+    required: true
+    evidence:
+    - type: command
+      value: go test -race ./internal/mss/verify ./internal/mss/app
+  - id: combined-gates
+    requirement: efficiency
+    statement: Qualification dry runs contain one full-package race and coverage invocation with all original flags and thresholds.
+    level: unit
+    required: true
+    evidence:
+    - type: command
+      value: python3 -m unittest tools.release.test_qualification_efficiency
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+    - make test-admin-race-coverage test-framework-race-coverage
+    - python3 -m unittest tools.release.test_workflow_governance
+  rollout:
+    strategy: direct
+    migration: Review the isolated PR without merging during an active release. After merge, measure the next exact-main full qualification before claiming a wall-clock saving.
+    rollback: Revert through a follow-up PR while retaining source verification, coverage thresholds and all release gates.

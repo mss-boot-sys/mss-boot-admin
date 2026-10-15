@@ -262,6 +262,7 @@ func newVerifyCommand(rootOverride *string) *cobra.Command {
 				PlanOnly:        planOnly,
 				ReleaseEvidence: releaseEvidence,
 				ExpectedCommit:  expectedCommit,
+				Progress:        cmd.ErrOrStderr(),
 			})
 			if runErr != nil && report.GeneratedAt.IsZero() {
 				return runErr
