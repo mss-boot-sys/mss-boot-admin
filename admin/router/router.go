@@ -94,6 +94,8 @@ func InitRouteGroupsWithDependencies(r *gin.RouterGroup, dependencies Dependenci
 		}
 		provider.MountProtocol(r.Group("/api"))
 		provider.MountManagement(v1)
+	} else {
+		oidc.MountDisabledManagement(v1)
 	}
 	return RouteGroups{ProtectedAPI: v1}, nil
 }

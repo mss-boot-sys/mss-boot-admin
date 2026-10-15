@@ -53,6 +53,34 @@ describe('SSO administration', () => {
     await screen.findByText('403');
     expect(screen.queryByRole('button', { name: 'sso.create' })).toBeNull();
   });
+  it('shows an explicit unconfigured state only for the provider-disabled response', async () => {
+    api.clients.mockRejectedValue({
+      response: { status: 503, data: { errorCode: 'SSO_PROVIDER_DISABLED' } },
+    });
+    view(true);
+    await screen.findByText('sso.notConfigured');
+    expect(screen.getByText('sso.notConfiguredHelp')).toBeTruthy();
+    expect(screen.queryByText('sso.loadError')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'sso.create' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'sso.rotateKey' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'sso.audit' })).toBeNull();
+    expect(api.audit).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['unrelated 404', { response: { status: 404 } }],
+    ['network failure', new Error('Network Error')],
+    ['unrelated unavailable service', { response: { status: 503 } }],
+    [
+      'wrong status with disabled code',
+      { response: { status: 404, data: { errorCode: 'SSO_PROVIDER_DISABLED' } } },
+    ],
+  ])('keeps %s retryable rather than reporting unconfigured SSO', async (_name, error) => {
+    api.clients.mockRejectedValue(error);
+    view(true);
+    await screen.findByText('sso.loadError');
+    expect(screen.queryByText('sso.notConfigured')).toBeNull();
+    expect(screen.getByRole('button', { name: /actions.retry/ })).toBeTruthy();
+  });
   it('retries errors and opens an editable application with explicit grants', async () => {
     api.clients.mockRejectedValueOnce({ response: { status: 503 } });
     view(true);

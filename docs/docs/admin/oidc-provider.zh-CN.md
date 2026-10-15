@@ -33,6 +33,12 @@ Provider 默认关闭。开启后，issuer、cookie 策略、签名表或包装�
 
 授权地址位于现有 `/admin/api` cookie 路径下，所以跨站顶层 GET 跳转可以携带 Secure、HttpOnly、SameSite Lax 会话。不会把 cookie 路径扩展到 `/`，也不会放宽全局 CORS 或跳过后台 CSRF。授权继续流程额外绑定短期 HttpOnly 浏览器 cookie；同意授权的 POST 使用现有 CSRF 机制。Token/UserInfo 使用各自的客户端或 bearer 凭证。
 
+## Provider 未启用时的控制台状态
+
+应用 v1.6.0 之后的禁用状态修复后，SSO 菜单仍按原有菜单权限保留。`oidc.enabled` 为 false 时，已登录且具备原有客户端列表 API 权限的管理员访问 `GET /admin/api/sso/clients`，会收到 HTTP 503 和 `errorCode: SSO_PROVIDER_DISABLED`。控制台显示“SSO 尚未配置”，提示联系管理员完成配置。该响应不包含配置或密钥，协议路由和管理写入路由仍不注册。
+
+未登录请求仍返回 401，无 API 权限返回 403。网络故障、普通 404（包括旧版后端）及其他服务错误仍显示可重试的加载失败。应配套部署前后端修复，控制台不会根据路由不存在推断 Provider 未启用。
+
 ## 注册应用与授权
 
 在系统菜单打开 **SSO 应用**，以 root 初始化管理授权，再按需委派：

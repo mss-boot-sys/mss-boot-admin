@@ -32,6 +32,12 @@ The default is disabled. Enabled startup fails closed if the wrapping key, issue
 
 The canonical cookie stays host-only, HttpOnly, Secure and SameSite Lax. Cross-site top-level GET navigation to authorization can carry it. The protocol does not widen global CORS, bypass Admin CSRF, or move the Admin cookie to `/`. The token and UserInfo endpoints use client/bearer authentication; consent POSTs require the existing browser CSRF header. A browser authorization continuation additionally requires an HttpOnly, short-lived browser-flow cookie.
 
+## Disabled Provider console state
+
+With the disabled-state fix applied after v1.6.0, the SSO menu remains available according to existing menu permissions. When `oidc.enabled` is false, authenticated operators with the existing client-list API permission receive HTTP 503 with `errorCode: SSO_PROVIDER_DISABLED` from `GET /admin/api/sso/clients`. The console shows “SSO is not configured” and asks the operator to contact an administrator. This response contains no configuration or secrets. Protocol and management mutation routes remain unmounted.
+
+Unauthenticated requests still receive 401; users without API permission receive 403. Network failures, ordinary 404 responses (including an older backend), and other service errors retain the retryable load-error state. Deploy the backend and frontend fix together; the console does not infer disabled configuration from a missing route.
+
 ## Register a PVE application
 
 Open **SSO applications** in the system menu. A root operator can bootstrap access; delegate only the necessary menu/actions to other operators:

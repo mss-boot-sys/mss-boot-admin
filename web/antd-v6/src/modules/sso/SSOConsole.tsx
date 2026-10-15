@@ -1,4 +1,4 @@
-import { getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { getRequestErrorCode, getRequestStatus } from '@mss-admin-core/shared/api/errors';
 import { FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import {
   PageEmpty,
@@ -110,6 +110,13 @@ export default function SSOConsole({
     form.setFieldsValue(client === 'new' ? initial : client);
   };
   if (getRequestStatus(clients.error) === 403) return <PageForbidden />;
+  if (
+    getRequestStatus(clients.error) === 503 &&
+    getRequestErrorCode(clients.error) === 'SSO_PROVIDER_DISABLED'
+  )
+    return (
+      <Alert type="info" showIcon title={t('notConfigured')} description={t('notConfiguredHelp')} />
+    );
   if (clients.isError)
     return <PageError message={t('loadError')} onRetry={() => void clients.refetch()} />;
   return (
