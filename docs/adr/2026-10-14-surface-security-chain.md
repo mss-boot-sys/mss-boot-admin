@@ -60,7 +60,11 @@ core owns authentication, CORS and CSRF.
    token, not `Authorization`/`Cookie`; empty falls back to the default). The
    resolved name is validated, checked, and always added to the surface CORS
    allowed headers, including custom `AllowHeaders`. Modules issue tokens with
-   `business.SetSurfaceCSRFCookie` after sign-in or refresh.
+   `business.SetSurfaceCSRFCookie` after sign-in or refresh. The session
+   argument must be the raw value the browser sends back: when the session
+   cookie is written with gin `c.SetCookie` (which applies `url.QueryEscape`),
+   pass the escaped value `url.QueryEscape(session)`. Quoted (`"..."`), empty
+   or non-cookie-octet session values are always rejected.
 
 ## Consequences
 

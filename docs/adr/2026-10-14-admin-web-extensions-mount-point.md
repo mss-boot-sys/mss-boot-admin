@@ -35,7 +35,17 @@ versioned packages.
 - Surface names follow the backend surface rules and additionally reserve
   Admin page prefixes (`user`, `users`, `workplace`).
 - Every route path must stay below `/<surface>` and must not overlap
-  `/<surface>/api`; overlaps with Admin or business routes fail the build.
+  `/<surface>/api` (exactly `/<surface>/api` or `/<surface>/api/...`; a sibling
+  such as `/<surface>/apiary` is allowed). Paths with `.` or `..` segments are
+  rejected. Overlaps with Admin or business routes fail the build.
+- The reserved surface list is shared with the backend
+  (`reservedSurfaceNames` in `admin/business/surface.go`, which also reserves
+  `user`, `users` and `workplace`); keep both lists in sync.
+- Local development: the dev server origin (for example
+  `http://localhost:8000`) is a different origin from the API. Add it to the
+  surface `CORS.AllowOrigins` (and Admin `cors.allowOrigins` when needed) of the
+  development configuration only, otherwise unsafe surface requests fail the
+  Origin/CSRF check with 403. Never add dev origins in production.
 - Pages mount at `/<surface>` with `layout: false` (or the extension's own
   layout module) before the Admin fail-closed fallbacks. In development the
   proxy forwards `/<surface>/api/` to the API target.
@@ -44,6 +54,16 @@ versioned packages.
 - Deferred to a follow-up: locale namespaces (`zh-CN`/`en-US`), example
   extension e2e, thin-host template and doctor updates, and a byte-level
   build-artifact comparison in CI.
+
+## Trust boundary
+
+Extension pages run in the **same origin** as Admin. Any extension code can read
+Admin's browser storage, including the Admin access token, and call Admin APIs
+as the signed-in administrator. An extension is therefore fully trusted Admin
+code, reviewed and versioned like Admin itself. Pages for front-office (end
+user) traffic must not be mounted as Admin extensions: serve them from a
+separate origin (their own domain) so front-office users can never reach Admin
+credentials or Admin APIs.
 
 ## Consequences
 

@@ -807,7 +807,7 @@ func (r *Registry) Mount(
 			return fmt.Errorf("business module %s readiness failed: %w", registered.name, err)
 		}
 	}
-	runtime.Audit = audit.Redacting(runtime.Audit)
+	runtime.Audit = moduleAuditSink(runtime.Audit)
 	for _, registered := range entries {
 		if err := registered.routes(protectedAPI, runtime); err != nil {
 			return fmt.Errorf("register business module %s routes: %w", registered.name, err)
@@ -853,4 +853,19 @@ func nilInterface(value any) bool {
 	default:
 		return false
 	}
+}
+
+// moduleAuditSink wraps the host sink for Runtime.Audit. Modules record
+// through Runtime outside any surface request, so they must not attribute an
+// event to a surface: Surface is cleared. Writes also ignore cancellation so a
+// client disconnect does not lose evidence.
+func moduleAuditSink(next audit.Sink) audit.Sink {
+	redacting := audit.Redacting(next)
+	return audit.SinkFunc(func(ctx context.Context, e audit.Event) error {
+		if ctx == nil {
+			ctx = context.Background()
+		}
+		e.Surface = ""
+		return redacting.Record(context.WithoutCancel(ctx), e)
+	})
 }
