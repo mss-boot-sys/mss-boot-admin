@@ -11,7 +11,7 @@ keywords: [v1.6.1 v1.3.5 v1.3.6 thin host admin mobile responsive accessibility]
 ## 目标
 
 :::warning
-版本范围：**v1.6.1 是当前发行基线**（v1.4.0 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
+版本范围：**v1.6.1 是当前发行基线**（v1.3.9 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
 :::
 
 v1.6.1 Admin Web 只组合一个前端应用。桌面和移动端共享同一套业务组件、权限判断、

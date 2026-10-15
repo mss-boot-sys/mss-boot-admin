@@ -9,7 +9,7 @@ description: Foundation 源码调试边界与 v1.6.1 Thin Host 开发拓扑
 :::warning
 版本范围：**v1.6.1**；本页描述 Foundation 源码调试，Thin Host 的安装、创建、
 升级和本地启动从[快速开始](/getting-started)进入。v1.3.5 与 v1.3.6 保持不可变部分发布；
-Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
+Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 ## Foundation 源码调试

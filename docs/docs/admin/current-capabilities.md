@@ -7,9 +7,8 @@ description: v1.6.1 发行版源码能力、新仓库迁移与采用边界
 # v1.6.1 发行版源码能力与发布边界
 
 :::warning
-版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
-安装、创建或升级从[快速开始](/getting-started)进入。Docs 网站可通过 `docs/v*` 异步候补，
-其状态不影响组件、稳定别名或采用。
+版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+安装、创建或升级从[快速开始](/getting-started)进入。Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 机器可执行事实以 [`.mss/project.yaml`](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/project.yaml)

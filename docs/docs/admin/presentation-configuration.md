@@ -11,8 +11,8 @@ keywords: [v1.6.1 v1.3.5 v1.3.6 admin presentation configuration publish rollbac
 # 页面展示配置发布治理
 
 :::warning
-版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
-Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
+版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 页面展示配置把“已经编译并授权的页面能力”与日常展示选择分开。维护者可以准备列顺序、搜索项、

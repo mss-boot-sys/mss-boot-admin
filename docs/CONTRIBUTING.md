@@ -8,7 +8,7 @@ repository. It is an independently publishable component, not a separate source
 repository. Product prose, implementation, tests, and `.mss/` machine contracts
 must describe the same behavior.
 
-This guide targets v1.6.1; v1.4.0 was the first release under the new organization. Earlier
+This guide targets v1.6.1; v1.3.9 was the first release under the new organization. Earlier
 versions belong to `mss-boot-io` and retain their historical records. Validate
 locally on the exact merged-main commit, publish artifact tags, then deploy Docs
 and verify the public `/release.json` plus browser-visible content. Source changes

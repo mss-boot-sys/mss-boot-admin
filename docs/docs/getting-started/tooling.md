@@ -9,8 +9,7 @@ keywords: [v1.6.1 stable mss mss-mcp MCP stdio]
 
 v1.6.1 Root Release 同时发布 `mss` 与 `mss-mcp`。两个二进制内置同源
 `management-system` Blueprint，并在 `--version` 中报告 v1.6.1、完整提交和构建时间。
-安装器、归档与校验和必须来自同一个 Root Release；Docs 网站可独立候补，不参与工具
-完整性判断。
+安装器、归档与校验和必须来自同一个 Root Release；工具完整性由其发布资产独立核验。Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 
 v1.3.5 与 v1.3.6 已永久停止为不可变部分发布；它们的工具或缺失发布面不能与 v1.6.1
 混用，也不能用源码编译结果补齐。

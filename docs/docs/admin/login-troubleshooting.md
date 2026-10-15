@@ -11,8 +11,8 @@ keywords: [v1.6.1 v1.3.5 v1.3.6 admin login session cookie csrf troubleshooting]
 # v1.6.1 登录与会话排障
 
 :::warning
-版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
-Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
+版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 浏览器登录使用服务端会话和 HttpOnly Cookie；浏览器不会接收或保存 Admin JWT，

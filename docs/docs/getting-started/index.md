@@ -10,7 +10,7 @@ keywords: [v1.6.1 stable quick start thin host mss upgrade]
 
 # v1.6.1 快速开始
 
-**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）。 v1.3.8 及更早版本
+**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）。 v1.3.8 及更早版本
 属于原 `mss-boot-io` 组织；本页命令用于对应 Release 和包可用之后。Go 模块、Root
 工具、前端包和镜像必须使用同一版本，不能混用旧命名空间。
 

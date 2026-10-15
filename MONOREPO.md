@@ -34,7 +34,7 @@ make docs-install docs-build
 - Documentation: `docs/vX.Y.Z`
 
 Runtime components retain component-scoped tags but share one exact qualified
-merged-main commit and the v1.6.1 Distribution version. v1.4.0 was the first
+merged-main commit and the v1.6.1 Distribution version. v1.3.9 was the first
 release under `mss-boot-sys/mss-boot-admin`; v1.3.8 and earlier belong to
 `mss-boot-io` and are historical records, not prerequisites for the new release.
 

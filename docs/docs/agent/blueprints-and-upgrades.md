@@ -7,7 +7,7 @@ description: v1.6.1 发行版 Thin Host 文件所有权、三方升级、验证�
 # Blueprint 与升级
 
 本页向人类解释 v1.6.1 Thin Host 的升级合同；Agent 的执行权威仍是目标仓库的
-`AGENTS.md`、`.mss/` 和适用 Skill。v1.6.1 是当前发行基线（v1.4.0 为新仓库首发）；旧组织版本保留为历史记录。
+`AGENTS.md`、`.mss/` 和适用 Skill。v1.6.1 是当前发行基线（v1.3.9 为新仓库首发）；旧组织版本保留为历史记录。
 命名空间和 GitHub Packages 认证迁移见[发布说明](/releases/v1-5-0)。
 
 ## Blueprint 来源

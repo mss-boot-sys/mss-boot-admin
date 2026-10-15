@@ -7,7 +7,7 @@ keywords: [v1.6.1 stable go module npm admin web package]
 
 # v1.6.1 包与导入边界
 
-v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.4.0 为首发）。下游应用使用同一版本的
+v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.3.9 为首发）。下游应用使用同一版本的
 Admin、Framework 与 Admin Web，并保留生成器写入的精确锁。v1.3.8 及更早版本属于
 原 `mss-boot-io` 组织；迁移时必须更新业务 Go imports、npm scope 与 registry 配置。
 

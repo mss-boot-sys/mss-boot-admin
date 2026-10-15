@@ -24,7 +24,7 @@ features:
 
 # mss-boot Admin
 
-**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）。 v1.3.8 及更早版本
+**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）。 v1.3.8 及更早版本
 发布于原 `mss-boot-io` 组织。当前指南统一使用新 Go 模块路径、GitHub Packages 上的
 `@mss-boot-sys/admin-web` 和新镜像地址。
 

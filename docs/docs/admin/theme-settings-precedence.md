@@ -9,7 +9,7 @@ keywords: [admin ant-design-v6 theme settings precedence inheritance]
 ---
 
 :::warning
-版本范围：**v1.6.1 是当前发行基线**（v1.4.0 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
+版本范围：**v1.6.1 是当前发行基线**（v1.3.9 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
 :::
 
 ## 产品合同

@@ -4,9 +4,9 @@ title: Pull request checks
 
 # Pull request checks after the repository migration
 
-Development uses `mss-boot-sys/mss-boot-admin`. The v1.5.0 release migrates Go
-import paths and the package identity to `@mss-boot-sys/admin-web`; consumers must
-update imports and configure GitHub Packages authentication.
+Development uses `mss-boot-sys/mss-boot-admin`. The current v1.6.1 baseline uses this Go module namespace
+and the `@mss-boot-sys/admin-web` package identity. Consumers migrating from the
+legacy organization must update imports and configure GitHub Packages authentication.
 
 Every PR to `main` starts **PR Checks** (`.github/workflows/pr-checks.yml`).
 The single `pr-ci` job waits for the repository owner `mss-boot-sys` to approve the
