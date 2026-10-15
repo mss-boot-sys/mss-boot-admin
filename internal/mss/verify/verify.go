@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,6 +39,8 @@ type Options struct {
 	PlanOnly        bool
 	ReleaseEvidence bool
 	ExpectedCommit  string
+	// Progress receives metadata only; child output remains in the redacted report.
+	Progress io.Writer
 }
 
 // Plan describes the exact checks selected for a change.
@@ -279,7 +282,7 @@ func Run(parent context.Context, ctx *project.Context, options Options) (Report,
 
 	if !options.PlanOnly && report.Success {
 		for _, check := range plan.Checks {
-			result := command.Run(parent, check)
+			result := runWithProgress(parent, check, options.Progress, 30*time.Second)
 			result.Stdout = truncate(result.Stdout, 128*1024)
 			result.Stderr = truncate(result.Stderr, 128*1024)
 			report.Results = append(report.Results, result)

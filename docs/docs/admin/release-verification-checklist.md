@@ -101,3 +101,27 @@ npm 包只发布 GitHub Packages；Docs 源码与站点必须同时对齐。源�
 及 Docs 构建，前后都验证源码与干净工作树。只读 GitHub 权限仅用于源码证明；没有部署、
 包发布或标签写入权限。仅上传脱敏检查结果及原报告 SHA-256，不上传原始日志、环境变量或凭据。
 任何失败均阻止资格通过；多个局部 CI 成功不能拼成完整资格。发布前仍需逐项通过验收与治理检查。
+
+### 资格阶段进度与耗时
+
+CLI 在 stderr 输出每项检查的开始、每 30 秒心跳和结束（退出码与耗时）；stdout 的
+JSON/Markdown 格式不变。进度只含检查 ID 和计时，不转发子进程输出、参数或环境变量。
+成功的脱敏 `qualification.json` 在各检查中保留 `durationNanoseconds`；Docs 构建单独显示
+为工作流步骤。心跳不是成功证明，只有全部检查及最终源码复核通过才可发布。
+
+Admin 与 Framework 的资格目标将 race 和 atomic coverage 合为一次全包测试，保留
+`-shuffle=on -count=1 -coverpkg=./...`、原覆盖率阈值、vet 和模块元数据检查。
+独立 race/coverage Make 目标仍供诊断使用。合并后的仪器开销可能变化，应比较实际
+runner 耗时，不把减少测试调用次数等同于固定百分比提速。
+
+2026-10-15 对[成功资格运行 38687464815](https://github.com/mss-boot-sys/mss-boot-admin/actions/runs/38687464815)
+（`81d592a0e16ef210331249945baa63cb3dac6de4`）的审计基线：总计 24 分 18 秒，依赖准备
+71 秒，完整命令与 Docs 合计 22 分 04 秒，其中 Docs 约 11 秒，Go cache 收尾约 46 秒。
+旧证据没有检查级耗时，不能据此宣称某个具体检查占用最多。
+
+本轮不并发共享 checkout 的全部检查：Framework tidy 会写模块文件，外部消费者同时读取
+这些文件，多个 Node 构建、浏览器开发服务器与 Go race 编译也会竞争 runner 内存。
+保留 Framework → Admin → frontend → Root → Docs 发布次序和 Admin 对已公开 Framework
+的独立 `GOWORK=off` 门禁。Root 已复用公开 frontend 制品并并行六平台构建；不加入跨
+commit、跨运行的资格结果缓存。Demo 已有独立工作流、状态与按版本手动重试入口，
+其失败不需要重新创建不可变的核心发布标签。

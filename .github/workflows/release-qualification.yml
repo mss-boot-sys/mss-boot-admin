@@ -78,8 +78,9 @@ jobs:
         run: |
           set -euo pipefail
           GOWORK=off go run ./cmd/mss verify --all --release-evidence --expect-commit "$EXPECTED_COMMIT"
-          make docs-build
           git diff --exit-code
+      - name: Build documentation on the qualified checkout
+        run: make docs-build
       - name: Reconfirm source and retain sanitized successful evidence
         env:
           GH_TOKEN: ${{ github.token }}
@@ -101,7 +102,7 @@ jobs:
           assert all(check['exitCode'] == 0 for check in results.values())
           summary = {key: report[key] for key in ('commit', 'evidenceMode', 'success', 'trackedCleanBefore', 'trackedCleanAfter')}
           summary['reportSHA256'] = hashlib.sha256(raw).hexdigest()
-          summary['checks'] = [{'id': check['id'], 'exitCode': check['exitCode']} for check in report['results']]
+          summary['checks'] = [{'id': check['id'], 'exitCode': check['exitCode'], 'durationNanoseconds': check.get('duration', 0)} for check in report['results']]
           summary['docsBuild'] = 'passed'
           summary['workflowRun'] = os.environ['GITHUB_RUN_ID']
           summary['workflowRunAttempt'] = os.environ['GITHUB_RUN_ATTEMPT']
