@@ -109,6 +109,76 @@ class WorkflowGovernanceTest(unittest.TestCase):
             for path in sorted(WORKFLOW_DIR.glob("*.yml"))
         }
 
+    def test_exact_main_qualification_is_manual_read_only_and_complete(self):
+        workflow = self.workflows["release-qualification.yml"]
+        self.assertEqual(set(workflow["on"]), {"workflow_dispatch"})
+        self.assertEqual(workflow["permissions"], {"contents": "read", "pull-requests": "read"})
+        self.assertEqual(workflow["on"]["workflow_dispatch"]["inputs"]["expected_commit"]["required"], "true")
+        job = workflow["jobs"]["qualify"]
+        self.assertIn("github.ref == 'refs/heads/main'", job["if"])
+        self.assertIn("github.actor == 'mss-boot-sys'", job["if"])
+        self.assertIn("github.triggering_actor == 'mss-boot-sys'", job["if"])
+        self.assertNotIn("environment", job)
+        self.assertNotIn("GH_TOKEN", job["env"])
+        self.assertNotIn("TMPDIR", job["env"])
+        for name in ("Prepare exact package managers and dependencies", "Run the complete canonical qualification on this checkout"):
+            step = next(item for item in job["steps"] if item.get("name") == name)
+            self.assertEqual(step["env"]["TMPDIR"], "${{ runner.temp }}")
+        checkout = job["steps"][0]["with"]
+        self.assertEqual(checkout["ref"], "${{ inputs.expected_commit }}")
+        self.assertEqual(checkout["persist-credentials"], "false")
+        text = (WORKFLOW_DIR / "release-qualification.yml").read_text()
+        self.assertIn('test "$GITHUB_SHA" = "$EXPECTED_COMMIT"', text)
+        self.assertEqual(text.count("python3 tools/release/verify_release_source.py"), 2)
+        self.assertIn('go run ./cmd/mss verify --all --release-evidence --expect-commit "$EXPECTED_COMMIT"', text)
+        self.assertIn("make docs-build", text)
+        self.assertIn("planned <= results.keys()", text)
+        self.assertIn("hashlib.sha256(raw).hexdigest()", text)
+        self.assertIn("path: ${{ runner.temp }}/release-evidence/qualification.json", text)
+        for forbidden in ("secrets.", "continue-on-error", "git push", "gh release", "gh workflow run"):
+            self.assertNotIn(forbidden, text)
+
+    def test_qualification_sanitizer_rejects_incomplete_or_failed_evidence(self):
+        job = self.workflows["release-qualification.yml"]["jobs"]["qualify"]
+        step = next(item for item in job["steps"] if item.get("name") == "Reconfirm source and retain sanitized successful evidence")
+        script = step["run"].split("python3 - <<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+        commit = "a" * 40
+        good = {
+            "commit": commit, "evidenceMode": True, "success": True,
+            "planOnly": False, "trackedCleanBefore": True, "trackedCleanAfter": True,
+            "plan": {"checks": [{"id": "root-tests"}, {"id": "docker-smoke"}]},
+            "results": [{"id": "root-tests", "exitCode": 0}, {"id": "docker-smoke", "exitCode": 0}],
+            "privateLog": "must-not-be-uploaded",
+        }
+        cases = {"valid": good}
+        for key, value in (("commit", "b" * 40), ("success", False), ("evidenceMode", False),
+                           ("planOnly", True), ("trackedCleanBefore", False), ("trackedCleanAfter", False),
+                           ("plan", {"checks": []}), ("results", [{"id": "root-tests", "exitCode": 0}])):
+            cases[key] = {**good, key: value}
+        cases["failed-check"] = {**good, "results": [{"id": "root-tests", "exitCode": 1}, {"id": "docker-smoke", "exitCode": 0}]}
+        cases["missing-report"] = None
+        for label, report in cases.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / ".mss/reports").mkdir(parents=True)
+                if report is not None:
+                    (root / ".mss/reports/verify.json").write_text(json.dumps(report))
+                result = subprocess.run(["python3", "-c", script], cwd=root, capture_output=True, text=True,
+                                        env={**os.environ, "EXPECTED_COMMIT": commit, "RUNNER_TEMP": str(root),
+                                             "GITHUB_RUN_ID": "1234", "GITHUB_RUN_ATTEMPT": "2"})
+                output = root / "release-evidence/qualification.json"
+                if label == "valid":
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    summary = json.loads(output.read_text())
+                    self.assertEqual(summary["commit"], commit)
+                    self.assertEqual(summary["workflowRunAttempt"], "2")
+                    self.assertEqual(summary["reportSHA256"], hashlib.sha256((root / ".mss/reports/verify.json").read_bytes()).hexdigest())
+                    self.assertNotIn("must-not-be-uploaded", output.read_text())
+                    self.assertEqual(set(summary), {"commit", "evidenceMode", "success", "trackedCleanBefore", "trackedCleanAfter", "reportSHA256", "checks", "docsBuild", "workflowRun", "workflowRunAttempt"})
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(output.exists())
+
     def test_admin_ci_context_is_repository_unique(self):
         contexts = []
         for workflow_name, workflow in self.workflows.items():

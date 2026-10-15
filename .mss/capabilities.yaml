@@ -799,7 +799,7 @@ spec:
         - internal/mss
         - tools/install
       guidance: >-
-        The v1.5.0 release target provides checksummed cross-platform mss and mss-mcp tools with embedded source provenance and the matching Blueprint. Public creation and upgrade consume the new mss-boot-sys repository and authenticated GitHub Packages. Verify the tag, Release and checksums before installation. go install remains a compilation path, not a substitute for provenance-bound release tools. Never report declarative acceptance as executed.
+        The v1.6.0 release target provides checksummed cross-platform mss and mss-mcp tools with embedded source provenance and the matching Blueprint. Public creation and upgrade consume the new mss-boot-sys repository and authenticated GitHub Packages. Verify the tag, Release and checksums before installation. go install remains a compilation path, not a substitute for provenance-bound release tools. Never report declarative acceptance as executed.
 
     - id: agent.module-generator
       displayName: Deterministic Admin Module Scaffold Generator
@@ -838,7 +838,7 @@ spec:
         documentation, and semantic browser E2E. The Supplier plan is complete with zero deferred
         projections and is exercised through repository-external Thin Host generation, build,
         authorization, browser, upgrade, preservation, and two-run idempotency gates. Exact
-        v1.5.0 public Go and GitHub Packages consumption is the new release target; the package-first
+        v1.6.0 public Go and GitHub Packages consumption is the new release target; the package-first
         mss-shop exemplar remains the next qualification target. Keep the capability beta until that second
         representative domain proves the schema without weakening deterministic or
         generated/custom ownership boundaries.
@@ -888,7 +888,7 @@ spec:
         - cmd/mss-mcp
         - tools/install
       guidance: >-
-        The v1.5.0 Root tool archive installs mss-mcp beside mss. Both use one exact source identity. The MCP server delegates to CLI packages; writes default to dry-run. Verify the corresponding GitHub Release before installation. Docs deployment is part of the requested release completion.
+        The v1.6.0 Root tool archive installs mss-mcp beside mss. Both use one exact source identity. The MCP server delegates to CLI packages; writes default to dry-run. Verify the corresponding GitHub Release before installation. Docs deployment is part of the requested release completion.
 
     - id: agent.evals
       displayName: Agent Task Evaluations
@@ -919,7 +919,7 @@ spec:
         - internal/mss/verify
         - .mss/blueprints
       guidance: >-
-        v1.5.0 preserves strict Foundation, Blueprint, generator, snapshot, lock, and manifest
+        v1.6.0 preserves strict Foundation, Blueprint, generator, snapshot, lock, and manifest
         identities while resolving the requested published Distribution from the mss binary's
         embedded release source. A local --foundation path is an explicit Foundation-contributor
         override, never a consumer prerequisite. Plan remains read-only, apply is confirmed and

@@ -1,17 +1,17 @@
 ---
 title: FAQ
 order: 3
-description: v1.5.0 当前发行、v1.3.5/v1.3.6 永久停止与 Docs 独立发布边界 FAQ
+description: v1.6.0 当前发行、v1.3.5/v1.3.6 永久停止与 Docs 独立发布边界 FAQ
 ---
 
 # FAQ
 
 :::warning
-版本范围：**v1.5.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.6.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 网站 Tag 与部署可异步候补，不阻断组件发布、稳定别名或采用。
 :::
 
-## v1.5.0 现在可以安装或升级吗？
+## v1.6.0 现在可以安装或升级吗？
 
 对应 Release 和包可用后，可按本页安装与升级。安装新工具和创建应用见
 [快速开始](/getting-started)；升级现有 Thin Host 前必须备份代码、配置、数据库和业务数据，
@@ -21,24 +21,24 @@ Docs 网站 Tag 与部署可异步候补，不阻断组件发布、稳定别名�
 mss --version
 mss-mcp --version
 mss doctor --strict
-mss upgrade admin v1.5.0
-mss upgrade admin v1.5.0 --apply --yes
-mss upgrade admin v1.5.0
+mss upgrade admin v1.6.0
+mss upgrade admin v1.6.0 --apply --yes
+mss upgrade admin v1.6.0
 mss verify --all
 ```
 
-手工拼装或丢失 manifest 的仓库不能伪造基线；应先生成一个新的 v1.5.0 Thin Host，再按
+手工拼装或丢失 manifest 的仓库不能伪造基线；应先生成一个新的 v1.6.0 Thin Host，再按
 所有权边界迁入规格、配置和业务文件。Docs Tag 只发布网站，可前后异步完成。
 
 ## 旧组织版本是否会补发到新仓库？
 
 不会。v1.3.8 及以前的版本属于原 `mss-boot-io` 组织，保留历史记录和已知校验和。
-v1.5.0 是新仓库首发，v1.5.0 是其后的次版本。迁移前备份已安装的旧工具、依赖、镜像与数据库，避免回滚依赖
+v1.6.0 是新仓库首发，v1.6.0 是其后的次版本。迁移前备份已安装的旧工具、依赖、镜像与数据库，避免回滚依赖
 已经不可见的旧组织。
 
 ## 为什么不能从 npmjs 安装新包？
 
-`@mss-boot-sys/admin-web@1.5.0` 仅发布到 GitHub Packages。配置 scoped registry，
+`@mss-boot-sys/admin-web@1.6.0` 仅发布到 GitHub Packages。配置 scoped registry，
 通过 `NODE_AUTH_TOKEN` 注入具有 `read:packages` 权限的认证；不要向仓库写入令牌。
 完整配置见[包与导入边界](/getting-started/packages)。
 
@@ -46,16 +46,16 @@ v1.5.0 是新仓库首发，v1.5.0 是其后的次版本。迁移前备份已安
 
 需要迁移。业务代码中的旧 Go imports、npm scope、镜像仓库和构建认证都要更新。
 引用 Casbin v2 类型的扩展还需适配 v3；重新验证允许、拒绝和租户隔离路径。
-详见[v1.5.0 发布说明](/releases/v1-5-0)。
+详见[v1.6.0 发布说明](/releases/v1-6-0)。
 
 ## 为什么采用者不再需要先克隆 Foundation？
 
-v1.5.0 Root Release 的工具内置与版本、源提交和构建身份绑定的 Blueprint。采用者
+v1.6.0 Root Release 的工具内置与版本、源提交和构建身份绑定的 Blueprint。采用者
 从公开工具和包生成 Thin Host；Foundation checkout 只服务贡献者。
 
 ## 当前创建与升级流程怎样保护现有文件？
 
-v1.5.0 工具默认先返回只读计划，验证目标目录、未知文件、公共包身份与冻结锁，再在显式
+v1.6.0 工具默认先返回只读计划，验证目标目录、未知文件、公共包身份与冻结锁，再在显式
 确认后原子写入。生成结果记录 Blueprint manifest 与同源快照，两次生成必须稳定；未知
 文件和业务所有文件不得被静默覆盖。
 
@@ -92,5 +92,5 @@ Host，再按所有权迁入规格和业务文件。v1.3.5 与 v1.3.6 不具备�
 当前采用判断见[采用状态](/getting-started)，部分列车的不可变事实见
 [v1.3.5 部分发布记录](/releases/v1-3-5) 与
 [v1.3.6 部分发布记录](/releases/v1-3-6)，当前稳定记录见
-[v1.5.0 发布说明](/releases/v1-5-0)。本地分支、PR 成功、一个标签或一个组件
+[v1.6.0 发布说明](/releases/v1-6-0)。本地分支、PR 成功、一个标签或一个组件
 可下载都不能单独证明完整发行。

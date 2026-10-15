@@ -2,32 +2,32 @@
 
 [简体中文](./README.zh-CN.md)
 
-mss-boot is an agent-native management-system foundation. **v1.5.0 is the current
+mss-boot is an agent-native management-system foundation. **v1.6.0 is the current
 Complete Admin Distribution for `mss-boot-sys/mss-boot-admin`** (v1.3.9 was the
 first release here). Versions v1.3.8
 and earlier belong to the former `mss-boot-io` organization. Historical records
 are retained without recreating their tags or artifacts in this repository.
 
-The commands below describe the v1.5.0 release contract and apply when the
-corresponding [Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.5.0)
+The commands below describe the v1.6.0 release contract and apply when the
+corresponding [Release](https://github.com/mss-boot-sys/mss-boot-admin/releases/tag/v1.6.0)
 and packages are available. All components must resolve to the same qualified
 merged `main` commit; publication results are verified from their actual assets.
 
 ## Distribution identities
 
-| Surface | v1.5.0 identity |
+| Surface | v1.6.0 identity |
 | --- | --- |
-| Root tools, backend image, and GitHub Release | `v1.5.0` |
-| Reusable Go Framework | `mss-boot/v1.5.0` |
-| Importable Admin Go module | `admin/v1.5.0` |
-| Complete Admin Web | `web/antd-v6/v1.5.0` / `@mss-boot-sys/admin-web@1.5.0` |
-| Documentation website | `docs/v1.5.0` at https://docs.mss-boot-io.top |
+| Root tools, backend image, and GitHub Release | `v1.6.0` |
+| Reusable Go Framework | `mss-boot/v1.6.0` |
+| Importable Admin Go module | `admin/v1.6.0` |
+| Complete Admin Web | `web/antd-v6/v1.6.0` / `@mss-boot-sys/admin-web@1.6.0` |
+| Documentation website | `docs/v1.6.0` at https://docs.mss-boot-io.top |
 
 Admin Web is published only to GitHub Packages (`npm.pkg.github.com`); package
 downloads require GitHub authentication. The website retains its existing
 domain and records its deployed version and full source commit in `/release.json`.
 
-## Install the v1.5.0 tools
+## Install the v1.6.0 tools
 
 The versioned installers verify release checksums, install both `mss` and
 `mss-mcp`, do not use `sudo`, and do not modify a shell profile.
@@ -36,8 +36,8 @@ Linux or macOS:
 
 ```shell
 curl -fL -o install-mss.sh \
-  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.5.0/install-mss.sh
-bash ./install-mss.sh --version v1.5.0
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.6.0/install-mss.sh
+bash ./install-mss.sh --version v1.6.0
 export PATH="$HOME/.local/bin:$PATH"
 mss --version
 mss-mcp --version
@@ -47,9 +47,9 @@ Windows PowerShell:
 
 ```powershell
 Invoke-WebRequest `
-  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.5.0/install-mss.ps1 `
+  https://github.com/mss-boot-sys/mss-boot-admin/releases/download/v1.6.0/install-mss.ps1 `
   -OutFile install-mss.ps1
-& .\install-mss.ps1 -Version v1.5.0
+& .\install-mss.ps1 -Version v1.6.0
 $env:Path = "$env:LOCALAPPDATA\Programs\mss\bin;$env:Path"
 mss --version
 mss-mcp --version
@@ -68,14 +68,14 @@ directory containing its `package.json`, normally `web/` in a Thin Host).
 Go module root:
 
 ```shell
-go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.5.0
-go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.5.0
+go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.0
+go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0
 ```
 
 Frontend package root:
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.5.0
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0
 ```
 
 Thin Hosts pin the exact version. Set `NODE_AUTH_TOKEN` from a local secret store
@@ -112,25 +112,25 @@ The namespace changes require migrating owned Go imports from
 package registry authentication. Go 1.27.2 and Casbin v3 are required; callers
 using exported Casbin types must adapt imports and compile their integrations.
 
-Back up code, configuration, and the database; install the target v1.5.0 tools;
+Back up code, configuration, and the database; install the target v1.6.0 tools;
 and verify both binaries before planning. A supported three-way upgrade requires
 the generated `.mss/blueprint-manifest.json`:
 
 ```shell
 mss --version
 mss-mcp --version
-mss upgrade admin v1.5.0 --format json
-mss upgrade admin v1.5.0 --apply --yes --format json
+mss upgrade admin v1.6.0 --format json
+mss upgrade admin v1.6.0 --apply --yes --format json
 mss doctor --strict
 mss verify --all
-mss upgrade admin v1.5.0 --format json
+mss upgrade admin v1.6.0 --format json
 ```
 
 The first and final commands are read-only; the final plan must contain no
 create, update, delete, or conflict operations. The upgrade engine changes only
 Blueprint-managed files and preserves business-owned and unknown files. A
 hand-assembled repository or one missing its manifest must generate a clean
-v1.5.0 baseline in a new directory and migrate business-owned specifications
+v1.6.0 baseline in a new directory and migrate business-owned specifications
 and files instead of fabricating a manifest.
 
 ## Architecture boundary
@@ -163,7 +163,7 @@ model for humans; it is not an executable instruction source. Start with the
 [quick start](./docs/docs/getting-started/index.md),
 [package boundary](./docs/docs/getting-started/packages.md),
 [tooling contract](./docs/docs/getting-started/tooling.md), and
-[v1.5.0 release record](./docs/docs/releases/v1-5-0.md).
+[v1.6.0 release record](./docs/docs/releases/v1-6-0.md).
 
 Foundation contributors should use
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the nearest `AGENTS.md` for

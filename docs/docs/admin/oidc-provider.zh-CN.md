@@ -4,7 +4,7 @@ title: 原生 OIDC Provider 与 Proxmox VE
 
 # 原生 OIDC Provider 与 Proxmox VE
 
-本文对应 `mss-boot-sys/mss-boot-admin` v1.5.0 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
+本文对应 `mss-boot-sys/mss-boot-admin` v1.6.0 发行范围内的 OIDC Provider。协议实现与真实集成验收分别记录，不能以版本号代替部署验收。[英文版](./oidc-provider.md) 包含完整协议表与测试边界。
 
 平台继续管理账号、身份和策略，不引入独立身份服务。核心认证复用密码校验、浏览器 cookie、数据库会话、账号禁用和审计。`admin/oidc` 使用已有的 JWT 库及 Go 密码学实现，独立签发 OIDC 凭证，不向 PVE 交付 Admin 自身 JWT。
 

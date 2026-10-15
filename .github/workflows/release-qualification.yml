@@ -1,0 +1,118 @@
+name: Exact Main Release Qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_commit:
+        description: Full current merged-main SHA to qualify; never a PR head
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: exact-main-release-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    if: github.ref == 'refs/heads/main' && github.actor == 'mss-boot-sys' && github.triggering_actor == 'mss-boot-sys'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      CI: 'true'
+      GOTOOLCHAIN: local
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+      EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+    steps:
+      - name: Check out the immutable requested source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.expected_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require exact current merged-main source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$EXPECTED_COMMIT"
+          python3 tools/release/verify_release_source.py \
+            --repository "$GITHUB_REPOSITORY" --commit "$EXPECTED_COMMIT"
+      - name: Set up pinned Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            go.work.sum
+            admin/go.sum
+            mss-boot/go.sum
+      - name: Set up Node 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+      - name: Prepare exact package managers and dependencies
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          npm install --global --force corepack@0.34.0
+          corepack enable pnpm
+          corepack prepare pnpm@10.34.5 --activate
+          test "$(corepack --version)" = '0.34.0'
+          test "$(corepack pnpm@10.34.5 --version)" = '10.34.5'
+          test "$(corepack pnpm@9.15.9 --version)" = '9.15.9'
+          python3 -m pip install PyYAML==6.0.3
+          make deps-release-preview web-install docs-install
+          corepack pnpm@10.34.5 --dir web/antd-v6 exec playwright install --with-deps chromium
+          docker info >/dev/null
+          git diff --exit-code
+      - name: Run the complete canonical qualification on this checkout
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          GOWORK=off go run ./cmd/mss verify --all --release-evidence --expect-commit "$EXPECTED_COMMIT"
+          make docs-build
+          git diff --exit-code
+      - name: Reconfirm source and retain sanitized successful evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 tools/release/verify_release_source.py \
+            --repository "$GITHUB_REPOSITORY" --commit "$EXPECTED_COMMIT"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          raw = Path('.mss/reports/verify.json').read_bytes()
+          report = json.loads(raw)
+          assert report['commit'] == os.environ['EXPECTED_COMMIT']
+          assert report['evidenceMode'] and report['success'] and not report['planOnly']
+          assert report['trackedCleanBefore'] and report['trackedCleanAfter']
+          planned = {check['id'] for check in report['plan']['checks']}
+          results = {check['id']: check for check in report['results']}
+          assert planned and planned <= results.keys()
+          assert all(check['exitCode'] == 0 for check in results.values())
+          summary = {key: report[key] for key in ('commit', 'evidenceMode', 'success', 'trackedCleanBefore', 'trackedCleanAfter')}
+          summary['reportSHA256'] = hashlib.sha256(raw).hexdigest()
+          summary['checks'] = [{'id': check['id'], 'exitCode': check['exitCode']} for check in report['results']]
+          summary['docsBuild'] = 'passed'
+          summary['workflowRun'] = os.environ['GITHUB_RUN_ID']
+          summary['workflowRunAttempt'] = os.environ['GITHUB_RUN_ATTEMPT']
+          destination = Path(os.environ['RUNNER_TEMP']) / 'release-evidence'
+          destination.mkdir()
+          (destination / 'qualification.json').write_text(json.dumps(summary, indent=2) + '\n')
+          PY
+      - name: Upload only the sanitized qualification summary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: exact-main-release-qualification-${{ inputs.expected_commit }}
+          path: ${{ runner.temp }}/release-evidence/qualification.json
+          if-no-files-found: error
+          retention-days: 14

@@ -1,20 +1,20 @@
 ---
-title: v1.5.0 Thin Host 移动端响应式规范
+title: v1.6.0 Thin Host 移动端响应式规范
 order: 27
 nav:
   order: 1
   title: admin
 description: Thin Host 业务页面的响应式、可访问性与内置浏览器验收矩阵
-keywords: [v1.5.0 v1.3.5 v1.3.6 thin host admin mobile responsive accessibility]
+keywords: [v1.6.0 v1.3.5 v1.3.6 thin host admin mobile responsive accessibility]
 ---
 
 ## 目标
 
 :::warning
-版本范围：**v1.5.0 是当前发行基线**（v1.4.0 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
+版本范围：**v1.6.0 是当前发行基线**（v1.4.0 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
 :::
 
-v1.5.0 Admin Web 只组合一个前端应用。桌面和移动端共享同一套业务组件、权限判断、
+v1.6.0 Admin Web 只组合一个前端应用。桌面和移动端共享同一套业务组件、权限判断、
 请求契约和
 表单校验，不维护两份页面实现。移动适配解决信息密度、触摸操作和导航可达性，不能改变
 后端权限或业务语义。

@@ -6,6 +6,12 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+No unreleased changes are recorded.
+
+## [web/antd-v6/v1.6.0] - 2026-10-15
+
+Coordinated version with the v1.6.0 Admin Distribution.
+
 - Restore `subTitle` on `PageShell`/`PageContainer` as a deprecated alias of
   `content`. v1.4.0 replaced the ProComponents-based `PageContainer` with
   `PageShell`, which silently dropped `subTitle` (and other ProComponents

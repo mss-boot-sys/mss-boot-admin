@@ -60,11 +60,11 @@ class PublishedModuleSumsTest(unittest.TestCase):
         self.assertEqual(failures, [])
         self.assertEqual(len(skipped), 1)
 
-    def test_repository_template_pins_the_published_v150_admin_sum(self):
+    def test_repository_template_pins_the_candidate_v160_admin_sum(self):
         text = (REPOSITORY_ROOT / "templates/application/go.sum").read_text(encoding="utf-8")
         pinned = SUMS.parse_pinned(text)
-        self.assertIn((ADMIN, "v1.5.0"), pinned)
-        self.assertEqual(pinned[(ADMIN, "v1.5.0")], PUBLISHED_V150)
+        self.assertIn((ADMIN, "v1.6.0"), pinned)
+        self.assertNotIn((ADMIN, "v1.5.0"), pinned)
 
     def test_parse_pinned_rejects_duplicate_foundation_entries(self):
         text = go_sum(PUBLISHED_V150) + f"{ADMIN} v1.5.0 {STALE_V150}\n"

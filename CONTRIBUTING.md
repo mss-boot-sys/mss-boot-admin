@@ -1,7 +1,7 @@
 # Contributing to mss-boot-admin
 
 感谢你参与 mss-boot-admin。当前仓库维护 Admin Distribution 的源代码、测试、文档和
-生成器。v1.5.0 是当前发行版，v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的首次发布；v1.3.8 及更早版本属于
+生成器。v1.6.0 是当前发行版，v1.4.0 是 `mss-boot-sys/mss-boot-admin` 的首次发布；v1.3.8 及更早版本属于
 原 `mss-boot-io` 组织，保留历史记录，不要求补发旧制品。
 
 本文只适用于修改 Foundation 本身的贡献者。创建业务系统请先阅读
@@ -172,7 +172,7 @@ go run ./cmd/mss verify --changed
 ```text
 feat(module): add supplier approval workflow
 fix(upgrade): preserve downstream-owned files
-docs(release): align v1.5.0 migration guidance
+docs(release): align v1.6.0 migration guidance
 ```
 
 只暂存本次变更，提交前检查差异和敏感信息：
