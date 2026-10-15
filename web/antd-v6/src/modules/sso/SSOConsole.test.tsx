@@ -16,8 +16,8 @@ vi.mock('./api', () => ({ ssoAPI: api }));
 vi.mock('@umijs/max', () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
-function view(allowed = false) {
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function view(allowed = false, retry: false | number = false) {
+  const cache = new QueryClient({ defaultOptions: { queries: { retry, retryDelay: 0 } } });
   return render(
     <QueryClientProvider client={cache}>
       <App>
@@ -57,8 +57,9 @@ describe('SSO administration', () => {
     api.clients.mockRejectedValue({
       response: { status: 503, data: { errorCode: 'SSO_PROVIDER_DISABLED' } },
     });
-    view(true);
+    view(true, 2);
     await screen.findByText('sso.notConfigured');
+    expect(api.clients).toHaveBeenCalledTimes(1);
     expect(screen.getByText('sso.notConfiguredHelp')).toBeTruthy();
     expect(screen.queryByText('sso.loadError')).toBeNull();
     expect(screen.queryByRole('button', { name: 'sso.create' })).toBeNull();
@@ -80,6 +81,12 @@ describe('SSO administration', () => {
     await screen.findByText('sso.loadError');
     expect(screen.queryByText('sso.notConfigured')).toBeNull();
     expect(screen.getByRole('button', { name: /actions.retry/ })).toBeTruthy();
+  });
+  it('preserves configured automatic retries for transient failures', async () => {
+    api.clients.mockRejectedValueOnce({ response: { status: 503 } });
+    view(true, 2);
+    await screen.findByText('sso.empty');
+    expect(api.clients).toHaveBeenCalledTimes(2);
   });
   it('retries errors and opens an editable application with explicit grants', async () => {
     api.clients.mockRejectedValueOnce({ response: { status: 503 } });

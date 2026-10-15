@@ -25,6 +25,10 @@ import {
 import { useState } from 'react';
 import { type SSOClient, type SSOClientInput, ssoAPI } from './api';
 
+function isProviderDisabled(error: unknown) {
+  return getRequestStatus(error) === 503 && getRequestErrorCode(error) === 'SSO_PROVIDER_DISABLED';
+}
+
 const initial: SSOClientInput = {
   name: '',
   enabled: true,
@@ -56,8 +60,16 @@ export default function SSOConsole({
   const [editing, setEditing] = useState<SSOClient | 'new'>();
   const [secret, setSecret] = useState<{ clientID: string; value: string }>();
   const [form] = Form.useForm<SSOClientInput>();
+  const clientsKey = ['sso', 'clients', current];
+  const retry = cache.defaultQueryOptions({ queryKey: clientsKey }).retry;
   const clients = useQuery({
-    queryKey: ['sso', 'clients', current],
+    queryKey: clientsKey,
+    retry: (failureCount, error) => {
+      if (isProviderDisabled(error)) return false;
+      if (typeof retry === 'function') return retry(failureCount, error);
+      if (typeof retry === 'boolean') return retry;
+      return failureCount < (retry ?? 3);
+    },
     queryFn: () => ssoAPI.clients(current),
   });
   const audit = useQuery({
@@ -110,10 +122,7 @@ export default function SSOConsole({
     form.setFieldsValue(client === 'new' ? initial : client);
   };
   if (getRequestStatus(clients.error) === 403) return <PageForbidden />;
-  if (
-    getRequestStatus(clients.error) === 503 &&
-    getRequestErrorCode(clients.error) === 'SSO_PROVIDER_DISABLED'
-  )
+  if (isProviderDisabled(clients.error))
     return (
       <Alert type="info" showIcon title={t('notConfigured')} description={t('notConfiguredHelp')} />
     );
