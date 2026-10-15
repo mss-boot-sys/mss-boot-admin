@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
+	"strings"
 	"sync/atomic"
 
 	"github.com/spf13/cobra"
@@ -136,6 +138,7 @@ func (application *Application) ExecuteArgsContext(ctx context.Context, args []s
 	if !application.executed.CompareAndSwap(false, true) {
 		return ErrApplicationExecuted
 	}
+	logSkippedModules(slog.Default(), application.registry)
 	command := internalcmd.New(application.registry)
 	command.SetArgs(append([]string(nil), args...))
 	return command.ExecuteContext(ctx)
@@ -148,4 +151,18 @@ func ExecuteContext(ctx context.Context, applicationOptions ...Option) error {
 		return err
 	}
 	return application.ExecuteContext(ctx)
+}
+
+// logSkippedModules writes one info line naming the imported modules that were
+// skipped because they reported themselves disabled. It logs nothing when no
+// module was skipped.
+func logSkippedModules(logger *slog.Logger, registry *business.Registry) {
+	if logger == nil || registry == nil {
+		return
+	}
+	skipped := registry.SkippedModules()
+	if len(skipped) == 0 {
+		return
+	}
+	logger.Info("skipped disabled business modules", "modules", strings.Join(skipped, ","))
 }
