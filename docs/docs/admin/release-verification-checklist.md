@@ -125,3 +125,10 @@ runner 耗时，不把减少测试调用次数等同于固定百分比提速。
 的独立 `GOWORK=off` 门禁。Root 已复用公开 frontend 制品并并行六平台构建；不加入跨
 commit、跨运行的资格结果缓存。Demo 已有独立工作流、状态与按版本手动重试入口，
 其失败不需要重新创建不可变的核心发布标签。
+
+Demo 应按实际运行依赖就绪，不等待 Docs 发布或无关收尾：已验证的 Framework、Admin、
+frontend 公共版本，以及不可变后端镜像 digest、前端归档与校验和必须齐备。当前实现的
+后端来自 Root 标签触发的 `container.yml`，自动入口仍是 Root Release 完成；resolver
+还要求完整 Root 发行资产。Demo 本身不消费 Root 的工具安装器或跨平台 ZIP，但本轮
+不删除该既有门禁。后续若提前 Demo，应单独审查 resolver/触发依赖并验证实际镜像与
+前端来源，不能把当前 Root/container 就绪误当作可跳过，也不能取消正在进行的自动部署。
