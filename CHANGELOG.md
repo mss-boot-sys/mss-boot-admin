@@ -8,6 +8,16 @@ tag namespaces.
 
 ### Added
 
+- `business.OptionalModule`: an imported module whose `Enabled()` reports
+  `false` is skipped (no `Register` call, no migrations), instead of crashing
+  startup migration with `module did not provide a registration`; listed by
+  `Registry.SkippedModules()`. Enabled modules that register nothing still
+  fail. Found by 小林 during map dev integration.
+- `business.AlwaysReady`: a module without migrations (no tables of its own)
+  may omit `Readiness` and defaults to always ready.
+- Documented in `admin/README.md` that a POST with an empty body returns
+  `400`; clients must send `{}` (behaviour unchanged).
+
 - Optional business API surfaces (`business.Registration.Surfaces`) served at
   `/<name>/api` behind a core-enforced chain: per-surface CORS, module
   authenticator (read-only `SurfaceRequest`, reports `bearer`/`cookie`

@@ -124,6 +124,37 @@ type Module interface {
 	Register(*Registry) error
 }
 
+// OptionalModule is implemented by a module that is compiled in (imported)
+// but may be switched off by configuration. When Enabled reports false the
+// module is skipped: Register is not called, and it contributes no descriptor,
+// migration, readiness check, route, surface or command, so a disabled module
+// leaves startup migration completely unaffected. An enabled module, or one
+// that does not implement OptionalModule, must still call Registry.Register.
+type OptionalModule interface {
+	Module
+	Enabled() bool
+}
+
+// moduleDisabled reports whether an OptionalModule is switched off. A panic
+// in Enabled is recovered into an error.
+func moduleDisabled(name string, module Module) (disabled bool, err error) {
+	optional, ok := module.(OptionalModule)
+	if !ok {
+		return false, nil
+	}
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			disabled = false
+			err = fmt.Errorf("business module %s Enabled panicked: %v", name, recovered)
+		}
+	}()
+	return !optional.Enabled(), nil
+}
+
+// AlwaysReady is the default ReadinessCheck for a module that owns no
+// migrations (no tables of its own). It always reports ready.
+func AlwaysReady(context.Context, *gorm.DB) error { return nil }
+
 type entry struct {
 	name          string
 	descriptor    Descriptor
@@ -263,6 +294,7 @@ type Registry struct {
 	presentationDefs   []presentation.CapabilityDefinition
 	presentations      *presentation.Registry
 	modules            map[string]struct{}
+	skipped            []string
 	active             *registrationTransaction
 	transaction        *registrationTransaction
 	frozen             bool
@@ -375,6 +407,12 @@ func (r *Registry) Add(module Module) error {
 	if name == "" {
 		return errors.New("business module name is required")
 	}
+	// Enabled is user code: read it exactly once, before any registry lock is
+	// taken, so a panic or a read back into the registry cannot deadlock it.
+	disabled, err := moduleDisabled(name, module)
+	if err != nil {
+		return err
+	}
 	if err := r.tryLockRegistration(); err != nil {
 		return err
 	}
@@ -389,6 +427,14 @@ func (r *Registry) Add(module Module) error {
 	if _, exists := r.modules[name]; exists {
 		r.mu.Unlock()
 		return fmt.Errorf("%w: %s", ErrDuplicateModule, name)
+	}
+	if disabled {
+		// Imported but disabled: reserve the identity so duplicates are still
+		// rejected, but register nothing and skip its migrations entirely.
+		r.modules[name] = struct{}{}
+		r.skipped = append(r.skipped, name)
+		r.mu.Unlock()
+		return nil
 	}
 	r.active = transaction
 	r.mu.Unlock()
@@ -506,10 +552,15 @@ func (r *Registry) Register(registration Registration) error {
 		))
 	}
 	if registration.Readiness == nil {
-		return transaction.failRegistration(fmt.Errorf(
-			"business module %s readiness check is required",
-			transaction.module,
-		))
+		if registration.Migrations != nil {
+			return transaction.failRegistration(fmt.Errorf(
+				"business module %s readiness check is required",
+				transaction.module,
+			))
+		}
+		// A module without migrations owns no tables, so there is nothing
+		// to prove ready before mounting; default to always ready.
+		registration.Readiness = AlwaysReady
 	}
 	if registration.Routes == nil {
 		return transaction.failRegistration(fmt.Errorf(
@@ -652,6 +703,17 @@ func (r *Registry) PresentationRegistry() (*presentation.Registry, error) {
 		return nil, errors.New("application presentation registry is not initialized")
 	}
 	return r.presentations, nil
+}
+
+// SkippedModules lists, in composition order, the imported modules that were
+// skipped because they reported themselves disabled (see OptionalModule).
+func (r *Registry) SkippedModules() []string {
+	if r == nil || r.transactionView() {
+		return nil
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return append([]string(nil), r.skipped...)
 }
 
 // MigrationRunner returns an isolated executable clone after composition.
