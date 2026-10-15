@@ -29,6 +29,9 @@ for (const navTheme of ['light', 'realDark'] as const) {
   test(`login uses semantic button states and responsive background: ${navTheme}`, async ({
     page,
   }) => {
+    // A cold Utoopack server first serves its Bundling screen. Reserve time for
+    // that initial compilation without relaxing any button-state assertions.
+    test.setTimeout(60_000);
     await page.addInitScript(() => localStorage.setItem('umi_locale', 'en-US'));
     let finishLogin: (() => void) | undefined;
     await page.route('**/admin/api/**', async (route) => {
@@ -52,7 +55,7 @@ for (const navTheme of ['light', 'realDark'] as const) {
     });
     await page.goto('/user/login');
     const submit = page.locator('.mss-auth-submit');
-    await expect(submit).toBeVisible();
+    await expect(submit).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('html')).toHaveAttribute('data-mss-theme', navTheme);
     const colors = () =>
       submit.evaluate((button) => {
