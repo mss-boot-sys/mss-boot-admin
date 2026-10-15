@@ -93,12 +93,18 @@ test('@sso unknown unavailable service remains retryable and consent is explicit
 }) => {
   await setLocale(page, 'en-US');
   await login(page);
-  await page.route('**/admin/api/sso/clients**', (route) =>
-    route.fulfill({ status: 404, json: {} }),
-  );
+  let requests = 0;
+  await page.route('**/admin/api/sso/clients**', (route) => {
+    requests += 1;
+    return route.fulfill({ status: 404, json: {} });
+  });
   await page.goto('/sso');
   await expect(page.getByText('Unable to load SSO data. Please try again.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+  const retry = page.getByRole('button', { name: /(?:^|\s)Retry$/ });
+  await expect(retry).toBeVisible();
+  const requestsBeforeRetry = requests;
+  await retry.click();
+  await expect.poll(() => requests).toBeGreaterThan(requestsBeforeRetry);
   await expect(page.getByText('SSO is not configured', { exact: true })).toHaveCount(0);
   await page.route('**/admin/api/oidc/interaction**', async (route) => {
     if (route.request().method() === 'GET') {
@@ -146,7 +152,7 @@ test('@sso explicitly disabled provider explains configuration without retry con
       'The SSO provider is not enabled in this environment. Contact your administrator to configure it.',
     ),
   ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /(?:^|\s)Retry$/ })).toHaveCount(0);
   await expect(page.getByText('Unable to load SSO data. Please try again.')).toHaveCount(0);
   expect(requests).toBe(1);
   await expectNoDocumentOverflow(page);
