@@ -24,6 +24,8 @@ routes and behaviour are unchanged.
   startup migration with `module did not provide a registration`; listed by
   `Registry.SkippedModules()`. Enabled modules that register nothing still
   fail. Fixes a startup crash found by 小林 during map dev integration (#43).
+  Admin logs each skipped disabled module at startup, as suggested by 小林
+  (#44).
 - `business.AlwaysReady`: a module without migrations (no tables of its own)
   may omit `Readiness` and defaults to always ready.
 - Documented in `admin/README.md` that a POST with an empty body returns
