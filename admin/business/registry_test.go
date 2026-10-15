@@ -789,12 +789,28 @@ func TestMountAlwaysRedactsRuntimeAudit(t *testing.T) {
 		if runtimeAudit == nil {
 			t.Fatal("modules must always receive a sink")
 		}
-		if err := runtimeAudit.Record(context.Background(), audit.Event{Action: "a", Result: "ok",
+		if err := runtimeAudit.Record(context.Background(), audit.Event{Action: "a", Result: "ok", Surface: "portal",
 			Detail: map[string]string{"Cookie": "sid=secret-cookie"}}); err != nil {
 			t.Fatal(err)
 		}
 	}
 	if got.Detail["Cookie"] != audit.Redacted {
 		t.Fatalf("module-provided sink received unredacted detail: %v", got.Detail)
+	}
+	if got.Surface != "" {
+		t.Fatalf("Runtime.Audit must not let a module set Surface, got %q", got.Surface)
+	}
+}
+
+func TestRuntimeAuditIgnoresCancellation(t *testing.T) {
+	var ctxErr error = context.Canceled
+	sink := moduleAuditSink(audit.SinkFunc(func(ctx context.Context, _ audit.Event) error { ctxErr = ctx.Err(); return nil }))
+	cancelled, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := sink.Record(cancelled, audit.Event{Action: "a", Result: "ok"}); err != nil {
+		t.Fatal(err)
+	}
+	if ctxErr != nil {
+		t.Fatalf("audit write must not observe client cancellation: %v", ctxErr)
 	}
 }

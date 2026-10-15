@@ -19,6 +19,16 @@ routes and behaviour are unchanged.
 
 ### Added
 
+- `business.OptionalModule`: an imported module whose `Enabled()` reports
+  `false` is skipped (no `Register` call, no migrations), instead of crashing
+  startup migration with `module did not provide a registration`; listed by
+  `Registry.SkippedModules()`. Enabled modules that register nothing still
+  fail. Fixes a startup crash found by 小林 during map dev integration (#43).
+- `business.AlwaysReady`: a module without migrations (no tables of its own)
+  may omit `Readiness` and defaults to always ready.
+- Documented in `admin/README.md` that a POST with an empty body returns
+  `400`; clients must send `{}` (behaviour unchanged).
+
 - Optional business API surfaces (`business.Registration.Surfaces`) served at
   `/<name>/api` behind a core-enforced chain: per-surface CORS, module
   authenticator (read-only `SurfaceRequest`, reports `bearer`/`cookie`
@@ -55,6 +65,19 @@ routes and behaviour are unchanged.
 
 
 ### Fixed
+
+- Hardening follow-up from the #40 review (#42): `X-Request-Id` is accepted only
+  up to 128 characters of `[A-Za-z0-9._:-]`, otherwise a `srv-<hex>` id is
+  generated; audit records are written with `context.WithoutCancel`;
+  `Runtime.Audit` clears `Surface`; audit `Detail` is size-capped.
+- Module commands (#42): an unfrozen registry or a command validation error now
+  fails every host subcommand, including `server` and `migrate`.
+- Surfaces and extensions (#42): `user`, `users` and `workplace` are reserved in
+  the backend as in Admin Web; `/<surface>/apiary` is no longer flagged as an
+  API overlap; `.` and `..` path segments are rejected. Documented that module
+  commands run unsandboxed, the same-origin trust boundary and dev
+  `AllowOrigins` for extensions, and that `SetSurfaceCSRFCookie` takes the
+  escaped session value (quoted cookie values are rejected).
 
 - `mss new app` v1.5.0 wrote `admin v1.5.0 h1:lgMtwmHW…` into the generated
   `go.sum`, but the published module is `h1:4a+E4pf3…`, so new projects failed

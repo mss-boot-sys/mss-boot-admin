@@ -149,6 +149,15 @@ var ErrSurfaceCSRFDisabled = errors.New("surface did not enable CSRF tokens")
 // undecoded value the module just wrote to its session cookie) and sets the readable
 // __Host- cookie. Call it from the sign-in or session-refresh handler.
 // It returns the token so the module may also return it in the body.
+//
+// session must be byte-for-byte what the browser will send back. gin's
+// c.SetCookie percent-escapes the value (url.QueryEscape), so when the session
+// cookie is written with c.SetCookie, pass url.QueryEscape(value), not the
+// plain value. http.SetCookie writes the value unescaped; pass it as is.
+// Session values that are quoted ("..."), empty, or contain characters outside
+// RFC 6265 cookie-octets (space, comma, semicolon, backslash, double quote,
+// control or non-ASCII bytes) are always rejected by the CSRF check, so a token
+// minted for them never validates.
 func SetSurfaceCSRFCookie(c *gin.Context, session string, expiresAt time.Time) (string, error) {
 	value, ok := c.Get(surfaceCSRFKey)
 	if !ok {
