@@ -42,6 +42,22 @@ Do not copy Admin startup, security middleware, migrations, or core routes into
 a business repository. A business module may extend the protected group only
 through `admin/business`; UI visibility never replaces backend authorization.
 
+Optional and table-less modules (v1.6.0):
+
+- A module that is imported but switched off implements
+  `business.OptionalModule` and returns `false` from `Enabled()`. It is
+  skipped: `Register` is not called and it contributes no migration, route,
+  surface or command, so startup migration is unaffected. An enabled module
+  that registers nothing still fails with `module did not provide a
+  registration`.
+- A module without `Migrations` owns no tables and may leave `Readiness` nil;
+  it defaults to `business.AlwaysReady`. A module with migrations must still
+  provide its own readiness check.
+
+Request bodies: generated business JSON endpoints decode the body strictly
+(unknown fields and trailing values are rejected). A POST with an empty body
+is rejected with `400`; a client that has nothing to send must send `{}`.
+
 The v1.5.0 tool generates this composition as part of a version-bound Thin Host.
 Use the public Root tool and package onboarding guide instead of copying this
 repository's Admin source into a business application.
