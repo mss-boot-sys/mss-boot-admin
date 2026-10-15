@@ -163,7 +163,7 @@ model for humans; it is not an executable instruction source. Start with the
 [quick start](./docs/docs/getting-started/index.md),
 [package boundary](./docs/docs/getting-started/packages.md),
 [tooling contract](./docs/docs/getting-started/tooling.md), and
-[v1.6.0 release record](./docs/docs/releases/v1-5-0.md).
+[v1.6.0 release record](./docs/docs/releases/v1-6-0.md).
 
 Foundation contributors should use
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the nearest `AGENTS.md` for

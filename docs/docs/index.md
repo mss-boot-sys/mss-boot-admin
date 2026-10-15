@@ -7,7 +7,7 @@ hero:
     - text: 快速开始
       link: /getting-started
     - text: v1.6.0 发布与迁移
-      link: /releases/v1-5-0
+      link: /releases/v1-6-0
     - text: GitHub Packages 配置
       link: /getting-started/packages
 features:
@@ -30,7 +30,7 @@ features:
 
 安装前阅读[快速开始](/getting-started)与[包认证指南](/getting-started/packages)。
 升级涉及命名空间、Go 1.27.2、Casbin v3 和 GitHub Packages 认证，完整步骤见
-[v1.6.0 发布说明](/releases/v1-5-0)。发行是否完成以实际 Release 与包资产为准；
+[v1.6.0 发布说明](/releases/v1-6-0)。发行是否完成以实际 Release 与包资产为准；
 网站保留原域名，以 `/release.json` 标识部署版本和源码提交。
 
 ## 人类文档与 Agent 合同

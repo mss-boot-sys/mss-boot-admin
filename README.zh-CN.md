@@ -143,7 +143,7 @@ manifest 的仓库必须在新目录生成干净的 v1.6.0 基线，再迁入业
 可执行指令源。采用者请从[快速开始](./docs/docs/getting-started/index.md)、
 [包边界](./docs/docs/getting-started/packages.md)、
 [工具契约](./docs/docs/getting-started/tooling.md)与
-[v1.6.0 发布记录](./docs/docs/releases/v1-5-0.md)开始。
+[v1.6.0 发布记录](./docs/docs/releases/v1-6-0.md)开始。
 
 Foundation 贡献者应按 [`CONTRIBUTING.md`](./CONTRIBUTING.md) 与最近的
 `AGENTS.md` 使用源码检出命令和验证流程。
