@@ -23,6 +23,8 @@ Run the complete local gate once on the frozen commit:
 go run ./cmd/mss verify --all --release-evidence --expect-commit "$SHA"
 ```
 
+If the operator workspace cannot run Docker, dispatch `release-qualification.yml` from `main` with `expected_commit` equal to the frozen full SHA. This runs the same complete command in one isolated runner checkout and retains a sanitized summary plus the original report digest. It grants no publication authority by itself; source, governance, acceptance and ordered publication gates still apply. Do not stitch partial hosted runs into a full pass.
+
 Inspect the actual report, retain its digest, and complete applicable external-consumer, migration/upgrade, permission, Docker delivery and browser verification. Use gvm for Go, nvm for Node, and the in-app browser for UI evidence. Run Docs build and inspect home plus nested guide/release pages at desktop and narrow widths. A failed gate requires a follow-up PR, merge, a new freeze, and affected verification. Never forge evidence or treat branch validation as publication authority.
 
 There is no hosted artifact-preview prerequisite and no stable-promotion PR. Workflows retain lightweight operator/source/version checks, artifact build and integrity checks, and publication. Admin also resolves/tests the exact public Framework with `GOWORK=off` after Framework publication. Broad quality suites run locally.

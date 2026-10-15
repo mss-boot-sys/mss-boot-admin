@@ -86,3 +86,18 @@ npm 包只发布 GitHub Packages；Docs 源码与站点必须同时对齐。源�
 - [v1.3.6 不可变部分发布记录](/releases/v1-3-6)
 - [v1.6.0 发行版说明](/releases/v1-6-0)
 - [v1.6.0 快速开始](/getting-started)
+
+## 发布源码认证
+
+`tools/release/verify_release_source.py` 通过 `gh api graphql` 验证精确提交来自已合并的 PR。
+本地可使用已经完成 `gh auth login` 的账号；无需导出或复制登录令牌。CI 仍可使用
+注入的 `GH_TOKEN` / `GITHUB_TOKEN`。认证失败、未合并或提交不匹配都必须停止发布。
+
+## 完整资格验证的执行环境
+
+本机无法运行 Docker 时，发布操作者可从 `main` 手动触发 `release-qualification.yml`，
+将 `expected_commit` 设为当前已合并 `main` 的完整 SHA。该流程在一个隔离 runner 中执行
+原有完整 `mss verify --all --release-evidence --expect-commit` 命令（包括真实 Docker 和浏览器检查）
+及 Docs 构建，前后都验证源码与干净工作树。只读 GitHub 权限仅用于源码证明；没有部署、
+包发布或标签写入权限。仅上传脱敏检查结果及原报告 SHA-256，不上传原始日志、环境变量或凭据。
+任何失败均阻止资格通过；多个局部 CI 成功不能拼成完整资格。发布前仍需逐项通过验收与治理检查。

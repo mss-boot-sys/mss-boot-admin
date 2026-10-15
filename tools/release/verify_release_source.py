@@ -133,11 +133,12 @@ def query_pr_merge_evidence(
     repository: str, commit: str, branch: str
 ) -> dict[str, Any]:
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise SourceError("GH_TOKEN or GITHUB_TOKEN is required for pull-request proof")
     owner, name = repository.split("/", 1)
     command_env = os.environ.copy()
-    command_env["GH_TOKEN"] = token
+    # Let gh use its authenticated credential store when no CI token is injected.
+    # Authentication and the exact GraphQL merge proof remain mandatory.
+    if token:
+        command_env["GH_TOKEN"] = token
     result = run_command(
         [
             "gh",

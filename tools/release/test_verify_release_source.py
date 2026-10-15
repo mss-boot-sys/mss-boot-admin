@@ -1,9 +1,12 @@
+import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 TOOLS_DIR = Path(__file__).resolve().parent
@@ -61,6 +64,36 @@ def pr_payload(
             }
         }
     }
+
+
+
+class AuthenticatedCLISourceProofTest(unittest.TestCase):
+    def test_existing_gh_login_runs_exact_remote_source_proof_without_token_export(self):
+        commit = "a" * 40
+        response = subprocess.CompletedProcess([], 0, json.dumps(pr_payload(commit)), "")
+        with patch.dict(os.environ, {"GH_CONFIG_DIR": "/task/gh"}, clear=True):
+            with patch.object(SOURCE, "run_command", return_value=response) as command:
+                result = SOURCE.query_pr_merge_evidence(REPOSITORY, commit, "main")
+        self.assertTrue(result["merged"])
+        args, kwargs = command.call_args
+        self.assertEqual(args[0][:3], ["gh", "api", "graphql"])
+        self.assertIn(f"oid={commit}", args[0])
+        self.assertNotIn("GH_TOKEN", kwargs["env"])
+        self.assertEqual(kwargs["env"]["GH_CONFIG_DIR"], "/task/gh")
+
+    def test_existing_gh_login_does_not_accept_unmerged_source(self):
+        commit = "a" * 40
+        response = subprocess.CompletedProcess([], 0, json.dumps(pr_payload(commit, merged=False)), "")
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(SOURCE, "run_command", return_value=response):
+                with self.assertRaises(SOURCE.SourceError):
+                    SOURCE.query_pr_merge_evidence(REPOSITORY, commit, "main")
+
+    def test_unauthenticated_gh_failure_remains_fatal(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(SOURCE, "run_command", side_effect=SOURCE.SourceError("authentication required")):
+                with self.assertRaisesRegex(SOURCE.SourceError, "authentication required"):
+                    SOURCE.query_pr_merge_evidence(REPOSITORY, "a" * 40, "main")
 
 
 class PullRequestEvidenceTest(unittest.TestCase):
