@@ -85,8 +85,8 @@ describe('SSO administration', () => {
   it('preserves configured automatic retries for transient failures', async () => {
     api.clients.mockRejectedValueOnce({ response: { status: 503 } });
     view(true, 2);
+    await waitFor(() => expect(api.clients).toHaveBeenCalledTimes(2));
     await screen.findByText('sso.empty');
-    expect(api.clients).toHaveBeenCalledTimes(2);
   });
   it('retries errors and opens an editable application with explicit grants', async () => {
     api.clients.mockRejectedValueOnce({ response: { status: 503 } });
