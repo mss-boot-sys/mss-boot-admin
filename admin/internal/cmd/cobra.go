@@ -46,7 +46,12 @@ func New(registry *business.Registry) *cobra.Command {
 	root.AddCommand(migrate.NewCommand(registry))
 	if registry != nil {
 		moduleCommands, err := registry.Commands()
-		if err != nil && !errors.Is(err, business.ErrRegistryNotFrozen) {
+		if err != nil {
+			// Fail loudly: an unfrozen registry or an invalid module command
+			// must block every subcommand, including server and migrate,
+			// instead of silently dropping module commands.
+			err = fmt.Errorf("business module commands: %w", err)
+			root.PersistentPreRunE = func(*cobra.Command, []string) error { return err }
 			root.RunE = func(*cobra.Command, []string) error { return err }
 			return root
 		}

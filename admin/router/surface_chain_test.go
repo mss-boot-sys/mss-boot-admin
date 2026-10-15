@@ -265,17 +265,20 @@ func TestModuleCannotBypassSurfaceChain(t *testing.T) {
 func TestSurfaceRegistrationRejectsUnsafeDeclarations(t *testing.T) {
 	base := func() business.SurfaceRegistration { var hits []string; return portalSurface(&hits) }
 	cases := map[string]func(*business.SurfaceRegistration){
-		"reserved admin":   func(s *business.SurfaceRegistration) { s.Name = "admin" },
-		"reserved api":     func(s *business.SurfaceRegistration) { s.Name = "api" },
-		"invalid name":     func(s *business.SurfaceRegistration) { s.Name = "Portal/x" },
-		"no authenticator": func(s *business.SurfaceRegistration) { s.Authenticator = nil },
-		"no issuer":        func(s *business.SurfaceRegistration) { s.Issuer = " " },
-		"wildcard origin":  func(s *business.SurfaceRegistration) { s.CORS.AllowOrigins = []string{"*"} },
-		"unknown category": func(s *business.SurfaceRegistration) { s.Routes[0].Category = "internal" },
-		"empty category":   func(s *business.SurfaceRegistration) { s.Routes[0].Category = "" },
-		"traversal path":   func(s *business.SurfaceRegistration) { s.Routes[0].Path = "/../../admin/api/users" },
-		"nil middleware":   func(s *business.SurfaceRegistration) { s.Middleware = append(s.Middleware, nil) },
-		"no routes":        func(s *business.SurfaceRegistration) { s.Routes = nil },
+		"reserved admin":     func(s *business.SurfaceRegistration) { s.Name = "admin" },
+		"reserved api":       func(s *business.SurfaceRegistration) { s.Name = "api" },
+		"reserved user":      func(s *business.SurfaceRegistration) { s.Name = "user" },
+		"reserved users":     func(s *business.SurfaceRegistration) { s.Name = "users" },
+		"reserved workplace": func(s *business.SurfaceRegistration) { s.Name = "workplace" },
+		"invalid name":       func(s *business.SurfaceRegistration) { s.Name = "Portal/x" },
+		"no authenticator":   func(s *business.SurfaceRegistration) { s.Authenticator = nil },
+		"no issuer":          func(s *business.SurfaceRegistration) { s.Issuer = " " },
+		"wildcard origin":    func(s *business.SurfaceRegistration) { s.CORS.AllowOrigins = []string{"*"} },
+		"unknown category":   func(s *business.SurfaceRegistration) { s.Routes[0].Category = "internal" },
+		"empty category":     func(s *business.SurfaceRegistration) { s.Routes[0].Category = "" },
+		"traversal path":     func(s *business.SurfaceRegistration) { s.Routes[0].Path = "/../../admin/api/users" },
+		"nil middleware":     func(s *business.SurfaceRegistration) { s.Middleware = append(s.Middleware, nil) },
+		"no routes":          func(s *business.SurfaceRegistration) { s.Routes = nil },
 	}
 	for name, mutate := range cases {
 		surface := base()
@@ -631,6 +634,27 @@ func TestSurfaceCSRFRawSessionCookieHandling(t *testing.T) {
 			require.Equal(t, http.StatusForbidden, call(path, full, token, path == "/portal/api/orders"), "%s %s", name, path)
 		}
 	}
+	// A fully quoted session value is rejected even when a token was minted for it.
+	quoted := `"abc"`
+	quotedToken := mint(quoted)
+	hits = 0
+	require.Equal(t, http.StatusForbidden, call("/portal/api/orders", "__Host-portal-session="+quoted+"; "+csrfName+"="+quotedToken, quotedToken, true))
+
+	// CSRF token cookie that is empty or carries illegal characters.
+	session := "__Host-portal-session=" + raw
+	for name, tc := range map[string]struct{ cookie, header string }{
+		"empty token cookie":        {session + "; " + csrfName + "=", token},
+		"empty token cookie+header": {session + "; " + csrfName + "=", ""},
+		"quoted token cookie":       {session + "; " + csrfName + `="` + token + `"`, token},
+		"token with space":          {session + "; " + csrfName + "=" + token + " x", token + " x"},
+		"token with illegal chars":  {session + "; " + csrfName + "=" + token + "\\", token + "\\"},
+		"token with percent":        {session + "; " + csrfName + "=" + strings.Replace(token, ".", "%2E", 1), strings.Replace(token, ".", "%2E", 1)},
+		"missing token cookie":      {session, token},
+	} {
+		for _, path := range []string{"/portal/api/public", "/portal/api/orders"} {
+			require.Equal(t, http.StatusForbidden, call(path, tc.cookie, tc.header, path == "/portal/api/orders"), "%s %s", name, path)
+		}
+	}
 	require.Zero(t, hits, "rejected requests must not reach module middleware or handlers")
 }
 
@@ -723,5 +747,47 @@ func TestSurfaceCSRFCustomHeaderName(t *testing.T) {
 		s.CSRF = &csrf
 		_, err := business.Compose(migration.New(), surfaceTestModule{name: "shop", id: "202610140001", surfaces: []business.SurfaceRegistration{s}})
 		require.Error(t, err, bad)
+	}
+}
+
+func TestSurfaceAuditSanitizesRequestIDAndSurvivesCancellation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var recorded []audit.Event
+	var ctxErrs []error
+	sink := audit.SinkFunc(func(ctx context.Context, e audit.Event) error {
+		recorded = append(recorded, e)
+		ctxErrs = append(ctxErrs, ctx.Err())
+		return nil
+	})
+	surface := business.SurfaceRegistration{
+		Name: "portal", Issuer: surfaceTestIssuer, Authenticator: headerAuthenticator,
+		Routes: []business.SurfaceRoute{{Method: http.MethodGet, Path: "/me", Category: business.SurfaceRouteAuthenticated,
+			Handlers: []gin.HandlerFunc{func(c *gin.Context) {
+				ctx, cancel := context.WithCancel(c.Request.Context())
+				cancel() // simulate the client going away before the write
+				c.Request = c.Request.WithContext(ctx)
+				if err := business.RecordSurfaceEvent(c, audit.Event{Action: "profile.view", Result: "success"}); err != nil {
+					c.Status(http.StatusInternalServerError)
+					return
+				}
+				c.Status(http.StatusOK)
+			}}}},
+	}
+	registry := composeSurfaceRegistry(t, surface)
+	engine := gin.New()
+	_, err := registry.MountSurfaces(engine, sink)
+	require.NoError(t, err)
+	for _, id := range []string{"ok-id_1.2:3", "bad id\twith<chars>", strings.Repeat("a", audit.MaxRequestIDBytes+1), ""} {
+		res := serveSurface(engine, http.MethodGet, "/portal/api/me", map[string]string{"X-Test-Principal": "portal", "X-Request-Id": id})
+		require.Equal(t, http.StatusOK, res.Code)
+	}
+	require.Len(t, recorded, 4)
+	require.Equal(t, "ok-id_1.2:3", recorded[0].RequestID)
+	for i, e := range recorded {
+		require.True(t, audit.ValidRequestID(e.RequestID), "event %d request id %q", i, e.RequestID)
+		require.NoError(t, ctxErrs[i])
+	}
+	for _, e := range recorded[1:] {
+		require.True(t, strings.HasPrefix(e.RequestID, "srv-"), e.RequestID)
 	}
 }

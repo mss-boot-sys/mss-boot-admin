@@ -35,6 +35,19 @@ describe('defineBusinessAdmin extensions (v1.6.0)', () => {
     expect(paths).toContain('/workplace');
   });
 
+  it('does not treat sibling paths that merely start with api as API overlap', () => {
+    const configuration = defineBusinessAdmin({
+      extensions: [
+        { surface: 'portal', routes: [{ path: '/portal/apiary' }, { path: '/portal/api-docs' }] },
+      ],
+    });
+    const mount = configuration.routes.find((route) => route.path === '/portal');
+    expect(mount?.routes?.map((route) => route.path)).toEqual([
+      '/portal/apiary',
+      '/portal/api-docs',
+    ]);
+  });
+
   it('accepts an extension-owned layout module', () => {
     const configuration = defineBusinessAdmin({
       extensions: [{ ...portal, layout: '@/extensions/portal/Layout' }],
@@ -54,6 +67,12 @@ describe('defineBusinessAdmin extensions (v1.6.0)', () => {
       [[{ surface: 'portal', routes: [{ path: '/users' }] }], 'must stay below /portal'],
       [[{ surface: 'portal', routes: [{ path: '/portalx' }] }], 'must stay below /portal'],
       [[{ surface: 'portal', routes: [{ path: '/portal/api/x' }] }], 'overlaps its API'],
+      [[{ surface: 'portal', routes: [{ path: '/portal/api' }] }], 'overlaps its API'],
+      [[{ surface: 'portal', routes: [{ path: '/portal/../admin' }] }], 'segments'],
+      [[{ surface: 'portal', routes: [{ path: '/portal/a/../../users' }] }], 'segments'],
+      [[{ surface: 'portal', routes: [{ path: '/portal/./x' }] }], 'segments'],
+      [[{ ...portal, surface: 'users' }], 'reserved'],
+      [[{ ...portal, surface: 'workplace' }], 'reserved'],
       [[{ surface: 'portal', routes: [] }], 'non-empty array'],
       [[portal, portal], 'duplicate'],
       [[{ ...portal, request: './my-request' }], 'unsupported option: request'],

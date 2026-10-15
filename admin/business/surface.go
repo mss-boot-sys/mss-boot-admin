@@ -219,6 +219,8 @@ var reservedSurfaceNames = map[string]struct{}{
 	"admin": {}, "api": {}, "oidc": {}, ".well-known": {}, "swagger": {},
 	"static": {}, "assets": {}, "public": {}, "docs": {}, "ws": {},
 	"healthz": {}, "readyz": {}, "metrics": {}, "favicon.ico": {},
+	// Admin SPA pages; kept in sync with web/antd-v6/package/business.cjs.
+	"user": {}, "users": {}, "workplace": {},
 }
 
 var allowedSurfaceMethods = map[string]struct{}{
@@ -495,12 +497,11 @@ func RecordSurfaceEvent(c *gin.Context, e audit.Event) error {
 	e.Surface = scope.surface
 	e.IP = c.ClientIP()
 	e.UserAgent = c.Request.UserAgent()
-	if requestID := c.GetHeader("X-Request-Id"); requestID != "" {
-		e.RequestID = requestID
-	}
+	e.RequestID = audit.RequestID(c.GetHeader("X-Request-Id"))
 	if principal, ok := SurfacePrincipalFrom(c); ok {
 		e.ActorKind = scope.surface
 		e.ActorID = principal.Subject
 	}
-	return scope.sink.Record(c.Request.Context(), e)
+	// The record must survive a client disconnect, so drop cancellation.
+	return scope.sink.Record(context.WithoutCancel(c.Request.Context()), e)
 }

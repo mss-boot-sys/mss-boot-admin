@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 const sampleJWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.c2lnbmF0dXJlLXZhbHVl"
@@ -95,4 +96,44 @@ func values(m map[string]string) []string {
 		out = append(out, v)
 	}
 	return out
+}
+
+func TestRedactCapsDetailSize(t *testing.T) {
+	detail := map[string]string{}
+	for i := 0; i < MaxDetailEntries+10; i++ {
+		detail[strings.Repeat("k", 3)+string(rune('a'+i%26))+strings.Repeat("x", i)] = "v"
+	}
+	detail["big"] = strings.Repeat("é", MaxDetailValueBytes)
+	detail[strings.Repeat("K", 200)] = "v"
+	got := Redact(Event{Action: "a", Result: "ok", Detail: detail})
+	if len(got.Detail) > MaxDetailEntries {
+		t.Fatalf("detail entries = %d, want <= %d", len(got.Detail), MaxDetailEntries)
+	}
+	if got.Detail[DetailTruncatedKey] != "true" {
+		t.Fatal("truncation marker missing")
+	}
+	for k, v := range got.Detail {
+		if len(k) > MaxDetailKeyBytes || len(v) > MaxDetailValueBytes || !utf8.ValidString(v) {
+			t.Fatalf("oversized or invalid entry %q=%d bytes", k, len(v))
+		}
+	}
+	again := Redact(got)
+	if len(again.Detail) != len(got.Detail) {
+		t.Fatalf("Redact must be idempotent: %d != %d", len(again.Detail), len(got.Detail))
+	}
+}
+
+func TestRequestIDValidation(t *testing.T) {
+	if got := RequestID("abc-123_X.y:z"); got != "abc-123_X.y:z" {
+		t.Fatalf("valid id replaced: %q", got)
+	}
+	for _, bad := range []string{"", "a b", "x\r\ny", "<script>", strings.Repeat("a", MaxRequestIDBytes+1)} {
+		got := RequestID(bad)
+		if got == bad || !ValidRequestID(got) || !strings.HasPrefix(got, "srv-") {
+			t.Fatalf("RequestID(%q) = %q", bad, got)
+		}
+	}
+	if got := Redact(Event{Action: "a", Result: "ok", RequestID: "bad id"}); !ValidRequestID(got.RequestID) {
+		t.Fatalf("Redact kept invalid request id %q", got.RequestID)
+	}
 }

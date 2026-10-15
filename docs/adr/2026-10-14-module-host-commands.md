@@ -26,6 +26,19 @@ module code.
 5. `mss` may later offer a static `mss module list` that reads `.mss/modules`;
    it never executes module commands.
 
+6. Fail loudly (#40): if the registry is not frozen, or module command
+   validation fails while the host builds its command tree, every host
+   subcommand fails, including `server` and `migrate`. Module commands are
+   never silently dropped.
+
+## Security boundary
+
+Module commands have **no sandbox**. They run in the host process with the
+host's full privileges: the same OS user, file system, environment variables,
+configuration, secrets and database credentials. Composing a module into the
+host binary is a full trust decision; review module commands like any other
+host code.
+
 ## Consequences
 
 Install, uninstall and purge semantics are owned by each module and are not
