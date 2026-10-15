@@ -36,8 +36,10 @@ export default {
   'sso.empty': 'No applications registered',
   'sso.failed': 'The operation failed. Check your permissions and application values.',
   'sso.conflict': 'This application changed. Close the editor, refresh and try again.',
-  'sso.loadError':
-    'Unable to load SSO data. Confirm that the Provider is enabled and you have permission.',
+  'sso.loadError': 'Unable to load SSO data. Please try again.',
+  'sso.notConfigured': 'SSO is not configured',
+  'sso.notConfiguredHelp':
+    'The SSO provider is not enabled in this environment. Contact your administrator to configure it.',
   'sso.updateNotice':
     'Saving changes invalidates outstanding authorization grants and access tokens for this client.',
   'sso.oneTimeSecret': 'Save this client secret',

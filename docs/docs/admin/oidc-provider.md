@@ -4,7 +4,7 @@ title: Native OIDC Provider and Proxmox VE
 
 # Native OIDC Provider and Proxmox VE
 
-This page describes the OIDC provider included in the v1.6.0 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
+This page describes the OIDC provider included in the v1.6.1 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
 
 Admin remains the account and policy authority. No separate identity service is required. Core authentication reuses its password verification, browser cookies, durable sessions, disabled-account checks and audit. `admin/oidc` owns the OIDC protocol; it uses the existing `golang-jwt/jwt/v4` library and Go crypto for RS256 and AES-GCM. It does not hand PVE an Admin JWT.
 
@@ -31,6 +31,12 @@ oidc:
 The default is disabled. Enabled startup fails closed if the wrapping key, issuer, cookie policy or signing tables are unavailable. The issuer path is deliberately `/admin/api/oidc`, within the existing `/admin/api` session-cookie path. A deployment with a custom Admin route-group prefix is not supported by this first version. Discovery is at `https://identity.example.com/admin/api/oidc/.well-known/openid-configuration`.
 
 The canonical cookie stays host-only, HttpOnly, Secure and SameSite Lax. Cross-site top-level GET navigation to authorization can carry it. The protocol does not widen global CORS, bypass Admin CSRF, or move the Admin cookie to `/`. The token and UserInfo endpoints use client/bearer authentication; consent POSTs require the existing browser CSRF header. A browser authorization continuation additionally requires an HttpOnly, short-lived browser-flow cookie.
+
+## Disabled Provider console state
+
+In v1.6.1, the SSO menu remains available according to existing menu permissions. When `oidc.enabled` is false, authenticated operators with the existing client-list API permission receive HTTP 503 with `errorCode: SSO_PROVIDER_DISABLED` from `GET /admin/api/sso/clients`. The console shows “SSO is not configured” and asks the operator to contact an administrator. This deterministic disabled state has no retry action and is not automatically retried. The patch adds no migration and does not enable the Provider; enabled-Provider behavior is unchanged. This response contains no configuration or secrets. Protocol and management mutation routes remain unmounted.
+
+Unauthenticated requests still receive 401; users without API permission receive 403. Network failures, ordinary 404 responses (including an older backend), and other service errors retain the retryable load-error state. Deploy the backend and frontend fix together; the console does not infer disabled configuration from a missing route.
 
 ## Register a PVE application
 
@@ -108,7 +114,8 @@ Use a database shared by all replicas and route security reads to its primary. A
 
 | Symptom | Check |
 | --- | --- |
-| 404 on Discovery or SSO management | Provider disabled; route prefix/configuration differs |
+| 503 with `SSO_PROVIDER_DISABLED` on the client list | Provider disabled; contact an administrator to configure it; do not retry this deterministic state |
+| 404 on Discovery or SSO management | Disabled protocol route, route prefix/configuration mismatch, or older backend; 404 alone does not identify the disabled console state |
 | Startup rejects issuer/wrapping key | Exact HTTPS issuer, same frontend origin, secret environment variable, persisted issuer and key continuity |
 | No redirect / `invalid_request` | Client ID and exact registered redirect URI, duplicate parameters, unsupported request options |
 | `invalid_client` / 401 | Enabled client, current secret, HTTP Basic; do not use form-post client secrets |

@@ -841,6 +841,19 @@ class WorkflowGovernanceTest(unittest.TestCase):
         )
         self.assertEqual(deploy["with"]["command"], "deploy --env prod")
 
+    def test_login_theme_evidence_retains_successful_html_attachments(self):
+        workflow = load_workflow("frontend-v6-ci.yml")
+        steps = workflow["jobs"]["browser"]["steps"]
+        run = next(step for step in steps if step.get("id") == "login_theme")
+        self.assertEqual(run["run"], "pnpm exec playwright test e2e/auth-theme.spec.ts")
+        guard = next(step for step in steps if step.get("id") == "portable_login_theme_evidence")
+        self.assertIn("steps.login_theme.outcome != 'skipped'", guard["if"])
+        self.assertNotIn("--allow-missing", guard["run"])
+        upload = next(step for step in steps if step.get("name") == "Upload login theme regression evidence")
+        self.assertEqual(upload["with"]["path"], "${{ runner.temp }}/login-theme-evidence/login-theme")
+        self.assertEqual(upload["with"]["if-no-files-found"], "error")
+        self.assertIn("steps.portable_login_theme_evidence.outcome == 'success'", upload["if"])
+
     def test_all_release_bash_blocks_parse(self):
         import re
 

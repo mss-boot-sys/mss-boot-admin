@@ -183,3 +183,22 @@ func hasRoute(routes []gin.RouteInfo, method, path string) bool {
 	}
 	return false
 }
+
+func TestDisabledSSORoutesKeepOnlyProtectedReadEntrypoint(t *testing.T) {
+	previous := config.Cfg.OIDC.Enabled
+	t.Cleanup(func() { config.Cfg.OIDC.Enabled = previous })
+	config.Cfg.OIDC.Enabled = false
+	engine := gin.New()
+	InitRouter(engine.Group("/admin"))
+	routes := engine.Routes()
+	if !hasRoute(routes, http.MethodGet, "/admin/api/sso/clients") {
+		t.Fatal("disabled SSO must preserve its console read entrypoint")
+	}
+	for _, route := range routes {
+		if strings.HasPrefix(route.Path, "/admin/api/oidc") ||
+			(strings.HasPrefix(route.Path, "/admin/api/sso/") &&
+				(route.Method != http.MethodGet || route.Path != "/admin/api/sso/clients")) {
+			t.Fatalf("disabled provider exposed an active route: %s %s", route.Method, route.Path)
+		}
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
@@ -25,6 +26,19 @@ var ManagementRoutes = []struct{ Method, Path, Permission string }{
 	{"GET", "/sso/audit", "sso:audit"},
 	{"GET", "/sso/signing-keys", "sso:read"},
 	{"POST", "/sso/signing-keys/rotate", "sso:key-rotate"},
+}
+
+// MountDisabledManagement keeps the console entrypoint diagnosable without
+// mounting protocol or mutation routes. The existing authentication and API
+// permission checks run before disclosing this non-sensitive capability state.
+func MountDisabledManagement(api *gin.RouterGroup) {
+	api.GET("/sso/clients", protocolHeaders, middleware.Auth.MiddlewareFunc(), func(c *gin.Context) {
+		c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
+			"success":      false,
+			"errorCode":    "SSO_PROVIDER_DISABLED",
+			"errorMessage": "SSO provider is not configured",
+		})
+	})
 }
 
 func (p *Provider) MountManagement(api *gin.RouterGroup) {

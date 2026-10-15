@@ -41,26 +41,21 @@
   border-radius: 8px;
 }
 
-.mss-auth-submit.ant-btn {
+/* Keep primary, hover, active, focus, loading and disabled colors owned by
+ * Ant Design's semantic Button tokens inside the ConfigProvider scope. */
+.mss-auth-submit {
   height: 44px;
-  border: 0;
   border-radius: 8px;
-  background: var(--mss-brand-gradient);
-  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--mss-color-primary) 65%, transparent);
   font-weight: 600;
   letter-spacing: 0.3em;
-  transition:
-    transform var(--mss-motion-fast) var(--mss-ease-out),
-    box-shadow var(--mss-motion-fast) var(--mss-ease-out);
 }
 
-.mss-auth-submit.ant-btn:not(:disabled):hover {
-  box-shadow: 0 12px 24px -10px color-mix(in srgb, var(--mss-color-primary) 80%, transparent);
-  transform: translateY(-1px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mss-auth-submit.ant-btn:not(:disabled):hover {
-    transform: none;
+/* The desktop hero is hidden below lg. Keep a quiet, theme-aware backdrop
+ * behind the mobile form without adding another hero or reducing legibility. */
+@media (width < 1024px) {
+  .mss-auth-main {
+    background-image:
+      radial-gradient(ellipse at top left, var(--mss-color-primary-bg), transparent 65%),
+      radial-gradient(ellipse at bottom right, var(--mss-color-primary-bg-hover), transparent 65%);
   }
 }

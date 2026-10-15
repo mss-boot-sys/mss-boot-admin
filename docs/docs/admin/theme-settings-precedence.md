@@ -1,5 +1,5 @@
 ---
-title: v1.6.0 主题设置优先级、继承与重置
+title: v1.6.1 主题设置优先级、继承与重置
 order: 14
 nav:
   order: 1
@@ -9,16 +9,16 @@ keywords: [admin ant-design-v6 theme settings precedence inheritance]
 ---
 
 :::warning
-版本范围：**v1.6.0 是当前发行基线**（v1.4.0 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
+版本范围：**v1.6.1 是当前发行基线**（v1.3.9 为新仓库首发）；使用同一版本的 GitHub Packages 包与工具。
 :::
 
 ## 产品合同
 
-- Admin Web 稳定身份：`@mss-boot-sys/admin-web@1.6.0`，从 GitHub Packages 与对应 Release 核对身份；
-- Admin 后端稳定身份：`github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0`，从公开 Go 模块与对应 Release 核对身份；
+- Admin Web 稳定身份：`@mss-boot-sys/admin-web@1.6.1`，从 GitHub Packages 与对应 Release 核对身份；
+- Admin 后端稳定身份：`github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.1`，从公开 Go 模块与对应 Release 核对身份；
 - 历史状态：v1.3.5 与 v1.3.6 的已公开组件保持不可变，但不能补全或混用；
 - 源码状态：主题继承、重置、并发前置条件和授权已在 Foundation 中实现；
-- 采用范围：v1.6.0 将这套合同作为 Thin Host 产品面；
+- 采用范围：v1.6.1 将这套合同作为 Thin Host 产品面；
 - 设计历史保留在[默认 V6 切换 ADR](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/docs/adr/2026-08-17-ant-design-v6-default-cutover.md)，使用方无需 Foundation 源码。
 
 本页只描述 V6 规范契约。后端不再返回旧主题投影，不接受缺少修订号的写入，

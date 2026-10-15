@@ -1,6 +1,6 @@
 {
   "name": "@mss-boot-sys/admin-web",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Complete React 19 and Ant Design 6 Admin application for mss-boot business hosts.",
   "packageManager": "pnpm@10.34.5",
   "license": "MIT",

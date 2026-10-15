@@ -1,18 +1,18 @@
 ---
 title: Blueprint 与升级
 order: 4
-description: v1.6.0 发行版 Thin Host 文件所有权、三方升级、验证和恢复合同
+description: v1.6.1 发行版 Thin Host 文件所有权、三方升级、验证和恢复合同
 ---
 
 # Blueprint 与升级
 
-本页向人类解释 v1.6.0 Thin Host 的升级合同；Agent 的执行权威仍是目标仓库的
-`AGENTS.md`、`.mss/` 和适用 Skill。v1.6.0 是当前发行基线（v1.4.0 为新仓库首发）；旧组织版本保留为历史记录。
+本页向人类解释 v1.6.1 Thin Host 的升级合同；Agent 的执行权威仍是目标仓库的
+`AGENTS.md`、`.mss/` 和适用 Skill。v1.6.1 是当前发行基线（v1.3.9 为新仓库首发）；旧组织版本保留为历史记录。
 命名空间和 GitHub Packages 认证迁移见[发布说明](/releases/v1-5-0)。
 
 ## Blueprint 来源
 
-正式 v1.6.0 Root Release 的 `mss` 与 `mss-mcp` 内置同一个 `management-system`
+正式 v1.6.1 Root Release 的 `mss` 与 `mss-mcp` 内置同一个 `management-system`
 Blueprint，并把版本、完整源提交、构建时间和仓库身份写入工具及生成结果。采用者不需要
 Foundation checkout；本地编译或源码目录不能替代这条来源链。
 
@@ -32,30 +32,30 @@ Foundation checkout；本地编译或源码目录不能替代这条来源链。
 `.mss/blueprint-manifest.json` 保存受管文件摘要，`.mss/lock.yaml` 保存当前 Distribution
 和升级记录。不得手改摘要或复制其他项目的 manifest 伪造一致。
 
-## 标准 v1.6.0 升级流程
+## 标准 v1.6.1 升级流程
 
 升级前必须**备份** Git 仓库、环境配置、数据库和业务数据，并确认恢复演练有效。安装
-正式 v1.6.0 工具后，先确认 `mss` 与 `mss-mcp` 报告相同版本、源提交和构建时间；再确认
+正式 v1.6.1 工具后，先确认 `mss` 与 `mss-mcp` 报告相同版本、源提交和构建时间；再确认
 目标 Thin Host 仍含 `.mss/blueprint-manifest.json`。
 
 ```shell
 mss --version
 mss-mcp --version
 mss upgrade status --format json
-mss upgrade admin v1.6.0 --format json
-mss upgrade admin v1.6.0 --apply --yes --format json
+mss upgrade admin v1.6.1 --format json
+mss upgrade admin v1.6.1 --apply --yes --format json
 mss upgrade status
 mss doctor --strict
 mss verify --all
-mss upgrade admin v1.6.0 --format json
+mss upgrade admin v1.6.1 --format json
 ```
 
-第一条 `mss upgrade admin v1.6.0` 是只读计划，比较旧 Blueprint 基线、当前工作树与
-v1.6.0 新基线，只列出 create、update、preserve 和 conflict，不写文件。逐项审查计划并
-清零冲突后，才运行第二条 `mss upgrade admin v1.6.0 --apply`。应用使用事务式暂存，先
+第一条 `mss upgrade admin v1.6.1` 是只读计划，比较旧 Blueprint 基线、当前工作树与
+v1.6.1 新基线，只列出 create、update、preserve 和 conflict，不写文件。逐项审查计划并
+清零冲突后，才运行第二条 `mss upgrade admin v1.6.1 --apply`。应用使用事务式暂存，先
 写受管文件，保留业务和未知文件，最后更新快照与锁。
 
-随后运行严格环境诊断和完整验证。最后一条 `mss upgrade admin v1.6.0` 是幂等性证明：
+随后运行严格环境诊断和完整验证。最后一条 `mss upgrade admin v1.6.1` 是幂等性证明：
 结果必须没有 create、update、delete 或 conflict；对显式定制默认注册表的只读
 `preserve` 说明可以保留，但文件字节不能变化。
 
@@ -64,7 +64,7 @@ v1.6.0 新基线，只列出 create、update、preserve 和 conflict，不写文
 手工拼装、丢失 manifest 或无法证明 `.mss/blueprint-manifest.json` 来源的仓库，不能
 直接使用三方升级。不要从其他仓库复制 manifest，也不要让 Agent 根据当前文件猜摘要。
 
-正确路径是在独立空目录使用正式 v1.6.0 工具生成新的 Thin Host，验证其公共依赖和冻结
+正确路径是在独立空目录使用正式 v1.6.1 工具生成新的 Thin Host，验证其公共依赖和冻结
 锁后，按所有权迁入业务规格、业务自有代码、手写前端、配置意图与数据迁移。先让新基线
 完整通过 `mss doctor --strict` 和 `mss verify --all`，再以正常 PR 替换旧部署。旧数据库
 需要单独的迁移与恢复计划，不能因为文件迁移成功就跳过数据验证。
@@ -75,7 +75,7 @@ v1.6.0 新基线，只列出 create、update、preserve 和 conflict，不写文
 - 存在 conflict 时禁止应用；由拥有该文件的一方决定合并内容，然后重新生成计划；
 - 应用失败应恢复原工作树并保留脱敏诊断报告，不允许留下半写快照；
 - 数据库迁移失败必须阻断部署；回退同时恢复匹配的代码、配置、锁、数据库快照和业务数据；
-- 已发布 v1.6.0 身份不可移动或覆盖，发布后修复进入新的补丁版本；
+- 已发布 v1.6.1 身份不可移动或覆盖，发布后修复进入新的补丁版本；
 - Docs 页面或站点失败只进入独立文档修复流程，不触发组件回滚。
 
 ## Agent 审查清单

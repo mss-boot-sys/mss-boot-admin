@@ -19,25 +19,7 @@ import (
 func TestManagementPermissionsSecretsAndCAS(t *testing.T) {
 	f := setup(t)
 	f.login()
-	require.NoError(t, f.db.AutoMigrate(&models.ConfigRevision{}))
-	adapter, err := gormadapter.NewAdapterByDBUseTableName(f.db, "mss_boot", "casbin_rule")
-	require.NoError(t, err)
-	model, err := casbinmodel.NewModelFromString(`[request_definition]
-r = sub, tp, obj, act
-[policy_definition]
-p = sub, tp, obj, act
-[policy_effect]
-e = some(where (p.eft == allow))
-[matchers]
-m = r.sub == p.sub && r.tp == p.tp && keyMatch(r.obj, p.obj) && regexMatch(r.act, p.act)
-`)
-	require.NoError(t, err)
-	enforcer, err := casbin.NewSyncedEnforcer(model, adapter)
-	require.NoError(t, err)
-	old, oldPolicies := gormdb.Enforcer, service.AuthorizationPolicies
-	gormdb.Enforcer = enforcer
-	service.AuthorizationPolicies = service.NewAuthorizationPolicyService()
-	t.Cleanup(func() { gormdb.Enforcer = old; service.AuthorizationPolicies = oldPolicies })
+	enforcer := setupManagementPermissions(t, f)
 	f.p.MountManagement(f.router.Group("/admin/api", middleware.EnforceBrowserCSRF()))
 	headers := map[string]string{"Content-Type": "application/json", "Origin": "https://id.example.test"}
 	for _, cookie := range f.cookies {
@@ -50,7 +32,7 @@ m = r.sub == p.sub && r.tp == p.tp && keyMatch(r.obj, p.obj) && regexMatch(r.act
 		// Ordinary SSO access never implies management authority.
 		require.Equal(t, 403, f.call(route.Method, path, "{}", headers, f.cookies).Code, route.Path)
 		require.Equal(t, 401, f.call(route.Method, path, "{}", headers, nil).Code, route.Path)
-		_, err = enforcer.AddPolicy(f.user.RoleID, "API", "/admin/api"+route.Path, route.Method)
+		_, err := enforcer.AddPolicy(f.user.RoleID, "API", "/admin/api"+route.Path, route.Method)
 		require.NoError(t, err)
 	}
 	// Optional claim and role lists may be omitted by an API caller; responses
@@ -91,7 +73,59 @@ m = r.sub == p.sub && r.tp == p.tp && keyMatch(r.obj, p.obj) && regexMatch(r.act
 	require.Equal(t, 200, logs.Code)
 	require.NotContains(t, logs.Body.String(), secret)
 	// Method-specific read grants cannot mutate or rotate secrets.
-	_, err = enforcer.RemovePolicy(f.user.RoleID, "API", "/admin/api/sso/clients/:id/rotate-secret", "POST")
+	_, err := enforcer.RemovePolicy(f.user.RoleID, "API", "/admin/api/sso/clients/:id/rotate-secret", "POST")
 	require.NoError(t, err)
 	require.Equal(t, 403, f.call("POST", path, `{"revision":3}`, headers, f.cookies).Code)
+}
+
+func setupManagementPermissions(t *testing.T, f *fixture) *casbin.SyncedEnforcer {
+	t.Helper()
+	require.NoError(t, f.db.AutoMigrate(&models.ConfigRevision{}))
+	adapter, err := gormadapter.NewAdapterByDBUseTableName(f.db, "mss_boot", "casbin_rule")
+	require.NoError(t, err)
+	model, err := casbinmodel.NewModelFromString(`[request_definition]
+r = sub, tp, obj, act
+[policy_definition]
+p = sub, tp, obj, act
+[policy_effect]
+e = some(where (p.eft == allow))
+[matchers]
+m = r.sub == p.sub && r.tp == p.tp && keyMatch(r.obj, p.obj) && regexMatch(r.act, p.act)
+`)
+	require.NoError(t, err)
+	enforcer, err := casbin.NewSyncedEnforcer(model, adapter)
+	require.NoError(t, err)
+	old, oldPolicies := gormdb.Enforcer, service.AuthorizationPolicies
+	gormdb.Enforcer = enforcer
+	service.AuthorizationPolicies = service.NewAuthorizationPolicyService()
+	t.Cleanup(func() { gormdb.Enforcer = old; service.AuthorizationPolicies = oldPolicies })
+	return enforcer
+}
+
+func TestDisabledManagementPreservesAuthorization(t *testing.T) {
+	f := setup(t)
+	f.login()
+	enforcer := setupManagementPermissions(t, f)
+	MountDisabledManagement(f.router.Group("/admin/api", middleware.EnforceBrowserCSRF()))
+	const path = "/admin/api/sso/clients"
+	// A disabled provider must not disclose its state before authentication and
+	// the same route-level permission used by the enabled provider.
+	unauthenticated := f.call("GET", path, "", nil, nil)
+	require.Equal(t, 401, unauthenticated.Code)
+	require.NotContains(t, unauthenticated.Body.String(), "SSO_PROVIDER_DISABLED")
+	forbidden := f.call("GET", path, "", nil, f.cookies)
+	require.Equal(t, 403, forbidden.Code)
+	require.NotContains(t, forbidden.Body.String(), "SSO_PROVIDER_DISABLED")
+	_, err := enforcer.AddPolicy(f.user.RoleID, "API", path, "GET")
+	require.NoError(t, err)
+	disabled := f.call("GET", path+"?current=1&pageSize=20", "", nil, f.cookies)
+	require.Equal(t, 503, disabled.Code)
+	require.Equal(t, map[string]any{
+		"success":      false,
+		"errorCode":    "SSO_PROVIDER_DISABLED",
+		"errorMessage": "SSO provider is not configured",
+	}, bodyJSON(t, disabled))
+	require.Equal(t, "no-store", disabled.Header().Get("Cache-Control"))
+	require.Equal(t, 404, f.call("GET", "/admin/api/sso/unknown", "", nil, f.cookies).Code)
+	require.Equal(t, 404, f.call("POST", path, "{}", nil, f.cookies).Code)
 }

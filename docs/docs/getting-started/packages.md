@@ -1,13 +1,13 @@
 ---
-title: v1.6.0 包与导入边界
+title: v1.6.1 包与导入边界
 order: 2
-description: v1.6.0 发行版 Go Module、Admin Web npm 包与公共解析方法
-keywords: [v1.6.0 stable go module npm admin web package]
+description: v1.6.1 发行版 Go Module、Admin Web npm 包与公共解析方法
+keywords: [v1.6.1 stable go module npm admin web package]
 ---
 
-# v1.6.0 包与导入边界
+# v1.6.1 包与导入边界
 
-v1.6.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.4.0 为首发）。下游应用使用同一版本的
+v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线（v1.3.9 为首发）。下游应用使用同一版本的
 Admin、Framework 与 Admin Web，并保留生成器写入的精确锁。v1.3.8 及更早版本属于
 原 `mss-boot-io` 组织；迁移时必须更新业务 Go imports、npm scope 与 registry 配置。
 
@@ -20,7 +20,7 @@ Admin、Framework 与 Admin Web，并保留生成器写入的精确锁。v1.3.8 
 
 - 普通 Thin Host 直接依赖 Admin，由 Admin 固定 Framework；只有开发通用基础设施时才
   直接导入 `mss-boot`；
-- `@mss-boot-sys/admin-web@1.6.0` 是完整前端发行单元，不拆出第二个 SPA；
+- `@mss-boot-sys/admin-web@1.6.1` 是完整前端发行单元，不拆出第二个 SPA；
 - 不使用本地 `replace`、源码目录、未验证的本地 tarball 或相邻版本补齐依赖；
 - 后端权限始终是最终权威，前端控件隐藏不能授权请求。
 
@@ -45,8 +45,8 @@ POSIX shell：
   cd "$consumer_dir"
   export GOWORK=off
   go mod init mss-boot-sys.local/v139-public-consumer
-  go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0
-  go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.0
+  go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.1
+  go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.1
   go mod verify
 )
 ```
@@ -64,9 +64,9 @@ try {
   $env:GOWORK = 'off'
   go mod init mss-boot-sys.local/v139-public-consumer
   if ($LASTEXITCODE -ne 0) { throw 'go mod init failed' }
-  go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0
+  go get github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.1
   if ($LASTEXITCODE -ne 0) { throw 'Admin module resolution failed' }
-  go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.0
+  go get github.com/mss-boot-sys/mss-boot-admin/mss-boot@v1.6.1
   if ($LASTEXITCODE -ne 0) { throw 'Framework module resolution failed' }
   go mod verify
   if ($LASTEXITCODE -ne 0) { throw 'go mod verify failed' }
@@ -86,12 +86,12 @@ finally {
 }
 ```
 
-这段验证只证明公共 Go Module 可解析。完整 Thin Host 仍应由 v1.6.0 `mss new app`
+这段验证只证明公共 Go Module 可解析。完整 Thin Host 仍应由 v1.6.1 `mss new app`
 生成，并执行 `mss doctor --strict`、`mss setup` 与 `mss verify --all`。
 
 ## Admin Web npm 包
 
-官方包为 `@mss-boot-sys/admin-web@1.6.0`，仅发布至
+官方包为 `@mss-boot-sys/admin-web@1.6.1`，仅发布至
 `https://npm.pkg.github.com`，不发布 npmjs。生成的 Thin Host 固定精确版本与锁文件，
 不要手工改成范围版本。
 
@@ -109,7 +109,7 @@ finally {
 在已有前端 `package.json` 所在目录中执行：
 
 ```shell
-corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.0
+corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.1
 ```
 
 其他第三方依赖仍从其既有 registry 获取；不要把全部 npm 依赖转到 GitHub Packages。
@@ -123,6 +123,6 @@ locale 与 permission 投影接入。
 ## 镜像与版本一致性
 
 Root 后端镜像与前端镜像使用不可变 digest；生产部署应固定 digest，并确认它们都来自
-v1.6.0 的同一源提交。Foundation 参考镜像不是携带业务模块的 Thin Host 业务镜像，不能
+v1.6.1 的同一源提交。Foundation 参考镜像不是携带业务模块的 Thin Host 业务镜像，不能
 直接当作业务系统部署。Docs 网站的 `docs/v*` Tag 只发布网站，不改变 Go、npm 或 OCI
 身份。

@@ -1,8 +1,8 @@
 # Importable Admin application
 
-## v1.6.0 release identity
+## v1.6.1 release identity
 
-`github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.0` is the Admin module for the
+`github.com/mss-boot-sys/mss-boot-admin/admin@v1.6.1` is the Admin module for the
 first release from `mss-boot-sys/mss-boot-admin`. Pin the matching Framework,
 Admin Web and Root tools. Versions v1.3.8 and earlier remain releases of the
 former `mss-boot-io` organization; this namespace change requires updating
@@ -42,7 +42,7 @@ Do not copy Admin startup, security middleware, migrations, or core routes into
 a business repository. A business module may extend the protected group only
 through `admin/business`; UI visibility never replaces backend authorization.
 
-Optional and table-less modules (v1.6.0):
+Optional and table-less modules (v1.6.1):
 
 - A module that is imported but switched off implements
   `business.OptionalModule` and returns `false` from `Enabled()`. It is
@@ -61,11 +61,11 @@ Request bodies: generated business JSON endpoints decode the body strictly
 (unknown fields and trailing values are rejected). A POST with an empty body
 is rejected with `400`; a client that has nothing to send must send `{}`.
 
-The v1.6.0 tool generates this composition as part of a version-bound Thin Host.
+The v1.6.1 tool generates this composition as part of a version-bound Thin Host.
 Use the public Root tool and package onboarding guide instead of copying this
 repository's Admin source into a business application.
 
-The v1.6.0 bootstrap contract reads the initial administrator password
+The v1.6.1 bootstrap contract reads the initial administrator password
 through hidden input or a one-use `MSS_ADMIN_INITIAL_PASSWORD` secret, stores
 only a one-way verifier, and exposes no default password. The generated local
 application identity is user `admin` at `http://127.0.0.1:8001`.

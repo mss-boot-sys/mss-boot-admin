@@ -8,6 +8,28 @@ tag namespaces.
 
 No unreleased changes are recorded.
 
+## [v1.6.1] - 2026-10-15
+
+Release scope: coordinated patch release of Root, Framework, Admin and
+`@mss-boot-sys/admin-web`. Publication and deployment require verification of
+the corresponding assets; this source record is not proof of publication.
+All v1.6.0 features and enabled-Provider behavior are retained. No database
+migration, permission expansion, Provider enablement or demo deployment.
+
+### Fixed
+
+- Restore semantic theme colors for login primary-button states and the mobile auth background; preserve authentication behavior.
+
+- Preserve the permission-controlled SSO menu when `oidc.enabled` is false.
+  The client-list `GET /admin/api/sso/clients` retains authentication and API
+  permission checks, returning HTTP 503 with `SSO_PROVIDER_DISABLED` to
+  authorized operators. Unauthenticated and forbidden requests still receive
+  401 and 403; protocol and management mutation routes remain unmounted.
+- Explain that SSO is not configured in the console without a retry action or
+  automatic retry for this deterministic disabled state. Ordinary 404, network
+  and other load errors remain retryable. Deploy the backend and frontend
+  together; a missing route alone does not imply disabled configuration.
+
 ## [v1.6.0] - 2026-10-15
 
 Release scope: coordinated minor release of Root, Framework, Admin and

@@ -59,6 +59,7 @@ GET /admin/api/presentation/effective/:pageKey
 GET /admin/api/role/authorize/:roleID
 GET /admin/api/roles
 GET /admin/api/roles/:id
+GET /admin/api/sso/clients
 GET /admin/api/statistics/:name
 GET /admin/api/system-configs
 GET /admin/api/system-configs/:id

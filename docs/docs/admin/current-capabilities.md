@@ -1,20 +1,19 @@
 ---
 title: 源码能力与发布边界
 order: 2
-description: v1.6.0 发行版源码能力、新仓库迁移与采用边界
+description: v1.6.1 发行版源码能力、新仓库迁移与采用边界
 ---
 
-# v1.6.0 发行版源码能力与发布边界
+# v1.6.1 发行版源码能力与发布边界
 
 :::warning
-版本范围：**v1.6.0 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.4.0 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
-安装、创建或升级从[快速开始](/getting-started)进入。Docs 网站可通过 `docs/v*` 异步候补，
-其状态不影响组件、稳定别名或采用。
+版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+安装、创建或升级从[快速开始](/getting-started)进入。Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 机器可执行事实以 [`.mss/project.yaml`](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/project.yaml)
 和 [`.mss/capabilities.yaml`](https://github.com/mss-boot-sys/mss-boot-admin/blob/main/.mss/capabilities.yaml)
-为准。v1.6.0 的公共制品按发布流程核验；源码中的版本号不能代替发布结果。
+为准。v1.6.1 的公共制品按发布流程核验；源码中的版本号不能代替发布结果。
 
 ## merged-main 源码能力
 
@@ -36,7 +35,7 @@ description: v1.6.0 发行版源码能力、新仓库迁移与采用边界
 - 不自动把 UI 权限当作后端授权；
 - 不要求生产凭据完成源码验证；
 - 不在工具设计中加入遥测和采用者登记；
-- `mss-shop` 必须以已完成公共对账的 v1.6.0 为基础，并独立证明其单租户范本边界。
+- `mss-shop` 必须以已完成公共对账的 v1.6.1 为基础，并独立证明其单租户范本边界。
 
 后续版本只有在 Root 工具、Go/npm 包、镜像与外部使用方证据全部公开对账后，才能把
 源码能力转成新的可执行采用路径；Docs 网站继续在独立链路对账，不加入该采用门禁。

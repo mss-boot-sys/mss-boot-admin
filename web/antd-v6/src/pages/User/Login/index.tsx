@@ -113,7 +113,12 @@ export default function LoginPage() {
         requiredMark={false}
         submitter={{
           searchConfig: { submitText: intl.formatMessage({ id: 'pages.login.submit' }) },
-          submitButtonProps: { className: 'mss-auth-submit', size: 'large', block: true },
+          submitButtonProps: {
+            type: 'primary',
+            className: 'mss-auth-submit',
+            size: 'large',
+            block: true,
+          },
         }}
         onFinish={async (values) => {
           setError(undefined);

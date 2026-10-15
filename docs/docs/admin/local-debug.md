@@ -1,15 +1,15 @@
 ---
 title: 本地调试合同
 order: 4
-description: Foundation 源码调试边界与 v1.6.0 Thin Host 开发拓扑
+description: Foundation 源码调试边界与 v1.6.1 Thin Host 开发拓扑
 ---
 
 # 本地调试合同
 
 :::warning
-版本范围：**v1.6.0**；本页描述 Foundation 源码调试，Thin Host 的安装、创建、
+版本范围：**v1.6.1**；本页描述 Foundation 源码调试，Thin Host 的安装、创建、
 升级和本地启动从[快速开始](/getting-started)进入。v1.3.5 与 v1.3.6 保持不可变部分发布；
-Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或采用。
+Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
 ## Foundation 源码调试
@@ -40,8 +40,8 @@ Docs 网站可通过 `docs/v*` 异步候补，不影响组件、稳定别名或�
 停止进程时只停止当前项目声明的进程。删除数据库、缓存或生成物不是普通排障步骤，必须
 先解析精确目标和恢复影响。
 
-## v1.6.0 Thin Host
+## v1.6.1 Thin Host
 
-v1.6.0 Root 工具提供可核验的诊断、初始化、开发编排和验证能力，并绑定同版本 Blueprint
+v1.6.1 Root 工具提供可核验的诊断、初始化、开发编排和验证能力，并绑定同版本 Blueprint
 与公共包。采用者按[快速开始](/getting-started)使用发布工具；Foundation 贡献者才使用
 本页源码工作区。v1.3.5 与 v1.3.6 没有完整来源链，因此本页不展示它们的 Thin Host 命令。

@@ -14,7 +14,7 @@ private GitHub advisories are the preferred intake path.
 
 ## Supported versions
 
-The active `main` branch and the v1.6.0 Distribution are the new repository's
+The active `main` branch and the v1.6.1 Distribution are the new repository's
 support baseline. v1.3.9 was the first release under `mss-boot-sys`; v1.3.8 and
 earlier belong to the former `mss-boot-io` organization and are handled case by
 case. The release assets and `.mss/release-policy.yaml` identify the exact
@@ -25,7 +25,7 @@ Admin Web is published only to GitHub Packages. Workflows use a least-privilege
 environment variable. Credentials must never enter repository files, container
 layers, generated output, logs, or release archives.
 
-## v1.6.0 security boundary
+## v1.6.1 security boundary
 
 - Presentation profiles are untrusted, strictly data-only overlays over exact
   compiled capabilities. They cannot define code, HTML, SQL, transport, routes,

@@ -15,11 +15,6 @@
   --mss-hero-from: #4f6bff;
   --mss-hero-via: #2a2f8f;
   --mss-hero-to: #0f1240;
-  --mss-brand-gradient: linear-gradient(
-    135deg,
-    var(--mss-color-primary) 0%,
-    var(--mss-brand-accent) 100%
-  );
 }
 
 :root[data-mss-theme="realDark"] {

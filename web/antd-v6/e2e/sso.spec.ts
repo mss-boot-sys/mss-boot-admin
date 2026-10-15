@@ -88,18 +88,24 @@ test('@sso application registration, secret rotation, disable and audit', async 
   await expectNoDocumentOverflow(page);
 });
 
-test('@sso unavailable provider is retryable and consent is explicit', async ({ page }) => {
+test('@sso unknown unavailable service remains retryable and consent is explicit', async ({
+  page,
+}) => {
   await setLocale(page, 'en-US');
   await login(page);
-  await page.route('**/admin/api/sso/clients**', (route) =>
-    route.fulfill({ status: 404, json: {} }),
-  );
+  let requests = 0;
+  await page.route('**/admin/api/sso/clients**', (route) => {
+    requests += 1;
+    return route.fulfill({ status: 404, json: {} });
+  });
   await page.goto('/sso');
-  await expect(
-    page.getByText(
-      'Unable to load SSO data. Confirm that the Provider is enabled and you have permission.',
-    ),
-  ).toBeVisible();
+  await expect(page.getByText('Unable to load SSO data. Please try again.')).toBeVisible();
+  const retry = page.getByRole('button', { name: /(?:^|\s)Retry$/ });
+  await expect(retry).toBeVisible();
+  const requestsBeforeRetry = requests;
+  await retry.click();
+  await expect.poll(() => requests).toBeGreaterThan(requestsBeforeRetry);
+  await expect(page.getByText('SSO is not configured', { exact: true })).toHaveCount(0);
   await page.route('**/admin/api/oidc/interaction**', async (route) => {
     if (route.request().method() === 'GET') {
       await route.fulfill({
@@ -124,4 +130,30 @@ test('@sso unavailable provider is retryable and consent is explicit', async ({ 
   await expect(page.getByText('PVE test cluster')).toBeVisible();
   await page.getByRole('button', { name: 'Deny', exact: true }).click();
   await expect(page).toHaveURL(/error=access_denied/);
+});
+
+test('@sso explicitly disabled provider explains configuration without retry controls', async ({
+  page,
+}) => {
+  await setLocale(page, 'en-US');
+  await login(page);
+  let requests = 0;
+  await page.route('**/admin/api/sso/clients**', async (route) => {
+    requests += 1;
+    await route.fulfill({
+      status: 503,
+      json: { errorCode: 'SSO_PROVIDER_DISABLED' },
+    });
+  });
+  await page.goto('/sso');
+  await expect(page.getByText('SSO is not configured', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(
+      'The SSO provider is not enabled in this environment. Contact your administrator to configure it.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: /(?:^|\s)Retry$/ })).toHaveCount(0);
+  await expect(page.getByText('Unable to load SSO data. Please try again.')).toHaveCount(0);
+  expect(requests).toBe(1);
+  await expectNoDocumentOverflow(page);
 });
