@@ -33,6 +33,7 @@ spec:
         - Upgrade Docs Prettier to 3.9.10.
         - Apply CodeQL 4.38.3, Scorecard 2.5.0 and the setup-node commit proposed by PR 54 wherever the active workflow contract requires alignment.
         - Preserve Node 24, pnpm 10.34.5 and Go 1.27.2.
+        - Regenerate the unpublished Thin Host frontend lock from the candidate package, retain registry-resolved identity placeholders, and reject manifest or override drift before frozen installation.
         - Keep currentStableVersion v1.6.1 bound to published commit 0107548689c66d4e2ec89dabaabbee7486d8e4b6.
   constraints:
     - id: immutable-release
@@ -49,7 +50,7 @@ spec:
           value: make test-all build
     - id: frontend-validation
       requirement: coherent-upgrade
-      statement: Dependency contracts, lint, types, unit tests, release build and the external Thin Host install/lint/test/build qualification pass with the updated package.
+      statement: Dependency contracts, lint, types, unit tests, release build and the external Thin Host install/lint/test/build qualification pass with the updated package; the rendered source-template lock also installs frozen against that same candidate fixture.
       level: integration
       required: true
       evidence:
