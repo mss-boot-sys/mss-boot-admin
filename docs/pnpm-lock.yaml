@@ -46,7 +46,7 @@ importers:
         version: 21.2.3
       dumi:
         specifier: ^2.4.50
-        version: 2.4.50(@babel/core@7.29.7)(@swc/helpers@0.5.15)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1)
+        version: 2.4.50(@babel/core@7.29.7)(@swc/helpers@0.5.15)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.10)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1)
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -54,8 +54,8 @@ importers:
         specifier: ^17.6.0
         version: 17.6.0
       prettier:
-        specifier: ^3.9.9
-        version: 3.9.9
+        specifier: ^3.9.10
+        version: 3.9.10
 
 packages:
 
@@ -1813,8 +1813,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  baseline-browser-mapping@2.11.28:
-    resolution: {integrity: sha512-br0LOmjJqr6Rt4AEkadbcNf67Zpo7EPwKsWbjnRrJIa1QYFHQBqM4C7F2WTbV8ahTEcg1Eo+Y0aWjjORInYFyA==}
+  baseline-browser-mapping@2.11.29:
+    resolution: {integrity: sha512-YeesxhUmR4h5y5V8KF8iBCqJb8YFrBJ++XBTeGcWIaQOYXGN19JM0FoiOjAhwuDoln8owMgXcWBmgHtYSkky2w==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -1949,8 +1949,8 @@ packages:
   caniuse-lite@1.0.30001810:
     resolution: {integrity: sha512-TITQPUkaz+aVk5GL6NhOdwk1aEaNTSDPsGFWrTuhKGtjTF70jL/Oht2W4c6rXUe5fu7Ie19VIahAXHIIiWWNeg==}
 
-  caniuse-lite@1.0.30001815:
-    resolution: {integrity: sha512-uDybUEyfgbyJJ93J1vikTylBX31AkdVYeVPeffMQpf8XN7hSfr0oZOn4VFOIMNvtU5+rHvC5Udg2TgtJKHm23Q==}
+  caniuse-lite@1.0.30001816:
+    resolution: {integrity: sha512-+8Yx7BXCoqk6IF8yTicjfUR6D/ldJzdlsodlEOiOSPmhK844WIgk67/zIQaGAOxNkZyyvBlrRFnLvqKIoqbAFw==}
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -2524,8 +2524,8 @@ packages:
   electron-to-chromium@1.5.438:
     resolution: {integrity: sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==}
 
-  electron-to-chromium@1.5.452:
-    resolution: {integrity: sha512-cVvk1YBSj6571VmV6hdJTqj94Y79xSu8cj6Y9t6ae4Y4431z8/7EJFvu3rVp90xhfuv9BpPKUmaLfTo4+FOGBg==}
+  electron-to-chromium@1.5.457:
+    resolution: {integrity: sha512-RNKsgErRmkzRgC8nOV1wzFhSbfGlYJ6k4LT/aE7oFrDYaQgHhTh5oTp0ZgSbRRybKR8HlZIdCWc38Y+CDTk1Jw==}
 
   elliptic@6.6.1:
     resolution: {integrity: sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==}
@@ -4007,8 +4007,8 @@ packages:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
     engines: {node: '>=18'}
 
-  node-releases@2.0.58:
-    resolution: {integrity: sha512-BdiKAgbfRlvfMq/XzO/AF9NPmaA8a+YpLAyAFTVFBj3gARrAIfWvNq7Q7NE4se3KgFu0KkrvQMxTS0XVnsGzHg==}
+  node-releases@2.0.59:
+    resolution: {integrity: sha512-5qr2okC4ItAI0hG5SaV0HoYMpnM/Y6+Oqr7AmPYy/2uEoGvS+GbSKLeRxSS1uAdu59yz0ouzcuXievSgg///WA==}
     engines: {node: '>=18'}
 
   normalize-path@3.0.0:
@@ -4500,8 +4500,8 @@ packages:
       prettier:
         optional: true
 
-  prettier@3.9.9:
-    resolution: {integrity: sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==}
+  prettier@3.9.10:
+    resolution: {integrity: sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -5665,8 +5665,8 @@ packages:
   walker@1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
 
-  watchpack@2.5.2:
-    resolution: {integrity: sha512-6i/00NBjP4yGPs+caKSyRfpTF/8Torsu0MOW3mMzIbhgISFder8i7xbqgHlLMwJrdiN8ndBV3UA1/AfzPSr+jg==}
+  watchpack@2.6.1:
+    resolution: {integrity: sha512-8mk/LnXpQAiM2xKZhTkxikwly5GhL2Z+DWiLTkMa/E1Nfv9zURhHgiFyWvM4BWqW+LjIgL2AIS7JntEUx6v3vQ==}
     engines: {node: '>=10.13.0'}
 
   wbuf@1.7.3:
@@ -7809,7 +7809,7 @@ snapshots:
 
   baseline-browser-mapping@2.11.25: {}
 
-  baseline-browser-mapping@2.11.28: {}
+  baseline-browser-mapping@2.11.29: {}
 
   big-integer@1.6.52: {}
 
@@ -7915,10 +7915,10 @@ snapshots:
 
   browserslist@4.29.3:
     dependencies:
-      baseline-browser-mapping: 2.11.28
-      caniuse-lite: 1.0.30001815
-      electron-to-chromium: 1.5.452
-      node-releases: 2.0.58
+      baseline-browser-mapping: 2.11.29
+      caniuse-lite: 1.0.30001816
+      electron-to-chromium: 1.5.457
+      node-releases: 2.0.59
       update-browserslist-db: 1.3.4(browserslist@4.29.3)
 
   bser@2.1.1:
@@ -7979,7 +7979,7 @@ snapshots:
 
   caniuse-lite@1.0.30001810: {}
 
-  caniuse-lite@1.0.30001815: {}
+  caniuse-lite@1.0.30001816: {}
 
   ccount@2.0.1: {}
 
@@ -8544,7 +8544,7 @@ snapshots:
 
   dumi-assets-types@2.4.14: {}
 
-  dumi@2.4.50(@babel/core@7.29.7)(@swc/helpers@0.5.15)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1):
+  dumi@2.4.50(@babel/core@7.29.7)(@swc/helpers@0.5.15)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.10)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1):
     dependencies:
       '@ant-design/icons-svg': 4.6.0
       '@makotot/ghostui': 2.0.0(react@18.3.1)
@@ -8609,7 +8609,7 @@ snapshots:
       sass: 1.105.0
       sitemap: 7.1.3
       sucrase: 3.35.1
-      umi: 4.7.20(@babel/core@7.29.7)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(sass@1.105.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1)
+      umi: 4.7.20(@babel/core@7.29.7)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.10)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(sass@1.105.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1)
       unified: 10.1.2
       unist-util-visit: 4.1.2
       unist-util-visit-parents: 5.1.3
@@ -8673,7 +8673,7 @@ snapshots:
 
   electron-to-chromium@1.5.438: {}
 
-  electron-to-chromium@1.5.452: {}
+  electron-to-chromium@1.5.457: {}
 
   elliptic@6.6.1:
     dependencies:
@@ -10622,7 +10622,7 @@ snapshots:
 
   node-releases@2.0.57: {}
 
-  node-releases@2.0.58: {}
+  node-releases@2.0.59: {}
 
   normalize-path@3.0.0: {}
 
@@ -11123,19 +11123,19 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.2
 
-  prettier-plugin-organize-imports@3.2.4(prettier@3.9.9)(typescript@5.9.3):
+  prettier-plugin-organize-imports@3.2.4(prettier@3.9.10)(typescript@5.9.3):
     dependencies:
-      prettier: 3.9.9
+      prettier: 3.9.10
       typescript: 5.9.3
 
-  prettier-plugin-packagejson@2.4.3(prettier@3.9.9):
+  prettier-plugin-packagejson@2.4.3(prettier@3.9.10):
     dependencies:
       sort-package-json: 2.4.1
       synckit: 0.8.5
     optionalDependencies:
-      prettier: 3.9.9
+      prettier: 3.9.10
 
-  prettier@3.9.9: {}
+  prettier@3.9.10: {}
 
   pretty-error@4.0.0:
     dependencies:
@@ -12244,7 +12244,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  umi@4.7.20(@babel/core@7.29.7)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(sass@1.105.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1):
+  umi@4.7.20(@babel/core@7.29.7)(@types/node@26.6.2)(@types/react@19.3.0)(jiti@2.7.0)(lightningcss@1.22.1)(prettier@3.9.10)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.63.4)(sass@1.105.0)(styled-jsx@5.1.7(@babel/core@7.29.7)(react@18.3.1))(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))(yaml@2.9.1):
     dependencies:
       '@babel/runtime': 7.29.7
       '@umijs/bundler-utils': 4.7.20
@@ -12255,8 +12255,8 @@ snapshots:
       '@umijs/server': 4.7.20
       '@umijs/test': 4.7.20(@babel/core@7.29.7)
       '@umijs/utils': 4.7.20
-      prettier-plugin-organize-imports: 3.2.4(prettier@3.9.9)(typescript@5.9.3)
-      prettier-plugin-packagejson: 2.4.3(prettier@3.9.9)
+      prettier-plugin-organize-imports: 3.2.4(prettier@3.9.10)(typescript@5.9.3)
+      prettier-plugin-packagejson: 2.4.3(prettier@3.9.10)
     transitivePeerDependencies:
       - '@babel/core'
       - '@rspack/core'
@@ -12472,7 +12472,7 @@ snapshots:
     dependencies:
       makeerror: 1.0.12
 
-  watchpack@2.5.2:
+  watchpack@2.6.1:
     dependencies:
       graceful-fs: 4.2.11
 
@@ -12516,7 +12516,7 @@ snapshots:
       schema-utils: 4.5.0
       tapable: 2.3.3
       terser-webpack-plugin: 5.6.1(lightningcss@1.22.1)(postcss@8.5.23)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
-      watchpack: 2.5.2
+      watchpack: 2.6.1
       webpack-sources: 3.6.0
     transitivePeerDependencies:
       - '@minify-html/node'
