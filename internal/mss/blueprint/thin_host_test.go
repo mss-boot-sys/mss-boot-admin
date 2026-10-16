@@ -177,9 +177,9 @@ func TestApplicationTemplatePinsOneFrontendRuntimeWithoutPatches(t *testing.T) {
 	expected := map[string]string{
 		"react":                      "19.3.0",
 		"react-dom":                  "19.3.0",
-		"antd":                       "6.6.5",
+		"antd":                       "6.6.6",
 		"@ant-design/pro-components": "3.1.15-7",
-		"@tanstack/react-query":      "5.104.1",
+		"@tanstack/react-query":      "5.104.2",
 		"axios":                      "0.34.0",
 		"fast-uri":                   "3.1.7",
 		"js-yaml@3":                  "3.15.2",

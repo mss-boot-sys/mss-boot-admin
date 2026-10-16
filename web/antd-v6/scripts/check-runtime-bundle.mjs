@@ -41,7 +41,7 @@ const listJavaScript = async (directory) => {
 
 const markers = [
   { name: 'React 19.3.0', value: '19.3.0', required: true },
-  { name: 'Ant Design 6.6.5', value: '6.6.5', required: true },
+  { name: 'Ant Design 6.6.6', value: '6.6.6', required: true },
   { name: 'transitional React 18 runtime', value: '18.3.1', required: false },
   { name: 'transitional Ant Design 4 runtime', value: '4.24.16', required: false },
 ];
