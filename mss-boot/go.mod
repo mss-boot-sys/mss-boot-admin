@@ -4,7 +4,7 @@ go 1.27.2
 
 require (
 	github.com/IBM/sarama v1.61.1
-	github.com/alicebob/miniredis/v2 v2.39.0
+	github.com/alicebob/miniredis/v2 v2.40.0
 	github.com/apache/casbin-mongodb-adapter/v4 v4.3.1-0.20260805154135-67c101979371
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4
 	github.com/aws/aws-sdk-go-v2 v1.47.3
