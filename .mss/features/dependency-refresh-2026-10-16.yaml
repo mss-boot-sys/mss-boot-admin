@@ -1,0 +1,72 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: dependency-refresh-2026-10-16
+  displayName: Consolidate dependency PRs 48 through 54
+  owner: foundation-maintainers
+spec:
+  problem: Seven dependency PRs need one coherent update with matching dependency contracts and validation alongside the published v1.6.1 stable-baseline reconciliation.
+  goals:
+    - Integrate the dependency targets from PRs 48 through 54 into PR 55.
+    - Preserve exact frontend runtime pins and deterministic lockfiles.
+    - Validate affected backend, frontend, documentation and workflow behavior.
+  nonGoals:
+    - Publish a new release or change existing tags, packages or module checksums.
+    - Upgrade the coordinated internal Admin and Framework versions independently.
+  actors:
+    - id: maintainer
+      displayName: Foundation maintainer
+  modules:
+    - name: dependencies
+      kind: infrastructure
+      operation: extend
+  requirements:
+    - id: coherent-upgrade
+      title: Consolidate exact upstream dependency targets
+      description: Apply the seven reviewed dependency proposals and synchronize affected source contracts without changing published release identities.
+      priority: must
+      actor: maintainer
+      module: dependencies
+      rules:
+        - Upgrade miniredis to 2.40.0 and the Lark Go SDK to 3.12.1 in affected Go modules.
+        - Upgrade Ant Design to 6.6.6, React Query to 5.104.2, Vitest to 5.0.4 and happy-dom to 21.0.1 with exact pins and compatible runtime overrides.
+        - Upgrade Docs Prettier to 3.9.10.
+        - Apply CodeQL 4.38.3, Scorecard 2.5.0 and the setup-node commit proposed by PR 54 wherever the active workflow contract requires alignment.
+        - Preserve Node 24, pnpm 10.34.5 and Go 1.27.2.
+        - Keep currentStableVersion v1.6.1 bound to published commit 0107548689c66d4e2ec89dabaabbee7486d8e4b6.
+  constraints:
+    - id: immutable-release
+      type: operations
+      statement: This PR changes unpublished source dependencies; it must not overwrite or reclassify existing published artifacts or silently replace their checksums.
+  acceptance:
+    - id: backend-validation
+      requirement: coherent-upgrade
+      statement: Root, Admin and standalone Framework tests and the Admin build pass with the updated dependency graph.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: make test-all build
+    - id: frontend-validation
+      requirement: coherent-upgrade
+      statement: Dependency contracts, lint, types, unit tests, release build and the external Thin Host install/lint/test/build qualification pass with the updated package.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: make web-v6-lint web-v6-test web-v6-build
+    - id: docs-workflows
+      requirement: coherent-upgrade
+      statement: Docs builds, workflow contracts and the required GitHub PR check pass.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: make docs-build
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+  rollout:
+    strategy: direct
+    migration: Merge PR 55 through the existing main-branch PR gate. No database migration is required; any release needs separate exact-main qualification.
+    rollback: Revert dependency manifests, locks and matching contracts together through a follow-up PR.
