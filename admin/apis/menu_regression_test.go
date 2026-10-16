@@ -200,3 +200,70 @@ func TestMenuDeleteLegacyCycleTerminates(t *testing.T) {
 	require.NoError(t, db.Model(&models.Menu{}).Count(&count).Error)
 	require.Zero(t, count)
 }
+
+// database/sql can retain a query context after its handler returns. Inspect
+// statements too, so detecting pooled contexts does not depend on scheduling.
+func TestMenuDatabaseContextsDoNotRetainPooledGinContext(t *testing.T) {
+	db := setupRoleAuthorizationAPITest(t)
+	root := menuRegressionRecord("root", "", "menu.business", pkg.DirectoryAccessType)
+	page := menuRegressionRecord("page", root.ID, "menu.business.page", pkg.MenuAccessType)
+	require.NoError(t, db.Session(&gorm.Session{SkipHooks: true}).Create(&[]models.Menu{root, page}).Error)
+	require.NoError(t, db.Create(&models.CasbinRule{PType: "p", V0: "role-business", V1: "MENU", V2: page.Path, V3: "GET"}).Error)
+	oldAuth := response.AuthHandler
+	response.AuthHandler = func(ctx *gin.Context) {
+		ctx.Set(config.Cfg.Auth.IdentityKey, roleAuthorizationPrincipal(true))
+		ctx.Next()
+	}
+	t.Cleanup(func() { response.AuthHandler = oldAuth })
+	var controller *Menu
+	for _, candidate := range response.Controllers {
+		if menu, ok := candidate.(*Menu); ok {
+			controller = menu
+			break
+		}
+	}
+	require.NotNil(t, controller)
+	var pooledContext *gin.Context
+	queryCount := 0
+	callback := "test:menu-stable-request-context"
+	require.NoError(t, db.Callback().Query().Before("gorm:query").Register(callback, func(tx *gorm.DB) {
+		queryCount++
+		if queryContext, ok := tx.Statement.Context.(*gin.Context); ok {
+			require.NotSame(t, pooledContext, queryContext, "query must retain a request context or detached Gin copy")
+		}
+	}))
+	t.Cleanup(func() { require.NoError(t, db.Callback().Query().Remove(callback)) })
+	router := gin.New()
+	router.Use(func(ctx *gin.Context) {
+		pooledContext = ctx
+		ctx.Set(config.Cfg.Auth.IdentityKey, roleAuthorizationPrincipal(true))
+		ctx.Next()
+	})
+	router.GET("/menus", controller.List)
+	router.GET("/menu/tree", controller.Tree)
+	router.GET("/menu/authorize", controller.GetAuthorize)
+	router.GET("/menu/api/:id", controller.GetAPI)
+	router.POST("/menus", controller.GetAction(response.Control).Handler()...)
+	router.PUT("/menus/:id", controller.GetAction(response.Control).Handler()...)
+	router.DELETE("/menus/:id", controller.GetAction(response.Delete).Handler()...)
+	for _, request := range []struct {
+		method, path, body string
+		status             int
+	}{
+		{"GET", "/menus", "", http.StatusOK},
+		{"GET", "/menu/tree", "", http.StatusOK},
+		{"GET", "/menu/authorize", "", http.StatusOK},
+		{"GET", "/menu/api/page", "", http.StatusOK},
+		{"POST", "/menus", `{"name":"new","path":"/new","type":"MENU","parentID":"root"}`, http.StatusCreated},
+		{"DELETE", "/menus/page", "", http.StatusConflict},
+		{"PUT", "/menus/page", `{"name":"renamed"}`, http.StatusOK},
+	} {
+		before := queryCount
+		recorder := httptest.NewRecorder()
+		req := httptest.NewRequest(request.method, request.path, bytes.NewBufferString(request.body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(recorder, req)
+		require.Equal(t, request.status, recorder.Code, recorder.Body.String())
+		require.Greater(t, queryCount, before, "expected database queries for %s %s", request.method, request.path)
+	}
+}

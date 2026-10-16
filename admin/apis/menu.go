@@ -48,7 +48,7 @@ func init() {
 }
 
 var ensureCurrentAuthorizationPolicies = func(ctx *gin.Context, db *gorm.DB) error {
-	return service.AuthorizationPolicies.EnsureCurrent(ctx, db)
+	return service.AuthorizationPolicies.EnsureCurrent(ctx.Request.Context(), db)
 }
 
 var enforceMenuAuthorization = func(roleID, accessType, path, method string) (bool, error) {
@@ -70,7 +70,7 @@ type Menu struct {
 }
 
 func validateMenuMetadataDelete(ctx *gin.Context, db *gorm.DB, _ schema.Tabler) error {
-	return service.ValidateMenuMetadataDelete(ctx, db, ctx.Param("id"))
+	return service.ValidateMenuMetadataDelete(ctx.Request.Context(), db, ctx.Param("id"))
 }
 
 // GetAction get action
@@ -142,7 +142,7 @@ func (e *Menu) UpdateAuthorize(ctx *gin.Context) {
 		return
 	}
 	resource, err := service.AuthorizationPolicies.ReplaceMenu(
-		ctx,
+		ctx.Request.Context(),
 		center.Default.GetDB(ctx, &models.CasbinRule{}),
 		req.RoleID,
 		keys,
@@ -213,7 +213,7 @@ func (e *Menu) GetAuthorize(ctx *gin.Context) {
 		}
 	}
 	list := make([]*models.Menu, 0)
-	err := center.Default.GetDB(ctx, &models.Menu{}).
+	err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx.Request.Context()).
 		Where("(type = ? OR type = ?) AND status = ?", pkg.MenuAccessType, pkg.DirectoryAccessType, bootenum.Enabled).
 		Order("sort desc").
 		Find(&list).Error
@@ -278,7 +278,7 @@ func normalizeMenuNameForLayout(menus []*models.Menu) {
 func (e *Menu) Tree(ctx *gin.Context) {
 	api := response.Make(ctx)
 	list := make([]*models.Menu, 0)
-	err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx).
+	err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx.Request.Context()).
 		Where("type <> ?", pkg.APIAccessType).
 		Find(&list).Error
 	if err != nil {
@@ -301,7 +301,7 @@ func (e *Menu) GetAPI(ctx *gin.Context) {
 	api := response.Make(ctx)
 	id := ctx.Param("id")
 	m := &models.Menu{}
-	err := center.Default.GetDB(ctx, &models.Menu{}).Model(&models.Menu{}).
+	err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx.Request.Context()).Model(&models.Menu{}).
 		Where("id = ?", id).First(m).Error
 	if err != nil {
 		api.AddError(err).Log.Error("get menu error", "err", err)
@@ -309,7 +309,7 @@ func (e *Menu) GetAPI(ctx *gin.Context) {
 		return
 	}
 	list := make([]*models.Menu, 0)
-	err = center.Default.GetDB(ctx, &models.Menu{}).Where(&models.Menu{
+	err = center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx.Request.Context()).Where(&models.Menu{
 		Type:     pkg.APIAccessType,
 		ParentID: m.ID,
 	}).Find(&list).Error
@@ -359,7 +359,7 @@ func (e *Menu) BindAPI(ctx *gin.Context) {
 		})
 	}
 	err := service.AuthorizationPolicies.BindMenuAPIs(
-		ctx,
+		ctx.Request.Context(),
 		center.Default.GetDB(ctx, &models.Menu{}),
 		req.MenuID,
 		references,

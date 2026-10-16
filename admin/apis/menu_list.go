@@ -19,7 +19,7 @@ func listMenuTree(ctx *gin.Context, req *dto.MenuSearch) ([]*models.Menu, int64,
 	for _, kind := range req.Type {
 		loadedTypes = append(loadedTypes, pkg.AccessType(kind))
 	}
-	if err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx).
+	if err := center.Default.GetDB(ctx, &models.Menu{}).WithContext(ctx.Request.Context()).
 		Where("type IN ?", loadedTypes).Find(&list).Error; err != nil {
 		return nil, 0, err
 	}

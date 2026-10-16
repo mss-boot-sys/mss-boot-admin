@@ -31,7 +31,7 @@ func writeMenuMetadata(ctx *gin.Context) {
 		}
 	}
 	var bindingError error
-	menu, err := service.WriteMenuMetadata(ctx.Copy(), center.Default.GetDB(ctx, &models.Menu{}), id, func(menu *models.Menu) error {
+	menu, err := service.WriteMenuMetadata(ctx.Request.Context(), center.Default.GetDB(ctx, &models.Menu{}), id, func(menu *models.Menu) error {
 		bindingError = api.Bind(menu).Error
 		return bindingError
 	})
