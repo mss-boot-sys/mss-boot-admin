@@ -9,6 +9,9 @@ and the root changelog, not as a current release surface.
 - Refresh exact source dependencies to Ant Design 6.6.6, React Query 5.104.2,
   Vitest 5.0.4 and Happy DOM 21.0.1; align runtime overrides and the Thin Host
   manifest contract. Preserve Node 24, pnpm 10.34.5 and immutable v1.6.1 artifacts.
+- Rebuild the parameterized Thin Host lock from the candidate package and check
+  manifest/importer/override parity plus a rendered frozen installation. Published
+  package identities remain unchanged.
 - Keep Happy DOM 21's external stylesheet and iframe loading disabled by default.
   The upgrade changes the test environment, with no business API or data migration.
 

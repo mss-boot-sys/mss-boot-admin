@@ -30,9 +30,10 @@ reviewed on 2026-10-16. Source manifests, runtime overrides, dependency checks,
 and Thin Host manifest pins move together; this does not republish v1.6.1 or
 change the dependency graph of its immutable artifacts. Happy DOM 21 disables
 external CSS and iframe loading by default; test configuration retains those
-safer defaults. The generated-host lock still represents an earlier released
-graph and requires a separately qualified refresh against the exact public
-package before a future distribution is published.
+safer defaults. The generated-host lock freezes this candidate dependency graph with
+parameterized package identity. Its frozen install is checked against a local
+candidate package; public package resolution still requires separate
+qualification for the next coordinated release.
 
 The release gzip budgets are 32 KiB for the entry, 240 KiB for any single chunk
 and 940 KiB for the complete JavaScript corpus. The
