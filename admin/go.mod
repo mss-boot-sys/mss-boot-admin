@@ -3,7 +3,7 @@ module github.com/mss-boot-sys/mss-boot-admin/admin
 go 1.27.2
 
 require (
-	github.com/alicebob/miniredis/v2 v2.39.0
+	github.com/alicebob/miniredis/v2 v2.40.0
 	github.com/appleboy/gin-jwt/v2 v2.10.3
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
@@ -20,7 +20,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674
 	github.com/grafana/pyroscope-go v1.4.3
-	github.com/larksuite/oapi-sdk-go/v3 v3.12.0
+	github.com/larksuite/oapi-sdk-go/v3 v3.12.1
 	github.com/mss-boot-sys/mss-boot-admin/mss-boot v1.6.1
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/redis/go-redis/v9 v9.23.0
