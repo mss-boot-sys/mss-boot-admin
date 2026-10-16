@@ -262,28 +262,31 @@ test('@ui-experience failed user deletion preserves confirmation and succeeds af
       await row.getByRole('button', { name: 'More actions', exact: true }).click();
       await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
       const confirmation = page.getByRole('dialog', { name: 'Delete this user?', exact: true });
+      const confirmButton = confirmation.getByRole('button').filter({ hasText: /^OK$/ });
       await expect(confirmation).toBeVisible();
       const rejected = page.waitForResponse(
         (response) => response.url() === url && response.request().method() === 'DELETE',
       );
-      await confirmation.getByRole('button', { name: 'OK', exact: true }).click();
+      await confirmButton.click();
       expect((await rejected).status()).toBe(409);
       await expect(page.getByText(/Deletion failed:.*temporarily in use/)).toBeVisible();
       await expect(confirmation).toBeVisible();
       // The mutation's toast precedes RowActions' promise rejection handler.
-      // Its inline error and restored button are applied in one modal update.
       const failure = confirmation.getByRole('alert');
       await expect(
         failure.getByText('This fixture is temporarily in use', { exact: true }),
       ).toBeVisible();
-      await expect(confirmation.getByRole('button', { name: 'OK', exact: true })).toBeEnabled();
+      // AntD's zero-width exit-motion icon can retain the accessible name
+      // "loading" after pending ends. Check the actual button state and retry.
+      await expect(confirmButton).not.toHaveClass(/(?:^|\s)ant-btn-loading(?:\s|$)/);
+      await expect(confirmButton).toBeEnabled();
       expect((await page.request.get(url)).status()).toBe(200);
 
       await page.unroute(url, rejectDelete);
       const deleted = page.waitForResponse(
         (response) => response.url() === url && response.request().method() === 'DELETE',
       );
-      await confirmation.getByRole('button', { name: 'OK', exact: true }).click();
+      await confirmButton.click();
       expect((await deleted).status()).toBe(204);
       await expect(confirmation).toBeHidden();
       await expect(page.getByText(user.username, { exact: true })).toHaveCount(0);
