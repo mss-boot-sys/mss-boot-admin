@@ -992,6 +992,7 @@ func (e *User) PasswordReset(ctx *gin.Context) {
 // @Product application/json
 // @Param data body models.User true "data"
 // @Success 201 {object} models.User
+// @Failure 422 {object} response.Response "Username must contain 3 to 20 ASCII letters, digits or underscores"
 // @Router /admin/api/users [post]
 // @Security Bearer
 func (e *User) Create(*gin.Context) {}
@@ -1005,6 +1006,7 @@ func (e *User) Create(*gin.Context) {}
 // @Param id path string true "id"
 // @Param data body models.User true "data"
 // @Success 200 {object} models.User
+// @Failure 422 {object} response.Response "Changed usernames must satisfy the managed username contract"
 // @Router /admin/api/users/{id} [put]
 // @Security Bearer
 func (e *User) Update(*gin.Context) {}

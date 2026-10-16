@@ -431,6 +431,8 @@ func (*Menu) List(ctx *gin.Context) {
 // @Produce application/json
 // @Param data body models.Menu true "data"
 // @Success 201 {object} models.Menu
+// @Failure 409 {object} response.Response "Permission path conflict"
+// @Failure 422 {object} response.Response "Invalid parent, type or menu hierarchy"
 // @Router /admin/api/menus [post]
 // @Security Bearer
 func (*Menu) Create(*gin.Context) {}
@@ -444,6 +446,9 @@ func (*Menu) Create(*gin.Context) {}
 // @Param id path string true "id"
 // @Param data body models.Menu true "data"
 // @Success 200 {object} models.Menu
+// @Failure 404 {object} response.Response
+// @Failure 409 {object} response.Response "Revoke referenced role grants before regrouping"
+// @Failure 422 {object} response.Response "Invalid parent, type or menu hierarchy"
 // @Router /admin/api/menus/{id} [put]
 // @Security Bearer
 func (*Menu) Update(*gin.Context) {}
@@ -465,6 +470,7 @@ func (*Menu) Get(*gin.Context) {}
 // @Tags menu
 // @Param id path string true "id"
 // @Success 204
+// @Failure 409 {object} response.Response "Menu or descendants still have role grants"
 // @Router /admin/api/menus/{id} [delete]
 // @Security Bearer
 func (*Menu) Delete(*gin.Context) {}
