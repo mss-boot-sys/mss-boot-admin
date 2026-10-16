@@ -84,6 +84,10 @@ const Value = "local"
 			Repository:  "acme/workspace-admin",
 		},
 		Write: true,
+		// Keep Go's VCS discovery inside the fixture instead of inheriting a
+		// repository (or malformed .git directory) above the temporary root.
+		// Leave it uncommitted to also cover a freshly generated workspace.
+		InitializeGit: true,
 	})
 	if err != nil {
 		t.Fatalf("generate downstream workspace: %v", err)
