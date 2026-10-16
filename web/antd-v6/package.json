@@ -205,7 +205,7 @@
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@umijs/max": "4.7.23",
+    "@umijs/max": "4.7.24",
     "antd": "6.6.6",
     "antd-style": "4.1.0",
     "clsx": "2.1.1",
