@@ -77,9 +77,13 @@ async function expectUsableList(page: Page) {
       .filter({ has: page.locator('table, ul, [data-testid="page-empty"]') })
       .first(),
   ).toBeVisible();
-  await expect(page.getByTestId('page-loading')).toHaveCount(0);
-  await expect(page.getByTestId('page-error')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
+  // Closed detail drawers can retain their pending children in the DOM.
+  // Only states visible to the operator describe the current list surface.
+  await expect(page.getByTestId('page-loading').filter({ visible: true })).toHaveCount(0);
+  await expect(page.getByTestId('page-error').filter({ visible: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Retry', exact: true }).filter({ visible: true }),
+  ).toHaveCount(0);
 }
 
 function unwrapData<T>(body: Record<string, unknown>): T {

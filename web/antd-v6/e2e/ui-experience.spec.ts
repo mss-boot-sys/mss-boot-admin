@@ -2,12 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { expect, type Page, type Route, test } from '@playwright/test';
 import { API_BASE_URL, csrfHeaders, login, readJSON, setLocale } from './support/session';
 
-// Route compilation and authenticated presentation loading can exceed the
-// assertion default on a cold dev server. Wait on the actual usable surface.
-test.setTimeout(60_000);
-
 async function expectListReady(page: Page) {
-  await expect(page.locator('#mss-admin-name-filter')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('#mss-admin-name-filter')).toBeVisible();
   await expect(page.getByTestId('page-loading')).toHaveCount(0);
   await expect(page.getByTestId('page-error')).toHaveCount(0);
 }
@@ -140,7 +136,11 @@ test('@ui-experience desktop menu search restores keyboard focus on every openin
   await page.keyboard.press('Control+k');
   await expect(input).toBeFocused();
   await input.fill('/app-config');
-  await expect(page.getByRole('option').filter({ hasText: '/app-config' }).first()).toBeVisible();
+  // Ant Design's virtualized list exposes a separate hidden accessibility
+  // option. Verify the rendered result before exercising keyboard navigation.
+  await expect(
+    page.getByText('/app-config', { exact: true }).filter({ visible: true }),
+  ).toBeVisible();
   await input.press('Enter');
   await expect(page).toHaveURL(/\/app-config$/);
   await expect(input).toBeHidden();
@@ -155,6 +155,8 @@ test('@ui-experience desktop route tabs retain the settings query', async ({ pag
     'aria-selected',
     'true',
   );
+  await expect(page.getByTestId('page-loading')).toHaveCount(0);
+  await expect(page.getByTestId('page-error')).toHaveCount(0);
   await page.goto('/users');
   const tabs = page.getByRole('navigation', { name: 'Open pages', exact: true });
   await tabs.getByRole('button', { name: 'Application settings', exact: true }).click();
@@ -163,6 +165,8 @@ test('@ui-experience desktop route tabs retain the settings query', async ({ pag
     'aria-selected',
     'true',
   );
+  await expect(page.getByTestId('page-loading')).toHaveCount(0);
+  await expect(page.getByTestId('page-error')).toHaveCount(0);
 });
 
 test('@ui-experience mobile user cards retain identity and expose batch actions', async ({

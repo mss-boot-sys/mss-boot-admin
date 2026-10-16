@@ -92,9 +92,19 @@ test.describe('V6 authorization boundaries', () => {
       await expect(page.getByText(username, { exact: true })).toBeVisible();
       await expect(page.getByTestId('page-error')).toHaveCount(0);
       await expect(page.getByTestId('page-loading')).toHaveCount(0);
+      const reloadedList = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          response.request().method() === 'GET' &&
+          url.pathname === '/admin/api/users' &&
+          !url.searchParams.has('status')
+        );
+      });
       await page.reload();
+      expect((await reloadedList).status()).toBe(200);
       await expect(page.getByText(username, { exact: true })).toBeVisible();
       await expect(page.getByTestId('page-error')).toHaveCount(0);
+      await expect(page.getByTestId('page-loading')).toHaveCount(0);
     } finally {
       const removed = await page.request.delete(`${BACKEND_API_BASE_URL}/users/${user.id}`, {
         headers: await csrfHeaders(page),
@@ -138,7 +148,7 @@ test.describe('V6 authorization boundaries', () => {
       expect(menuContainsPath(authorizedMenu, '/security/online-sessions')).toBe(false);
 
       await page.goto('/suppliers');
-      await expect(page.getByText('403', { exact: true })).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText('403', { exact: true })).toBeVisible();
       expect(page.url().startsWith(APP_BASE_URL)).toBe(true);
 
       if (process.env.MSS_V6_AVATAR_PROBE === '1') {
@@ -186,7 +196,7 @@ test.describe('V6 authorization boundaries', () => {
       expect(deniedSessions.status()).toBe(403);
 
       await page.goto('/security/online-sessions');
-      await expect(page.getByText('403', { exact: true })).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText('403', { exact: true })).toBeVisible();
       expect(page.url().startsWith(APP_BASE_URL)).toBe(true);
     } finally {
       await page.close();

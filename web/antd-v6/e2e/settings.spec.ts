@@ -69,6 +69,8 @@ test('@settings application settings expose every migrated V6 section without wa
     'aria-selected',
     'true',
   );
+  await expect(page.getByTestId('page-loading')).toHaveCount(0);
+  await expect(page.getByTestId('page-error')).toHaveCount(0);
   await expectNoDocumentOverflow(page);
 
   for (const [name, key] of [
@@ -85,6 +87,8 @@ test('@settings application settings expose every migrated V6 section without wa
       'aria-selected',
       'true',
     );
+    await expect(page.getByTestId('page-loading')).toHaveCount(0);
+    await expect(page.getByTestId('page-error')).toHaveCount(0);
     await expectNoDocumentOverflow(page);
   }
 
