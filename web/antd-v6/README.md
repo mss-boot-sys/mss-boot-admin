@@ -20,8 +20,20 @@ ProComponents 3.1.15-7, React Query 5.104.1 and Umi Max 4.7.23.
 ProComponents intentionally follows the upstream
 [`beta` channel](https://registry.npmjs.org/@ant-design%2fpro-components/beta):
 the `latest` channel still points to the incompatible v2 line.
-Package manifests, lockfiles, dependency checks and the Thin Host Blueprint
-record the same exact runtime versions. These versions form the v1.6.1 package and generated Thin Host baseline.
+These versions form the published v1.6.1 package baseline.
+
+The unpublished source dependency refresh tracks [Ant Design 6.6.6](https://github.com/ant-design/ant-design/releases/tag/6.6.6),
+[React Query 5.104.2](https://github.com/TanStack/query/releases/tag/%40tanstack/react-query%405.104.2),
+[Vitest 5.0.4](https://github.com/vitest-dev/vitest/releases/tag/v5.0.4), and
+[Happy DOM 21.0.1](https://github.com/capricorn86/happy-dom/releases/tag/v21.0.1),
+reviewed on 2026-10-16. Source manifests, runtime overrides, dependency checks,
+and Thin Host manifest pins move together; this does not republish v1.6.1 or
+change the dependency graph of its immutable artifacts. Happy DOM 21 disables
+external CSS and iframe loading by default; test configuration retains those
+safer defaults. The generated-host lock freezes this candidate dependency graph with
+parameterized package identity. Its frozen install is checked against a local
+candidate package; public package resolution still requires separate
+qualification for the next coordinated release.
 
 The release gzip budgets are 32 KiB for the entry, 240 KiB for any single chunk
 and 940 KiB for the complete JavaScript corpus. The

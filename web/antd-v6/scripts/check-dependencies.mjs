@@ -11,15 +11,16 @@ const proxyConfig = await readFile(join(projectRoot, 'package/business.cjs'), 'u
 const expected = {
   '@ant-design/icons': '6.3.4',
   '@ant-design/pro-components': '3.1.15-7',
-  '@tanstack/react-query': '5.104.1',
-  antd: '6.6.5',
+  '@tanstack/react-query': '5.104.2',
+  antd: '6.6.6',
   'antd-style': '4.1.0',
   d: '1.0.2',
+  'happy-dom': '21.0.1',
   react: '19.3.0',
   'react-dom': '19.3.0',
   '@umijs/max': '4.7.23',
   typescript: '7.0.2',
-  vitest: '5.0.3',
+  vitest: '5.0.4',
 };
 
 const failures = [];
@@ -116,9 +117,9 @@ const versionsFor = (name) => {
 const allowedResolvedVersions = {
   react: ['19.3.0'],
   'react-dom': ['19.3.0'],
-  antd: ['6.6.5'],
+  antd: ['6.6.6'],
   '@ant-design/pro-components': ['3.1.15-7'],
-  '@tanstack/react-query': ['5.104.1'],
+  '@tanstack/react-query': ['5.104.2'],
   '@umijs/max': ['4.7.23'],
   axios: ['0.34.0'],
   umi: ['4.7.23'],

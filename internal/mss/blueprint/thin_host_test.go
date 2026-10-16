@@ -6,11 +6,13 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/mss-boot-sys/mss-boot-admin/internal/mss/project"
+	"gopkg.in/yaml.v3"
 )
 
 func TestGenerateThinHostSelectsOnlyApplicationTemplates(t *testing.T) {
@@ -177,9 +179,9 @@ func TestApplicationTemplatePinsOneFrontendRuntimeWithoutPatches(t *testing.T) {
 	expected := map[string]string{
 		"react":                      "19.3.0",
 		"react-dom":                  "19.3.0",
-		"antd":                       "6.6.5",
+		"antd":                       "6.6.6",
 		"@ant-design/pro-components": "3.1.15-7",
-		"@tanstack/react-query":      "5.104.1",
+		"@tanstack/react-query":      "5.104.2",
 		"axios":                      "0.34.0",
 		"fast-uri":                   "3.1.7",
 		"js-yaml@3":                  "3.15.2",
@@ -205,6 +207,87 @@ func TestApplicationTemplatePinsOneFrontendRuntimeWithoutPatches(t *testing.T) {
 	}
 	if document.DevDependencies["vite"] != "8.3.4" {
 		t.Fatalf("Thin Host test Vite = %q, want 8.3.4", document.DevDependencies["vite"])
+	}
+}
+
+func TestApplicationTemplateFrontendLockMatchesManifest(t *testing.T) {
+	_, sourceFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve test source path")
+	}
+	webRoot := filepath.Clean(filepath.Join(filepath.Dir(sourceFile), "..", "..", "..", "templates", "application", "web"))
+	manifestData, err := os.ReadFile(filepath.Join(webRoot, "package.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest struct {
+		Dependencies    map[string]string `json:"dependencies"`
+		DevDependencies map[string]string `json:"devDependencies"`
+		Pnpm            struct {
+			Overrides map[string]string `json:"overrides"`
+		} `json:"pnpm"`
+	}
+	if err := json.Unmarshal(manifestData, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	lockData, err := os.ReadFile(filepath.Join(webRoot, "pnpm-lock.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	type dependency struct {
+		Specifier string `yaml:"specifier"`
+		Version   string `yaml:"version"`
+	}
+	var lock struct {
+		Overrides map[string]string `yaml:"overrides"`
+		Importers map[string]struct {
+			Dependencies    map[string]dependency `yaml:"dependencies"`
+			DevDependencies map[string]dependency `yaml:"devDependencies"`
+		} `yaml:"importers"`
+	}
+	if err := yaml.Unmarshal(lockData, &lock); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(lock.Overrides, manifest.Pnpm.Overrides) {
+		t.Fatalf("Thin Host lock overrides differ from manifest: lock=%v manifest=%v", lock.Overrides, manifest.Pnpm.Overrides)
+	}
+	if len(lock.Importers) != 1 {
+		t.Fatalf("Thin Host lock must contain only the application importer, got %d", len(lock.Importers))
+	}
+	app, ok := lock.Importers["."]
+	if !ok {
+		t.Fatal("Thin Host lock has no application importer")
+	}
+	for _, group := range []struct {
+		name     string
+		declared map[string]string
+		locked   map[string]dependency
+	}{
+		{"dependencies", manifest.Dependencies, app.Dependencies},
+		{"devDependencies", manifest.DevDependencies, app.DevDependencies},
+	} {
+		if len(group.declared) != len(group.locked) {
+			t.Errorf("Thin Host lock %s contains %d entries, manifest has %d", group.name, len(group.locked), len(group.declared))
+		}
+		for name, version := range group.declared {
+			if name == "__MSS_DISTRIBUTION_FRONTEND_PACKAGE__" {
+				name = "@mss-boot-sys/admin-web"
+			}
+			resolved, ok := group.locked[name]
+			if !ok || resolved.Specifier != version || (resolved.Version != version && !strings.HasPrefix(resolved.Version, version+"(")) {
+				t.Errorf("Thin Host lock %s.%s = %#v, want exact %s", group.name, name, resolved, version)
+			}
+		}
+	}
+	for _, token := range []string{frontendTarballToken, frontendIntegrityToken} {
+		if strings.Count(string(lockData), token) != 1 {
+			t.Errorf("Thin Host lock must retain exactly one %s placeholder", token)
+		}
+	}
+	for _, forbidden := range []string{"127.0.0.1", "localhost", " file:", "@file:", "_authToken", "NODE_AUTH_TOKEN"} {
+		if strings.Contains(string(lockData), forbidden) {
+			t.Errorf("Thin Host lock contains fixture or credential residue %q", forbidden)
+		}
 	}
 }
 

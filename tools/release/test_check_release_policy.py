@@ -25,7 +25,7 @@ class ReleasePolicyTest(unittest.TestCase):
 
     def test_first_sys_release_is_direct_and_legacy_identity_remains_historical(self):
         self.assertEqual(self.policy["publicationMode"], "direct")
-        self.assertEqual(self.policy["currentStableVersion"], "v1.6.0")
+        self.assertEqual(self.policy["currentStableVersion"], "v1.6.1")
         self.assertEqual(self.policy["nextPublicVersion"], "v1.6.1")
         self.assertEqual(self.policy["legacyRepository"], "mss-boot-io/mss-boot-admin")
         self.assertEqual(self.policy["legacyStableVersion"], "v1.3.8")
@@ -33,14 +33,14 @@ class ReleasePolicyTest(unittest.TestCase):
         self.assertNotIn("immutableStoppedTrains", self.policy)
         self.assertEqual(
             self.policy["currentStableCommit"],
-            "81d592a0e16ef210331249945baa63cb3dac6de4",
+            "0107548689c66d4e2ec89dabaabbee7486d8e4b6",
         )
 
     def test_canonical_components_publish_only_reviewed_version(self):
         for component in POLICY.COMPONENT_TEMPLATE_KEYS:
             ref = POLICY.release_ref(self.policy, component, "v1.6.1")
             POLICY.check_public_ref(self.policy, component, "v1.6.1", ref)
-            for version in ("v1.5.0", "v1.4.0", "v1.3.8", "v1.6.2", "v1.6.1-rc.1", "v01.4.0"):
+            for version in ("v1.6.0", "v1.5.0", "v1.4.0", "v1.3.8", "v1.6.2", "v1.6.1-rc.1", "v01.4.0"):
                 with self.assertRaises(POLICY.PolicyError):
                     POLICY.check_public_ref(
                         self.policy,

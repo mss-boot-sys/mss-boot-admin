@@ -10,7 +10,7 @@ overrides:
   # The request plugin generates this package into the browser bundle. Stay on
   # its compatible 0.x line while replacing Umi's vulnerable 0.27.2 pin.
   '@umijs/plugins>axios': 0.34.0
-  '@umijs/plugins>@tanstack/react-query': 5.104.1
+  '@umijs/plugins>@tanstack/react-query': 5.104.2
   # These two inactive Umi tool paths have safe, API-compatible releases in
   # their existing major lines. Pin them so a clean install cannot regress.
   '@umijs/preset-umi>path-to-regexp': 1.9.0

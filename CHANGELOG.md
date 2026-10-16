@@ -6,7 +6,18 @@ tag namespaces.
 
 ## [Unreleased]
 
-No unreleased changes are recorded.
+### Changed
+
+- Consolidate dependency updates from PRs #48–54: miniredis 2.40.0, the Lark
+  Go SDK 3.12.1, Ant Design 6.6.6, React Query 5.104.2, Vitest 5.0.4,
+  Happy DOM 21.0.1, Docs Prettier 3.9.10, CodeQL 4.38.3, Scorecard 2.5.0
+  and the reviewed setup-node revision. Keep matching frontend overrides,
+  dependency checks and source templates aligned. Happy DOM retains its new
+  default of disabling external stylesheet and iframe loading in tests.
+- Reconcile the current stable baseline to the already published v1.6.1
+  source commit `0107548689c66d4e2ec89dabaabbee7486d8e4b6`. The dependency
+  updates above apply to unpublished source and do not alter existing
+  v1.6.1 artifacts, tags or module checksums. No database migration.
 
 ## [v1.6.1] - 2026-10-15
 

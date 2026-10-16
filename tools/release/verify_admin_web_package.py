@@ -21,8 +21,8 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 ADMIN_WEB_PACKAGE_MANAGER = "pnpm@10.34.5"
 ADMIN_WEB_RUNTIME_OVERRIDES = {
     "@ant-design/pro-components": "3.1.15-7",
-    "@tanstack/react-query": "5.104.1",
-    "antd": "6.6.5",
+    "@tanstack/react-query": "5.104.2",
+    "antd": "6.6.6",
     "axios": "0.34.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

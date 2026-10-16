@@ -54,7 +54,8 @@ spec:
         - .github/workflows/frontend-v6-ci.yml
         - .github/workflows/frontend-v6-release.yml
       guidance: >-
-        Ant Design 6.6.5 and the ProComponents v3 beta remain exact pins. Build and release
+        Unpublished source pins Ant Design 6.6.6 and the ProComponents v3 beta exactly.
+        Published releases retain their immutable dependency graphs. Build and release
         this application through its V6 tag, artifact, image, and rollback history. V6 is the
         only browser application and backend browser-session contract. Local verification is
         authoritative; the extended Frontend v6 CI matrix is available only by explicit dispatch
