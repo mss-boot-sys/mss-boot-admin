@@ -2343,6 +2343,7 @@ required_titles = {
     '@parity en-US retained pages are responsive and deprecation-free',
     '@parity zh-CN retained pages are responsive and deprecation-free',
     '@parity OAuth login preserves an attempt-bound safe deep link',
+    '@permission user write boundaries keep the management list usable after creation',
     '@permission anonymous direct navigation requires a server session',
     '@permission restricted user cannot access Supplier or online-session menu, route, and API',
     '@custom-content desktop en-US light preserves avatar and layout content with core actions',
