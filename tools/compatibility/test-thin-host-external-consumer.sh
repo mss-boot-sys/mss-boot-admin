@@ -2125,7 +2125,13 @@ restricted_role_create_status="$(curl --fail --silent --show-error \
 }
 restricted_role_id="$(jq -er '.id | select(type == "string" and length > 0)' "${restricted_role_response}")"
 
-restricted_username="compatrestricted${restricted_suffix}"
+# Keep the ten-character random suffix while respecting the managed username
+# contract (3-20 ASCII letters, digits or underscores).
+restricted_username="compatdeny${restricted_suffix}"
+[[ "${restricted_username}" =~ ^[A-Za-z0-9_]{3,20}$ ]] || {
+  echo "restricted compatibility fixture username violates the managed username contract" >&2
+  exit 1
+}
 restricted_password="MssRestricted-A1-$(python3 - <<'PY'
 import secrets
 print(secrets.token_hex(24))

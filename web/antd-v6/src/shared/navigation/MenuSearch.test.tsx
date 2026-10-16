@@ -90,9 +90,25 @@ describe('authorized menu search', () => {
       await waitFor(() => expect(document.activeElement).toBe(input));
       fireEvent.change(input, { target: { value: 'no-such-page' } });
       await screen.findByText('未找到匹配页面');
-      fireEvent.keyDown(input, { key: 'Escape' });
-      await waitFor(() => expect(document.activeElement).toBe(previous));
+      fireEvent.keyDown(input, { key: 'Escape', keyCode: 27 });
+      await waitFor(() => expect(document.activeElement).toBe(previous), { timeout: 2000 });
     }
     expect(push).not.toHaveBeenCalled();
+  });
+  it('returns focus to the field trigger after Escape with popover motion enabled', async () => {
+    render(
+      <App>
+        <MenuSearch items={menu} variant="field" />
+      </App>,
+    );
+    const trigger = screen.getByRole('button', { name: '打开菜单搜索' });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: 'k', ctrlKey: true });
+    const input = await screen.findByRole('combobox', { name: '搜索菜单' });
+    await waitFor(() => expect(document.activeElement).toBe(input));
+    fireEvent.change(input, { target: { value: 'no-such-page' } });
+    await screen.findByText('未找到匹配页面');
+    fireEvent.keyDown(input, { key: 'Escape', keyCode: 27 });
+    await waitFor(() => expect(document.activeElement).toBe(trigger), { timeout: 2000 });
   });
 });
