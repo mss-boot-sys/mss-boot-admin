@@ -9,6 +9,7 @@ import {
   AUTHORIZATION_REFRESH_EVENT,
   authorizationStateSignature,
   isAuthorizationBootstrapQuery,
+  navigationStateSignature,
   shouldRefreshAuthorization,
   subscribeAuthorizationRefreshBroadcast,
 } from './freshness';
@@ -127,6 +128,8 @@ export default function AuthorizationFreshnessBridge() {
     const changed =
       authorizationStateSignature(before.currentUser, before.authorizedMenu) !==
       authorizationStateSignature(currentUser, authorizedMenu);
+    const navigationChanged =
+      navigationStateSignature(before.authorizedMenu) !== navigationStateSignature(authorizedMenu);
     if (changed) await evictAuthorizationSensitiveQueries();
     queryClient.setQueryData(queryKeys.currentUser, currentUser);
     queryClient.setQueryData(queryKeys.authorizedMenu(currentUser.id), authorizedMenu);
@@ -136,9 +139,10 @@ export default function AuthorizationFreshnessBridge() {
             ...previous,
             currentUser,
             authorizedMenu,
-            authorizationVersion: changed
-              ? (previous.authorizationVersion ?? 0) + 1
-              : previous.authorizationVersion,
+            authorizationVersion:
+              changed || navigationChanged
+                ? (previous.authorizationVersion ?? 0) + 1
+                : previous.authorizationVersion,
             startupFailure: undefined,
           }
         : previous,

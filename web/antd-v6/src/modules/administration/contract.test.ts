@@ -7,6 +7,7 @@ import {
   parseAdministrationPage,
   parseDepartment,
   parseRole,
+  parseUser,
   serializeRoleWrite,
   serializeUserWrite,
 } from './contract';
@@ -14,6 +15,37 @@ import {
 const params = { current: 1, pageSize: 20 } as const;
 
 describe('administration contracts', () => {
+  it('keeps legacy usernames readable and editable without weakening new usernames', () => {
+    const usernames = ['e2erestricted0123456789', 'provider-identity', ' legacy identity ', ''];
+    const page = parseAdministrationPage(
+      { data: usernames.map((username, index) => ({ id: `user-${index}`, username })), total: 4 },
+      params,
+      parseUser,
+    );
+    expect(page.data.map(({ username }) => username)).toEqual(usernames);
+    for (const username of usernames) {
+      const values = { username, status: 'enabled' as const };
+      expect(serializeUserWrite(values, 'edit', username).username).toBe(username);
+      expect(() => serializeUserWrite(values, 'edit', 'different')).toThrow(/username/);
+      expect(() => serializeUserWrite(values, 'create', username)).toThrow(/username/);
+    }
+    expect(() => parseUser({ id: 'bad', username: 42 })).toThrow(/username/);
+  });
+
+  it('enforces the managed username boundaries on new and renamed users', () => {
+    for (const username of ['ab', 'a'.repeat(21), 'has-hyphen', '用户名']) {
+      expect(() =>
+        serializeUserWrite({ username, status: 'enabled', password: 'Testing123' }, 'create'),
+      ).toThrow(/username/);
+    }
+    for (const username of ['abc', 'a'.repeat(20), 'USER_123']) {
+      expect(
+        serializeUserWrite({ username, status: 'enabled', password: 'Testing123' }, 'create')
+          .username,
+      ).toBe(username);
+    }
+  });
+
   it('never uses a relation identifier as display text', () => {
     const names = new Map([['role-1', 'Administrator']]);
 

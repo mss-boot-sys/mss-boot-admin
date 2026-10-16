@@ -2,7 +2,7 @@ import SearchOutlined from '@ant-design/icons/SearchOutlined';
 import type { AuthorizedMenuItem } from '@mss-admin-core/shared/auth/types';
 import { history, useIntl } from '@umijs/max';
 import { AutoComplete, Button, Empty, Input, Popover, Space, Typography } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatMenuLabel } from './menuLocale';
 
 const SEARCH_RESULT_LIMIT = 20;
@@ -63,6 +63,45 @@ export default function MenuSearch({
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const openRef = useRef(open);
+  openRef.current = open;
+  const inputRef = useRef<ComponentRef<typeof AutoComplete>>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const restoreFocusRef = useRef(false);
+  const show = useCallback(() => {
+    if (!open) {
+      returnFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    restoreFocusRef.current = false;
+    setOpen(true);
+    inputRef.current?.focus();
+  }, [open]);
+  const close = useCallback(() => {
+    restoreFocusRef.current = true;
+    setOpen(false);
+    setQuery('');
+  }, []);
+  const focusInput = useCallback((node: ComponentRef<typeof AutoComplete> | null) => {
+    inputRef.current = node;
+    if (openRef.current) node?.focus();
+  }, []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (open) inputRef.current?.focus();
+      else if (restoreFocusRef.current) {
+        restoreFocusRef.current = false;
+        const previous = returnFocusRef.current;
+        const target =
+          previous?.isConnected && previous !== document.body ? previous : triggerRef.current;
+        // Do not steal focus if another control was selected while closing.
+        if (document.activeElement === document.body || document.activeElement === target)
+          target?.focus();
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
   const allItems = useMemo(
     () => buildAuthorizedMenuSearchItems(items, (name) => formatMenuLabel(intl, name)),
     [intl, items],
@@ -78,18 +117,18 @@ export default function MenuSearch({
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
         event.preventDefault();
-        setOpen(true);
+        show();
       }
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape' && open) {
+        // Own Escape before nested inputs or popup handlers can consume it.
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
-
-  const close = () => {
-    setOpen(false);
-    setQuery('');
-  };
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [close, open, show]);
 
   return (
     <Popover
@@ -100,52 +139,63 @@ export default function MenuSearch({
       trigger="click"
       content={
         <div className="w-[min(420px,calc(100vw-32px))]">
-          <AutoComplete
-            autoFocus
-            className="w-full"
-            defaultActiveFirstOption
-            value={query}
-            options={results.map((item) => ({
-              value: item.path,
-              label: (
-                <Space orientation="vertical" size={0}>
-                  <Typography.Text>{item.label}</Typography.Text>
-                  <Typography.Text type="secondary">{item.path}</Typography.Text>
-                </Space>
-              ),
-            }))}
-            filterOption={false}
-            notFoundContent={
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={intl.formatMessage({ id: 'navigation.search.empty' })}
-              />
-            }
-            onChange={setQuery}
-            onSelect={(path) => {
-              close();
-              history.push(path);
-            }}
-          >
-            <Input
-              allowClear
-              prefix={<SearchOutlined />}
-              placeholder={intl.formatMessage({ id: 'navigation.search.placeholder' })}
-              aria-label={intl.formatMessage({ id: 'navigation.search.placeholder' })}
-            />
-          </AutoComplete>
-          <Typography.Text className="mt-2 block text-xs" type="secondary">
-            {intl.formatMessage({ id: 'navigation.search.hint' })}
-          </Typography.Text>
+          {open ? (
+            <>
+              <AutoComplete
+                ref={focusInput}
+                className="w-full"
+                defaultActiveFirstOption
+                value={query}
+                options={results.map((item) => ({
+                  value: item.path,
+                  label: (
+                    <Space orientation="vertical" size={0}>
+                      <Typography.Text>{item.label}</Typography.Text>
+                      <Typography.Text type="secondary">{item.path}</Typography.Text>
+                    </Space>
+                  ),
+                }))}
+                filterOption={false}
+                onChange={setQuery}
+                onSelect={(path) => {
+                  close();
+                  history.push(path);
+                }}
+              >
+                <Input
+                  allowClear
+                  prefix={<SearchOutlined />}
+                  placeholder={intl.formatMessage({ id: 'navigation.search.placeholder' })}
+                  aria-label={intl.formatMessage({ id: 'navigation.search.placeholder' })}
+                />
+              </AutoComplete>
+              {results.length === 0 ? (
+                <div role="status">
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={intl.formatMessage({ id: 'navigation.search.empty' })}
+                  />
+                </div>
+              ) : null}
+              <Typography.Text className="mt-2 block text-xs" type="secondary">
+                {intl.formatMessage({ id: 'navigation.search.hint' })}
+              </Typography.Text>
+            </>
+          ) : null}
         </div>
       }
       onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setQuery('');
+        if (next) show();
+        else {
+          restoreFocusRef.current = false;
+          setOpen(false);
+          setQuery('');
+        }
       }}
     >
       {variant === 'field' ? (
         <button
+          ref={triggerRef}
           aria-label={intl.formatMessage({ id: 'navigation.search.open' })}
           className="mss-search-trigger"
           type="button"
@@ -156,6 +206,7 @@ export default function MenuSearch({
         </button>
       ) : (
         <Button
+          ref={triggerRef}
           type="text"
           icon={<SearchOutlined />}
           aria-label={intl.formatMessage({ id: 'navigation.search.open' })}

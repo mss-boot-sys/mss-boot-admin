@@ -1,6 +1,7 @@
 import MoreOutlined from '@ant-design/icons/MoreOutlined';
+import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
 import { useIntl } from '@umijs/max';
-import { App, Button, Dropdown } from 'antd';
+import { Alert, App, Button, Dropdown } from 'antd';
 import type { ReactNode } from 'react';
 
 export interface RowAction {
@@ -8,7 +9,8 @@ export interface RowAction {
   label: ReactNode;
   /** Stable accessible name when `label` is operator-configurable. */
   ariaLabel?: string;
-  onClick: () => void;
+  /** Returned promises keep a confirmation open until the action succeeds. */
+  onClick: () => unknown;
   disabled?: boolean;
   danger?: boolean;
   /** Danger actions ask for confirmation before running. */
@@ -34,12 +36,36 @@ export function RowActions({
   const run = (action: RowAction) => {
     if (action.disabled) return;
     if (action.confirm) {
-      modal.confirm({
+      const confirmation = action.confirm;
+      const dialog = modal.confirm({
         title: action.confirm.title,
         content: action.confirm.description,
         okButtonProps: { danger: action.danger },
-        onOk: action.onClick,
+        // Return the action promise so the modal owns pending state, duplicate
+        // click protection and resetting the confirmation button after failure.
+        onOk: () =>
+          Promise.resolve()
+            .then(() => action.onClick())
+            .catch((error: unknown) => {
+              dialog.update({
+                content: (
+                  <div className="flex flex-col gap-3">
+                    {confirmation.description}
+                    <Alert
+                      showIcon
+                      type="error"
+                      title={intl.formatMessage({ id: 'actions.failed' })}
+                      description={getRequestErrorMessage(error)}
+                    />
+                  </div>
+                ),
+              });
+              throw error;
+            }),
       });
+      // Hook modal's public await mode handles a rejected onOk promise without
+      // emitting an unhandled rejection; the visible error above stays open.
+      void Promise.resolve(dialog);
       return;
     }
     action.onClick();
@@ -50,6 +76,7 @@ export function RowActions({
         <Button
           aria-label={primary.ariaLabel}
           disabled={primary.disabled}
+          danger={primary.danger}
           size="small"
           type="link"
           onClick={() => run(primary)}

@@ -1,6 +1,6 @@
 export const ADMIN_PAGE_SIZES = [20, 50, 100] as const;
 export const MAX_ADMIN_PAGE_SIZE = 100;
-export const MAX_ADMIN_TREE_DEPTH = 8;
+export const MAX_ADMIN_TREE_DEPTH = 64;
 export const MAX_ADMIN_TREE_NODES = 2_000;
 
 export type AdminPageSize = (typeof ADMIN_PAGE_SIZES)[number];
@@ -11,6 +11,8 @@ export interface AdministrationListParams {
   current: number;
   pageSize: AdminPageSize;
   name?: string;
+  /** Menus only: compiled locale IDs matching the visible search text. */
+  nameKeys?: string[];
   status?: AdministrationStatusFilter;
   /** Users only: exact role / department filter chips. */
   roleID?: string;
@@ -304,10 +306,15 @@ export function parseRole(value: unknown): RoleSummary {
 
 export function parseUser(value: unknown): UserSummary {
   const user = record(value, 'user');
+  // Read persisted identities as-is. Older SQLite and provider-created users
+  // can fall outside the managed-user write rules and must remain manageable.
+  if (typeof user.username !== 'string') {
+    throw new AdministrationContractError('username must be a string');
+  }
   const rawRole = user.role === undefined || user.role === null ? undefined : parseRole(user.role);
   return {
     id: identifier(user),
-    username: text(user, 'username', 20, true),
+    username: user.username,
     name: text(user, 'name', 100),
     email: text(user, 'email', 100),
     avatar: text(user, 'avatar', 255) || undefined,
@@ -538,9 +545,14 @@ export function serializeRoleWrite(values: RoleWriteValues) {
   };
 }
 
-export function serializeUserWrite(values: UserWriteValues, mode: 'create' | 'edit') {
-  const username = cleanRequired(values.username, 'username', 20);
-  if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+export function serializeUserWrite(
+  values: UserWriteValues,
+  mode: 'create' | 'edit',
+  originalUsername?: string,
+) {
+  const unchanged = mode === 'edit' && values.username === originalUsername;
+  const username = unchanged ? values.username : cleanRequired(values.username, 'username', 20);
+  if (!unchanged && !/^[A-Za-z0-9_]{3,20}$/.test(username)) {
     throw new AdministrationContractError('username is invalid');
   }
   const email = cleanOptional(values.email, 100);

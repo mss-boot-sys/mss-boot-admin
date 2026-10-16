@@ -132,7 +132,7 @@ func (e *Menu) AfterDelete(tx *gorm.DB) error {
     SELECT id
     FROM %s
     WHERE id IN ?
-    UNION ALL
+    UNION
     SELECT m.id
     FROM %s m
     INNER JOIN MenuHierarchy mh ON m.parent_id = mh.id

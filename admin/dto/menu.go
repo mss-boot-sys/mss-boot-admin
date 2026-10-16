@@ -18,6 +18,8 @@ type MenuSearch struct {
 	ID string `query:"id" form:"id" search:"type:contains;column:id"`
 	// Name 名称
 	Name string `query:"name" form:"name" search:"type:contains;column:name"`
+	// NameKeys adds frontend-localized names to the text search (OR with Name).
+	NameKeys []string `query:"nameKeys[]" form:"nameKeys[]" search:"-"`
 	// Status 状态
 	Status enum.Status `query:"status" form:"status" search:"type:exact;column:status"`
 	// ParentID 父级id

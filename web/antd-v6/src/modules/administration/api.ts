@@ -194,11 +194,15 @@ export function createAdministrationAPI(client: AdministrationRequestClient) {
           skipErrorHandler: true,
         }),
       ),
-    update: async (id: string, values: UserWriteValues): Promise<UserSummary> =>
+    update: async (
+      id: string,
+      values: UserWriteValues,
+      originalUsername?: string,
+    ): Promise<UserSummary> =>
       parseUser(
         await client(entityPath('users', id), {
           method: 'PUT',
-          data: serializeUserWrite(values, 'edit'),
+          data: serializeUserWrite(values, 'edit', originalUsername),
           skipErrorHandler: true,
         }),
       ),
@@ -227,7 +231,11 @@ export function createAdministrationAPI(client: AdministrationRequestClient) {
       parseAdministrationPage(
         await client('/menus', {
           method: 'GET',
-          params: { ...pageParams(params), type: ['DIRECTORY', 'MENU', 'COMPONENT'] },
+          params: {
+            ...pageParams(params),
+            'nameKeys[]': params.nameKeys?.length ? params.nameKeys : undefined,
+            type: ['DIRECTORY', 'MENU', 'COMPONENT'],
+          },
           skipErrorHandler: true,
         }),
         params,

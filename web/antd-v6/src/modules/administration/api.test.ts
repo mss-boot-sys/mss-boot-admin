@@ -93,4 +93,36 @@ describe('administration API', () => {
       lastLogin: { u1: '2026-10-13T00:00:00Z' },
     });
   });
+
+  it('passes translated menu search keys alongside the original query', async () => {
+    const client = vi.fn(async () => ({ data: [], total: 0, current: 1, pageSize: 20 }));
+    await createAdministrationAPI(client).menus.list({
+      current: 1,
+      pageSize: 20,
+      name: '用户',
+      nameKeys: ['menu.origination.user'],
+    });
+    expect(client).toHaveBeenCalledWith(
+      '/menus',
+      expect.objectContaining({
+        params: expect.objectContaining({ name: '用户', 'nameKeys[]': ['menu.origination.user'] }),
+      }),
+    );
+  });
+
+  it('keeps an unchanged legacy username intact in edit requests', async () => {
+    const username = 'legacy_username_longer_than_twenty';
+    const client = vi.fn(async () => ({ id: 'legacy', username, status: 'enabled' }));
+    await createAdministrationAPI(client).users.update(
+      'legacy',
+      { username, status: 'enabled' },
+      username,
+    );
+    expect(client).toHaveBeenCalledWith(
+      '/users/legacy',
+      expect.objectContaining({
+        data: expect.objectContaining({ username }),
+      }),
+    );
+  });
 });

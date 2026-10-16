@@ -99,6 +99,14 @@ export default function DepartmentManagement({
   const remove = useMutation({
     mutationFn: (department: DepartmentSummary) =>
       administrationAPI.departments.remove(department.id),
+    onError: (error) => {
+      void message.error(
+        intl.formatMessage(
+          { id: 'administration.delete.failed' },
+          { reason: getRequestErrorMessage(error) },
+        ),
+      );
+    },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: queryKeys.administration('departments') });
       void message.success(intl.formatMessage({ id: 'administration.delete.success' }));
@@ -205,7 +213,7 @@ export default function DepartmentManagement({
                 title: intl.formatMessage({ id: 'department.delete.confirm' }),
                 description: intl.formatMessage({ id: 'department.delete.description' }),
               },
-              onClick: () => remove.mutate(department),
+              onClick: () => remove.mutateAsync(department),
             },
           ]}
         />

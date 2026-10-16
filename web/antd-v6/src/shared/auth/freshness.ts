@@ -58,6 +58,11 @@ function menuSignature(items: readonly AuthorizedMenuItem[]): unknown[] {
   }));
 }
 
+/** Includes display metadata so cosmetic menu edits also refresh the shell. */
+export function navigationStateSignature(menu: readonly AuthorizedMenuItem[]): string {
+  return JSON.stringify(menu);
+}
+
 /**
  * Only privilege-bearing identity fields and executable menu metadata enter
  * this signature. Profile edits do not evict unrelated server-state queries.

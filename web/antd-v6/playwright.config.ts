@@ -69,6 +69,11 @@ if (!process.env.MSS_V6_EXTERNAL_SERVER) {
 
 export default defineConfig({
   testDir: './e2e',
+  // This suite qualifies cold development servers and installed Thin Hosts.
+  // Route compilation, session verification and data loading share this budget;
+  // assertions still wait for the actual rendered state, without fixed sleeps.
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   ...(evidenceDirectory ? { outputDir: resolve(evidenceDirectory, 'test-results') } : {}),
   fullyParallel: false,
   // The qualification backend intentionally uses one isolated SQLite file.

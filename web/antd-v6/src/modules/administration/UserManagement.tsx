@@ -19,10 +19,11 @@ import { queryKeys } from '@mss-admin-core/shared/query/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useIntl } from '@umijs/max';
 import type { TableColumnsType } from 'antd';
-import { Alert, App, Avatar, Button, Form, Input, Popconfirm, Select, Space } from 'antd';
+import { Alert, App, Avatar, Button, Form, Input, Select, Space } from 'antd';
 import { useMemo, useState } from 'react';
 import AdministrationTable, { AdministrationStatusTag } from './AdministrationTable';
 import { administrationAPI } from './api';
+import { createBatchDeleteAction } from './bulkDelete';
 import {
   type AdministrationListParams,
   administrationReferenceName,
@@ -147,7 +148,11 @@ export default function UserManagement({
     mutationFn: (values: UserWriteValues) =>
       editing === 'create'
         ? administrationAPI.users.create(values)
-        : administrationAPI.users.update((editing as UserSummary).id, values),
+        : administrationAPI.users.update(
+            (editing as UserSummary).id,
+            values,
+            (editing as UserSummary).username,
+          ),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: queryKeys.administration('users') });
       setEditing(undefined);
@@ -158,6 +163,14 @@ export default function UserManagement({
   });
   const remove = useMutation({
     mutationFn: (user: UserSummary) => administrationAPI.users.remove(user.id),
+    onError: (error) => {
+      void message.error(
+        intl.formatMessage(
+          { id: 'administration.delete.failed' },
+          { reason: getRequestErrorMessage(error) },
+        ),
+      );
+    },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: queryKeys.administration('users') });
       void message.success(intl.formatMessage({ id: 'administration.delete.success' }));
@@ -336,7 +349,7 @@ export default function UserManagement({
                   title: intl.formatMessage({ id: 'user.delete.confirm' }),
                   description: intl.formatMessage({ id: 'user.delete.description' }),
                 },
-                onClick: () => remove.mutate(user),
+                onClick: () => remove.mutateAsync(user),
               },
             ]}
           />
@@ -465,27 +478,32 @@ export default function UserManagement({
             />
           </>
         }
+        isRowSelectable={(user) => (user.role ?? rolesByID.get(user.roleID))?.root !== true}
         bulkActions={
           canDelete
             ? (selected, clear) => (
-                <Popconfirm
-                  title={intl.formatMessage(
-                    { id: 'administration.bulk.deleteConfirm' },
-                    { count: selected.length },
-                  )}
-                  description={intl.formatMessage({ id: 'user.delete.description' })}
-                  onConfirm={async () => {
-                    const targets = selected.filter(
-                      (user) => (user.role ?? rolesByID.get(user.roleID))?.root !== true,
-                    );
-                    for (const user of targets) await remove.mutateAsync(user);
-                    clear();
+                <RowActions
+                  primary={{
+                    key: 'bulk-delete',
+                    label: intl.formatMessage({ id: 'administration.bulk.delete' }),
+                    danger: true,
+                    disabled: remove.isPending,
+                    confirm: {
+                      title: intl.formatMessage(
+                        { id: 'administration.bulk.deleteConfirm' },
+                        { count: selected.length },
+                      ),
+                      description: intl.formatMessage({ id: 'user.delete.description' }),
+                    },
+                    onClick: createBatchDeleteAction(
+                      selected.filter(
+                        (user) => (user.role ?? rolesByID.get(user.roleID))?.root !== true,
+                      ),
+                      (user) => remove.mutateAsync(user),
+                      clear,
+                    ),
                   }}
-                >
-                  <Button danger size="small" loading={remove.isPending}>
-                    {intl.formatMessage({ id: 'administration.bulk.delete' })}
-                  </Button>
-                </Popconfirm>
+                />
               )
             : undefined
         }
@@ -561,7 +579,16 @@ export default function UserManagement({
           <Form.Item
             name="username"
             label={intl.formatMessage({ id: 'user.field.username' })}
-            rules={[{ required: true }, { min: 3 }, { max: 20 }, { pattern: /^[A-Za-z0-9_]+$/ }]}
+            rules={[
+              {
+                validator: async (_, value: unknown) => {
+                  if (typeof editing === 'object' && value === editing.username) return;
+                  if (typeof value !== 'string' || !/^[A-Za-z0-9_]{3,20}$/.test(value)) {
+                    throw new Error(intl.formatMessage({ id: 'user.validation.username' }));
+                  }
+                },
+              },
+            ]}
           >
             <Input autoComplete="off" />
           </Form.Item>
