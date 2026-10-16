@@ -100,4 +100,23 @@ describe('AuthorizationFreshnessBridge', () => {
     await waitFor(() => expect(current.fetchCurrentUser).toHaveBeenCalledTimes(1));
     now.mockRestore();
   });
+
+  it('refreshes changed display metadata without evicting unrelated business data', async () => {
+    current.fetchCurrentUser = vi.fn().mockResolvedValue(current.currentUser);
+    const updatedMenu = current.authorizedMenu.map((item) => ({
+      ...item,
+      name: 'Renamed workplace',
+      icon: 'HomeOutlined',
+      hideInMenu: true,
+    }));
+    mockedFetchAuthorizedMenu.mockResolvedValue(updatedMenu);
+    queryClient.setQueryData(queryKeys.workplace, { retained: true });
+
+    render(<AuthorizationFreshnessBridge />);
+    act(() => window.dispatchEvent(new Event(AUTHORIZATION_REFRESH_EVENT)));
+
+    await waitFor(() => expect(current.authorizationVersion).toBe(1));
+    expect(current.authorizedMenu).toEqual(updatedMenu);
+    expect(queryClient.getQueryData(queryKeys.workplace)).toEqual({ retained: true });
+  });
 });

@@ -36,7 +36,7 @@ async function createRestrictedUser(rootPage: Page) {
   expect(roleID, 'the E2E fixture must create an ordinary restricted role').not.toBe('');
 
   const credentials = {
-    username: `e2erestricted${suffix}`,
+    username: `e2er${suffix}`,
     password: 'E2eRestricted123!',
   };
   const response = await rootPage.request.post(`${BACKEND_API_BASE_URL}/users`, {
@@ -53,10 +53,56 @@ async function createRestrictedUser(rootPage: Page) {
   expect(response.status()).toBe(201);
   const user = await readJSON(response);
   expect(typeof user.id === 'string' ? user.id : '').not.toBe('');
-  return credentials;
+  return { credentials, userID: user.id as string, roleID };
 }
 
 test.describe('V6 authorization boundaries', () => {
+  test('@permission user write boundaries keep the management list usable after creation', async ({
+    page,
+  }) => {
+    await setLocale(page, 'en-US');
+    await login(page);
+    const username = `e2e_${randomUUID().replaceAll('-', '').slice(0, 16)}`;
+    const headers = await csrfHeaders(page);
+    const invalid = await page.request.post(`${BACKEND_API_BASE_URL}/users`, {
+      data: { username: `${username}x`, password: 'E2eUser123!' },
+      headers,
+    });
+    expect(invalid.status()).toBe(422);
+    const created = await page.request.post(`${BACKEND_API_BASE_URL}/users`, {
+      data: { username, password: 'E2eUser123!', status: 'enabled' },
+      headers,
+    });
+    expect(created.status()).toBe(201);
+    const user = await readJSON(created);
+    expect(typeof user.id).toBe('string');
+    try {
+      const invalidRename = await page.request.put(`${BACKEND_API_BASE_URL}/users/${user.id}`, {
+        data: { username: `${username}x` },
+        headers,
+      });
+      expect(invalidRename.status()).toBe(422);
+      const listResponse = page.waitForResponse(
+        (response) =>
+          response.request().method() === 'GET' &&
+          new URL(response.url()).pathname === '/admin/api/users',
+      );
+      await page.goto('/users');
+      expect((await listResponse).status()).toBe(200);
+      await expect(page.getByText(username, { exact: true })).toBeVisible();
+      await expect(page.getByTestId('page-error')).toHaveCount(0);
+      await expect(page.getByTestId('page-loading')).toHaveCount(0);
+      await page.reload();
+      await expect(page.getByText(username, { exact: true })).toBeVisible();
+      await expect(page.getByTestId('page-error')).toHaveCount(0);
+    } finally {
+      const removed = await page.request.delete(`${BACKEND_API_BASE_URL}/users/${user.id}`, {
+        headers: await csrfHeaders(page),
+      });
+      expect(removed.status()).toBe(204);
+    }
+  });
+
   test('@permission anonymous direct navigation requires a server session', async ({ page }) => {
     await setLocale(page, 'en-US');
     await page.goto('/suppliers');
@@ -76,7 +122,7 @@ test.describe('V6 authorization boundaries', () => {
     const rootContext = await browser.newContext();
     const rootPage = await rootContext.newPage();
     await login(rootPage);
-    const credentials = await createRestrictedUser(rootPage);
+    const { credentials, userID, roleID } = await createRestrictedUser(rootPage);
 
     try {
       await setLocale(page, 'en-US');
@@ -144,11 +190,24 @@ test.describe('V6 authorization boundaries', () => {
       expect(page.url().startsWith(APP_BASE_URL)).toBe(true);
     } finally {
       await page.close();
-      // The backend process owns an isolated SQLite database that is deleted
-      // before every E2E run. Avoid the legacy User AfterDelete hook here: it
-      // writes through a second connection while the delete transaction holds
-      // SQLite's writer lock and can poison later browser-project logins.
-      await rootContext.close();
+      try {
+        const userRemoval = await rootPage.request.delete(
+          `${BACKEND_API_BASE_URL}/users/${userID}`,
+          {
+            headers: await csrfHeaders(rootPage),
+          },
+        );
+        expect(userRemoval.status()).toBe(204);
+        const roleRemoval = await rootPage.request.delete(
+          `${BACKEND_API_BASE_URL}/roles/${roleID}`,
+          {
+            headers: await csrfHeaders(rootPage),
+          },
+        );
+        expect(roleRemoval.status()).toBe(204);
+      } finally {
+        await rootContext.close();
+      }
     }
   });
 });

@@ -20,7 +20,6 @@ import (
 	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
 	"github.com/mss-boot-sys/mss-boot-admin/admin/service"
 	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/response/actions"
-	"github.com/mss-boot-sys/mss-boot-admin/mss-boot/pkg/search/gorms"
 )
 
 /*
@@ -37,11 +36,11 @@ func init() {
 			controller.WithModel(new(models.Menu)),
 			controller.WithSearch(new(dto.RoleSearch)),
 			controller.WithModelProvider(actions.ModelProviderGorm),
-			// GORM shares this control-handler chain between POST and PUT.
+			// POST and PUT share the same root-only control action.
 			controller.WithCreateHandlers(gin.HandlersChain{requireRootManagement}),
 			controller.WithDeleteHandlers(gin.HandlersChain{requireRootManagement}),
-			controller.WithBeforeCreate(validateMenuMetadataCreate),
-			controller.WithBeforeUpdate(validateMenuMetadataUpdate),
+			controller.WithAction(&menuControlAction{}),
+			controller.WithWriteErrorMapper(mapMenuWriteError),
 			controller.WithBeforeDelete(validateMenuMetadataDelete),
 		),
 	}
@@ -68,22 +67,6 @@ func isRootOnlyRuntimeMenuPath(path string) bool {
 
 type Menu struct {
 	*controller.Simple
-}
-
-func validateMenuMetadataCreate(ctx *gin.Context, db *gorm.DB, table schema.Tabler) error {
-	menu, ok := table.(*models.Menu)
-	if !ok {
-		return gorm.ErrInvalidData
-	}
-	return service.ValidateMenuMetadataCreate(ctx, db, menu)
-}
-
-func validateMenuMetadataUpdate(ctx *gin.Context, db *gorm.DB, table schema.Tabler) error {
-	menu, ok := table.(*models.Menu)
-	if !ok {
-		return gorm.ErrInvalidData
-	}
-	return service.ValidateMenuMetadataUpdate(ctx, db, menu)
 }
 
 func validateMenuMetadataDelete(ctx *gin.Context, db *gorm.DB, _ schema.Tabler) error {
@@ -266,8 +249,7 @@ func (e *Menu) GetAuthorize(ctx *gin.Context) {
 		}
 	}
 	result := make([]*models.Menu, 0)
-	for _, m := range pkg.BuildTree(models.MenuTransferToTreeSlice(canList), "") {
-		menu := m.(*models.Menu)
+	for _, menu := range models.BuildMenuTree(canList, "", false) {
 		if len(menu.Children) == 0 && menu.Type == pkg.DirectoryAccessType {
 			continue
 		}
@@ -280,10 +262,6 @@ func (e *Menu) GetAuthorize(ctx *gin.Context) {
 func normalizeMenuNameForLayout(menus []*models.Menu) {
 	for i := range menus {
 		menus[i].Name = strings.TrimPrefix(menus[i].Name, "menu.")
-		if strings.Contains(menus[i].Name, ".") {
-			parts := strings.Split(menus[i].Name, ".")
-			menus[i].Name = parts[len(parts)-1]
-		}
 		if len(menus[i].Children) > 0 {
 			normalizeMenuNameForLayout(menus[i].Children)
 		}
@@ -308,10 +286,7 @@ func (e *Menu) Tree(ctx *gin.Context) {
 		api.Err(http.StatusInternalServerError)
 		return
 	}
-	api.OK(models.CompleteName(
-		models.TreeTransferToMenuSlice(
-			pkg.BuildTree(
-				models.MenuTransferToTreeSlice(list), ""))))
+	api.OK(models.CompleteName(models.BuildMenuTree(list, "", true)))
 }
 
 // GetAPI 获取菜单下的接口
@@ -413,11 +388,12 @@ func (e *Menu) BindAPI(ctx *gin.Context) {
 
 // List 菜单列表数据
 // @Summary 菜单列表数据
-// @Description 菜单列表数据
+// @Description Filters match every depth and preserve ancestors; total and pagination count matching root branches under parentID.
 // @Tags menu
 // @Accept  application/json
 // @Produce application/json
-// @Param name query string false "name"
+// @Param name query string false "Case-insensitive menu name or path text at any depth"
+// @Param nameKeys[] query []string false "Localized menu locale IDs matched by the client; OR with name"
 // @Param status query string false "status"
 // @Param show query bool false "show"
 // @Param parentID query string false "parentID"
@@ -434,53 +410,16 @@ func (*Menu) List(ctx *gin.Context) {
 		api.Err(http.StatusUnprocessableEntity)
 		return
 	}
-	list := make([]*models.Menu, 0)
-	query := center.Default.GetDB(ctx, &models.Menu{}).Model(&models.Menu{}).WithContext(ctx).
-		Where("parent_id = ?", req.ParentID).
-		Order("sort desc").Scopes(
-		gorms.Paginate(int(req.GetPageSize()), int(req.GetPage())),
-	)
-
-	types := []pkg.AccessType{
-		pkg.MenuAccessType,
-		pkg.ComponentAccessType,
-		pkg.DirectoryAccessType,
+	if len(req.NameKeys) > 1000 {
+		api.Err(http.StatusUnprocessableEntity)
+		return
 	}
-	if req.Name != "" {
-		query = query.Where("name LIKE ?", "%"+req.Name+"%")
-	}
-	if req.Status != "" {
-		query = query.Where("status = ?", req.Status)
-	}
-	if len(req.Type) > 0 {
-		types = make([]pkg.AccessType, len(req.Type))
-		for i := range req.Type {
-			types[i] = pkg.AccessType(req.Type[i])
-		}
-	}
-	query = query.Where("type in ?", types)
-	if req.Show {
-		query = query.Where("hide_in_menu = ?", false)
-	}
-	var count int64
-	if err := query.Scopes(func(db *gorm.DB) *gorm.DB {
-		return db.Limit(-1).Offset(-1)
-	}).Count(&count).Error; err != nil {
-		api.AddError(err).Log.Error("get menu list error", "err", err)
+	list, count, err := listMenuTree(ctx, req)
+	if err != nil {
+		api.AddError(err).Log.Error("get menu list error")
 		api.Err(http.StatusInternalServerError)
 		return
 	}
-
-	if err := query.
-		Preload("Children", "type IN ?", types).
-		Preload("Children.Children", "type IN ?", types).
-		Preload("Children.Children.Children", "type IN ?", types).
-		Find(&list).Error; err != nil {
-		api.AddError(err).Log.Error("get menu list error", "err", err)
-		api.Err(http.StatusInternalServerError)
-		return
-	}
-	list = models.CompleteName(list)
 	api.PageOK(list, count, req.GetPage(), req.GetPageSize())
 }
 

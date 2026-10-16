@@ -1,9 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { App } from 'antd';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AdministrationTable from './AdministrationTable';
 
 vi.mock('@umijs/max', () => ({
+  useModel: () => ({ initialState: { currentUser: { id: 'operator-1' } } }),
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 
@@ -115,9 +116,92 @@ describe('administration search presentation', () => {
     expect(screen.getByRole('checkbox', { name: 'Account' }).hasAttribute('disabled')).toBe(true);
     fireEvent.click(screen.getByText('administration.settings.density.small'));
     await waitFor(() => expect(tableProps.current?.size).toBe('small'));
-    expect(JSON.parse(window.localStorage.getItem('mss-admin.table.test') ?? '{}')).toEqual({
+    expect(
+      JSON.parse(window.localStorage.getItem('mss-admin.table.v2.operator-1.test') ?? '{}'),
+    ).toEqual({
       hidden: ['email'],
       density: 'small',
     });
+  });
+  it('repairs old visibility that left mobile cards with actions only and locks their identity', async () => {
+    window.localStorage.setItem(
+      'mss-admin.table.v2.operator-1.identity',
+      JSON.stringify({
+        hidden: ['username', 'name', 'removed'],
+        density: 'small',
+      }),
+    );
+    render(
+      <App>
+        <AdministrationTable
+          columns={[
+            { key: 'status', title: 'Status' },
+            { key: 'username', title: 'Account' },
+            { key: 'name', title: 'Name' },
+            { key: 'email', title: 'Email' },
+            { key: 'actions', title: 'Actions' },
+          ]}
+          emptyText="none"
+          mobileColumnKeys={['status', 'username', 'name', 'actions']}
+          params={{ current: 1, pageSize: 20, status: 'all' }}
+          query={query as never}
+          setParams={vi.fn()}
+          settingsKey="identity"
+        />
+      </App>,
+    );
+    expect(
+      ((tableProps.current?.columns ?? []) as { key: string }[]).map(({ key }) => key),
+    ).toEqual(['status', 'username', 'email', 'actions']);
+    await waitFor(() =>
+      expect(
+        JSON.parse(window.localStorage.getItem('mss-admin.table.v2.operator-1.identity') ?? '{}'),
+      ).toEqual({
+        hidden: ['name'],
+        density: 'small',
+      }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'administration.settings.label' }));
+    expect(
+      ((await screen.findByRole('checkbox', { name: 'Account' })) as HTMLInputElement).disabled,
+    ).toBe(true);
+    expect((screen.getByRole('checkbox', { name: 'Account' }) as HTMLInputElement).checked).toBe(
+      true,
+    );
+  });
+  it('excludes protected or newly revoked rows from selection and bulk actions', () => {
+    const rows = [{ id: 'root' }, { id: 'operator' }];
+    const bulkActions = vi.fn((_rows: { id: string }[], _clear: () => void) => null);
+    const props = {
+      columns: [],
+      emptyText: 'none',
+      mobileColumnKeys: [],
+      params: { current: 1, pageSize: 20 as const, status: 'all' as const },
+      query: { ...query, data: { ...query.data, data: rows, total: 2 } } as never,
+      setParams: vi.fn(),
+      bulkActions,
+    };
+    const view = render(
+      <App>
+        <AdministrationTable {...props} isRowSelectable={(row) => row.id !== 'root'} />
+      </App>,
+    );
+    const selection = tableProps.current?.rowSelection as {
+      getCheckboxProps: (row: { id: string }) => { disabled: boolean };
+      onChange: (keys: string[]) => void;
+    };
+    expect(selection.getCheckboxProps({ id: 'root' }).disabled).toBe(true);
+    act(() => selection.onChange(['root', 'operator']));
+    expect(bulkActions.mock.calls.at(-1)?.[0]).toEqual([{ id: 'operator' }]);
+    view.rerender(
+      <App>
+        <AdministrationTable {...props} isRowSelectable={() => false} />
+      </App>,
+    );
+    expect(bulkActions.mock.calls.at(-1)?.[0]).toEqual([]);
+    expect(
+      (tableProps.current?.rowSelection as { selectedRowKeys: string[] } | undefined)
+        ?.selectedRowKeys,
+    ).toEqual([]);
   });
 });

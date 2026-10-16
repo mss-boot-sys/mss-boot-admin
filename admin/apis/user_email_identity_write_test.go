@@ -43,8 +43,8 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 		username string
 		email    string
 	}{
-		{id: "identity-owner", username: "identity-owner", email: "owner@example.com"},
-		{id: "identity-target", username: "identity-target", email: "target@example.com"},
+		{id: "identity_owner", username: "identity_owner", email: "owner@example.com"},
+		{id: "identity_target", username: "identity_target", email: "target@example.com"},
 	} {
 		if err := db.Exec(
 			"INSERT INTO mss_boot_users (id, username, email) VALUES (?, ?, ?)",
@@ -120,7 +120,7 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 			name:      "invalid canonical identity",
 			method:    http.MethodPost,
 			path:      "/admin/api/users",
-			body:      `{"username":"invalid-email","email":"not-an-address"}`,
+			body:      `{"username":"invalid_email","email":"not-an-address"}`,
 			status:    http.StatusUnprocessableEntity,
 			errorCode: "INVALID_EMAIL_IDENTITY",
 			message:   "email identity is invalid",
@@ -130,7 +130,7 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 			name:      "create canonical identity conflict",
 			method:    http.MethodPost,
 			path:      "/admin/api/users",
-			body:      `{"username":"identity-contender","email":" OWNER@EXAMPLE.COM "}`,
+			body:      `{"username":"identity_contender","email":" OWNER@EXAMPLE.COM "}`,
 			status:    http.StatusConflict,
 			errorCode: "EMAIL_IDENTITY_UNAVAILABLE",
 			message:   "email identity is unavailable",
@@ -139,7 +139,7 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 		{
 			name:      "update canonical identity conflict",
 			method:    http.MethodPut,
-			path:      "/admin/api/users/identity-target",
+			path:      "/admin/api/users/identity_target",
 			body:      `{"email":" OWNER@EXAMPLE.COM "}`,
 			status:    http.StatusConflict,
 			errorCode: "EMAIL_IDENTITY_UNAVAILABLE",
@@ -150,11 +150,11 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 			name:      "unrelated unique constraint uses redacted fallback",
 			method:    http.MethodPost,
 			path:      "/admin/api/users",
-			body:      `{"username":"identity-owner","email":"unrelated@example.com"}`,
+			body:      `{"username":"identity_owner","email":"unrelated@example.com"}`,
 			status:    http.StatusInternalServerError,
 			errorCode: "WRITE_FAILED",
 			message:   "request could not be completed",
-			forbidden: []string{"identity-owner", "unrelated@example.com", "UNIQUE", "ux_mss_boot_users_test_username"},
+			forbidden: []string{"identity_owner", "unrelated@example.com", "UNIQUE", "ux_mss_boot_users_test_username"},
 		},
 	}
 	for _, test := range tests {
@@ -185,7 +185,7 @@ func TestUserControllerMapsEmailIdentityWriteFailuresWithoutDisclosure(t *testin
 		request := httptest.NewRequest(
 			http.MethodPost,
 			"/admin/api/users",
-			bytes.NewBufferString(`{"username":"delegated-create","email":"delegated@example.com"}`),
+			bytes.NewBufferString(`{"username":"delegated_create","email":"delegated@example.com"}`),
 		)
 		request.Header.Set("Content-Type", "application/json")
 		result := httptest.NewRecorder()

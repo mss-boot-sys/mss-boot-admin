@@ -49,12 +49,45 @@ func newUserController() *User {
 			controller.WithModelProvider(actions.ModelProviderGorm),
 			controller.WithScope(redactUserPersistenceDiagnostics),
 			controller.WithWriteErrorMapper(mapUserWriteError),
+			controller.WithBeforeCreate(validateCreatedUsername),
+			controller.WithBeforeUpdate(validateUpdatedUsername),
 			controller.WithAfterCommitCreate(recordCreatedUserStatistics),
 			controller.WithAfterDelete(recordDeletedUserStatistics),
 			controller.WithCreateHandlers(gin.HandlersChain{requireRootManagement, protectRootUserLifecycle}),
 			controller.WithDeleteHandlers(gin.HandlersChain{requireRootManagement, protectRootUserLifecycle}),
 		),
 	}
+}
+
+func validateCreatedUsername(_ *gin.Context, _ *gorm.DB, model schema.Tabler) error {
+	user, ok := model.(*models.User)
+	if !ok {
+		return errors.New("created user model is invalid")
+	}
+	return models.ValidateManagedUsername(user.Username)
+}
+
+func validateUpdatedUsername(ctx *gin.Context, _ *gorm.DB, model schema.Tabler) error {
+	user, ok := model.(*models.User)
+	if !ok {
+		return errors.New("updated user model is invalid")
+	}
+	if models.ValidateManagedUsername(user.Username) == nil {
+		return nil
+	}
+	// Existing SQLite and external-provider identities may predate the managed
+	// username contract. Preserve an unchanged identity while still permitting
+	// profile, role and status maintenance; a rename must satisfy today's rules.
+	var current models.User
+	if err := center.GetDB(ctx, &current).
+		Session(&gorm.Session{Logger: logger.Discard}).
+		Select("username").First(&current, "id = ?", ctx.Param("id")).Error; err != nil {
+		return err
+	}
+	if user.Username == current.Username {
+		return nil
+	}
+	return models.ErrUsernameInvalid
 }
 
 func recordCreatedUserStatistics(ctx *gin.Context, _ *gorm.DB, model schema.Tabler) error {
@@ -82,6 +115,11 @@ func mapUserWriteError(
 ) (actions.PublicWriteError, bool) {
 	err = models.NormalizeEmailIdentityPersistenceError(err)
 	switch {
+	case errors.Is(err, models.ErrUsernameInvalid):
+		return actions.PublicWriteError{
+			Status: http.StatusUnprocessableEntity,
+			Error:  response.NewError("INVALID_USERNAME", "username must contain 3 to 20 letters, digits or underscores"),
+		}, true
 	case errors.Is(err, models.ErrEmailIdentityInvalid):
 		return actions.PublicWriteError{
 			Status: http.StatusUnprocessableEntity,
@@ -104,7 +142,10 @@ func mapUserWriteError(
 // result. The mapper emits a fixed operation and error code for diagnostics.
 func redactUserPersistenceDiagnostics(_ *gin.Context, _ schema.Tabler) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Session(&gorm.Session{Logger: logger.Discard})
+		// Scopes execute inside GORM's callback dispatcher. Materialize this
+		// session now so transaction callbacks share one statement and its
+		// started-transaction marker; a deferred clone can lose the commit.
+		return db.Session(&gorm.Session{Logger: logger.Discard, Initialized: true})
 	}
 }
 

@@ -1,15 +1,35 @@
 export interface RouteTab {
   path: string;
+  /** Last local URL, including the page's query and fragment. */
+  url?: string;
 }
 
 export type RouteTabsAction =
-  | { type: 'open'; path: string }
+  | { type: 'open'; path: string; url?: string }
   | { type: 'close'; path: string }
   | { type: 'closeOthers'; path: string }
   | { type: 'closeRight'; path: string }
   | { type: 'closeAll' };
 
 export const MAX_ROUTE_TABS = 12;
+
+/** Treat persisted URLs as untrusted; a tab must stay inside its authorized route. */
+export function routeTabTarget(tab: RouteTab): string {
+  if (!tab.url?.startsWith('/') || tab.url.startsWith('//') || tab.url.includes('\\')) {
+    return tab.path;
+  }
+  try {
+    const url = new URL(tab.url, 'https://mss.invalid');
+    if (
+      url.origin === 'https://mss.invalid' &&
+      (url.pathname === tab.path || url.pathname.startsWith(`${tab.path}/`))
+    )
+      return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    // Old or malformed tab state falls back to the authorized menu path.
+  }
+  return tab.path;
+}
 
 /**
  * Pure tab-list transitions. `pinned` paths (the workplace) are never closed
@@ -27,8 +47,15 @@ export function reduceRouteTabs(
   };
   switch (action.type) {
     case 'open': {
-      if (tabs.some((tab) => tab.path === action.path)) return withPinned(tabs);
-      let next = withPinned([...tabs, { path: action.path }]);
+      const opened: RouteTab = action.url
+        ? { path: action.path, url: routeTabTarget(action) }
+        : { path: action.path };
+      if (tabs.some((tab) => tab.path === action.path)) {
+        return withPinned(
+          tabs.map((tab) => (tab.path === action.path ? { ...tab, ...opened } : tab)),
+        );
+      }
+      let next = withPinned([...tabs, opened]);
       // Evict the oldest closable tab beyond the cap.
       while (next.length > MAX_ROUTE_TABS) {
         const index = next.findIndex((tab) => !isPinned(tab.path) && tab.path !== action.path);
@@ -63,5 +90,5 @@ export function nextActivePath(
   const index = before.findIndex((tab) => tab.path === active);
   const candidate =
     after[Math.min(Math.max(index, 0), after.length - 1)] ?? after[after.length - 1];
-  return candidate?.path;
+  return candidate ? routeTabTarget(candidate) : undefined;
 }

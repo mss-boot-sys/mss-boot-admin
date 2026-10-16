@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mss-boot-sys/mss-boot-admin/admin/pkg"
@@ -65,4 +66,27 @@ func TestCompleteNamePreservesCanonicalAndCompletesRelativeNames(t *testing.T) {
 	require.Equal(t, "menu.origination.post", completed[0].Children[2].Name)
 	require.Equal(t, "menu.origination.post.create", completed[0].Children[2].Children[0].Name)
 	require.Equal(t, "menu.system.appConfig", completed[1].Children[0].Name)
+}
+
+func TestBuildMenuTreeBoundsLegacyDepthAndDoesNotMutateInput(t *testing.T) {
+	list := make([]*Menu, 0, MaxMenuDepth+1)
+	parentID := ""
+	for i := 0; i <= MaxMenuDepth; i++ {
+		menu := &Menu{ParentID: parentID, Sort: i}
+		menu.ID = fmt.Sprint(i)
+		list = append(list, menu)
+		parentID = menu.ID
+	}
+	management := BuildMenuTree(list, "", true)
+	require.Len(t, management, 2, "overflow node stays available for repair")
+	runtime := BuildMenuTree(list, "", false)
+	require.Len(t, runtime, 1)
+	depth := 0
+	for nodes := runtime; len(nodes) > 0; nodes = nodes[0].Children {
+		depth++
+	}
+	require.Equal(t, MaxMenuDepth, depth)
+	for _, menu := range list {
+		require.Empty(t, menu.Children, "building different projections must not mutate input")
+	}
 }

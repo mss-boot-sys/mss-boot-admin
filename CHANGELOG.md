@@ -6,6 +6,19 @@ tag namespaces.
 
 ## [Unreleased]
 
+### Fixed
+
+- Validate managed usernames consistently on create and rename, keep unchanged
+  legacy identities readable and editable, and commit user metadata updates
+  before reporting success.
+- Validate menu hierarchy changes transactionally, search descendants with
+  ancestor context, retain deep menus and nested locale keys, and report
+  protected authorization changes as actionable conflicts.
+- Restore mobile selection and tree navigation, identifying columns, scoped
+  table preferences, repeated search focus, route query retention, navigation
+  refresh and retryable asynchronous delete confirmations. Browser presentation
+  checks now require usable business data rather than only configured titles.
+
 ### Changed
 
 - Consolidate dependency updates from PRs #48–54: miniredis 2.40.0, the Lark

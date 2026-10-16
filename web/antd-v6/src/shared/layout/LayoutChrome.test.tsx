@@ -1,8 +1,10 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Grid } from 'antd';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { InitialState } from '../auth/types';
+
+const location = vi.hoisted(() => ({ pathname: '/users', search: '', hash: '' }));
 
 vi.mock('./HeaderActions', () => ({
   HeaderActions: () => <span data-testid="host-header-contribution" />,
@@ -12,11 +14,12 @@ vi.mock('./LayoutBreadcrumb', () => ({ LayoutBreadcrumb: () => null }));
 vi.mock('./RouteTabs', () => ({ RouteTabs: () => null }));
 vi.mock('./LayoutContributions', () => ({ LayoutContributions: () => null }));
 vi.mock('@umijs/max', () => ({
+  useLocation: () => location,
   Link: ({ children }: { children: unknown }) => children,
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 
-const { SideLayoutFrame } = await import('./LayoutChrome');
+const { SideLayoutFrame, AccessibleMobileHeader } = await import('./LayoutChrome');
 const { runtimeLayout } = await import('./RuntimeLayout');
 
 const initialState = {
@@ -62,5 +65,51 @@ describe('runtimeLayout route-level 403', () => {
     render(config.unAccessible as ReactElement);
     expect(screen.getByText('403')).toBeTruthy();
     expect(screen.getAllByTestId('host-header-contribution')).toHaveLength(1);
+  });
+});
+
+describe('mobile navigation lifecycle', () => {
+  it('closes only after the URL changes and focuses the new page after drawer focus restoration', async () => {
+    location.pathname = '/users';
+    const onCollapse = vi.fn();
+    const view = render(
+      <>
+        <AccessibleMobileHeader collapsed={false} onCollapse={onCollapse} />
+        <main>
+          <h1>Users</h1>
+        </main>
+      </>,
+    );
+    expect(onCollapse).not.toHaveBeenCalled();
+    view.rerender(
+      <>
+        <AccessibleMobileHeader collapsed={false} onCollapse={onCollapse} />
+        <main>
+          <h1>Users</h1>
+        </main>
+      </>,
+    );
+    expect(onCollapse).not.toHaveBeenCalled();
+    location.pathname = '/app-config';
+    view.rerender(
+      <>
+        <AccessibleMobileHeader collapsed={false} onCollapse={onCollapse} />
+        <main>
+          <h1>Settings</h1>
+        </main>
+      </>,
+    );
+    expect(onCollapse).toHaveBeenCalledWith(true);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('main')));
+    screen.getByRole('button', { name: 'navigation.sidebar.close' }).focus();
+    expect(document.activeElement).toBe(screen.getByRole('main'));
+  });
+
+  it('keeps an explicitly closed drawer closed when switching pages', () => {
+    const onCollapse = vi.fn();
+    render(<AccessibleMobileHeader collapsed onCollapse={onCollapse} />);
+    expect(onCollapse).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'navigation.sidebar.open' }));
+    expect(onCollapse).toHaveBeenCalledWith(false);
   });
 });

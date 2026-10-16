@@ -15,7 +15,7 @@ export function PageLoading({
   retryingMessage?: ReactNode;
 }) {
   return (
-    <div aria-busy="true" role="status" className="flex flex-col gap-4">
+    <div data-testid="page-loading" aria-busy="true" role="status" className="flex flex-col gap-4">
       {retrying && retryingMessage ? (
         <Alert showIcon type="warning" title={retryingMessage} />
       ) : null}
@@ -25,7 +25,11 @@ export function PageLoading({
 }
 
 export function PageEmpty({ description }: { description: ReactNode }) {
-  return <Empty description={description} image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+  return (
+    <div data-testid="page-empty">
+      <Empty description={description} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+    </div>
+  );
 }
 
 export function PageError({
@@ -42,6 +46,7 @@ export function PageError({
   const intl = useIntl();
   return (
     <Result
+      data-testid="page-error"
       status="error"
       title={title ?? intl.formatMessage({ id: 'states.loadError' })}
       subTitle={message}

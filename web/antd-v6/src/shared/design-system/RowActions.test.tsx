@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { App } from 'antd';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { App, ConfigProvider } from 'antd';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RowActions } from './RowActions';
 
@@ -61,5 +61,45 @@ describe('RowActions', () => {
     expect(screen.getByRole('button', { name: 'Edit' }).textContent).toContain('修改');
     fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
     expect(await screen.findByRole('menuitem', { name: 'Details' })).toBeTruthy();
+  });
+
+  it('keeps failed asynchronous confirmations open and permits a successful retry', async () => {
+    let reject: (error: Error) => void = () => {};
+    const remove = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, fail) => {
+            reject = fail;
+          }),
+      )
+      .mockResolvedValueOnce(undefined);
+    render(
+      <ConfigProvider theme={{ token: { motion: false } }}>
+        <App>
+          <RowActions
+            more={[
+              {
+                key: 'delete',
+                label: 'Delete record',
+                danger: true,
+                confirm: { title: 'Confirm deletion' },
+                onClick: remove,
+              },
+            ]}
+          />
+        </App>
+      </ConfigProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete record' }));
+    fireEvent.click(await screen.findByRole('button', { name: /OK/ }));
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    await act(async () => reject(new Error('conflict')));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /OK/ }));
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });

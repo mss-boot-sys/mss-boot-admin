@@ -1,6 +1,7 @@
 import MoreOutlined from '@ant-design/icons/MoreOutlined';
+import { getRequestErrorMessage } from '@mss-admin-core/shared/api/errors';
 import { useIntl } from '@umijs/max';
-import { App, Button, Dropdown } from 'antd';
+import { Alert, App, Button, Dropdown } from 'antd';
 import type { ReactNode } from 'react';
 
 export interface RowAction {
@@ -8,7 +9,8 @@ export interface RowAction {
   label: ReactNode;
   /** Stable accessible name when `label` is operator-configurable. */
   ariaLabel?: string;
-  onClick: () => void;
+  /** Returned promises keep a confirmation open until the action succeeds. */
+  onClick: () => unknown;
   disabled?: boolean;
   danger?: boolean;
   /** Danger actions ask for confirmation before running. */
@@ -34,11 +36,41 @@ export function RowActions({
   const run = (action: RowAction) => {
     if (action.disabled) return;
     if (action.confirm) {
-      modal.confirm({
+      const confirmation = action.confirm;
+      let pending = false;
+      const dialog = modal.confirm({
         title: action.confirm.title,
         content: action.confirm.description,
         okButtonProps: { danger: action.danger },
-        onOk: action.onClick,
+        // The public callback form closes explicitly. Rejected action promises
+        // stay in this handler instead of becoming unhandled modal rejections.
+        onOk: (close: () => void) => {
+          if (pending) return;
+          pending = true;
+          dialog.update({ okButtonProps: { danger: action.danger, loading: true } });
+          void Promise.resolve()
+            .then(() => action.onClick())
+            .then(
+              () => close(),
+              (error: unknown) => {
+                pending = false;
+                dialog.update({
+                  okButtonProps: { danger: action.danger, loading: false },
+                  content: (
+                    <div className="flex flex-col gap-3">
+                      {confirmation.description}
+                      <Alert
+                        showIcon
+                        type="error"
+                        title={intl.formatMessage({ id: 'actions.failed' })}
+                        description={getRequestErrorMessage(error)}
+                      />
+                    </div>
+                  ),
+                });
+              },
+            );
+        },
       });
       return;
     }
@@ -50,6 +82,7 @@ export function RowActions({
         <Button
           aria-label={primary.ariaLabel}
           disabled={primary.disabled}
+          danger={primary.danger}
           size="small"
           type="link"
           onClick={() => run(primary)}

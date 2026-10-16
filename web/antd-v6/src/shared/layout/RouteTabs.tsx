@@ -10,6 +10,7 @@ import {
   type RouteTab,
   type RouteTabsAction,
   reduceRouteTabs,
+  routeTabTarget,
 } from './routeTabsModel';
 
 const STORAGE_KEY = 'mss-admin.route-tabs';
@@ -19,7 +20,12 @@ function readTabs(): RouteTab[] {
   try {
     const parsed = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? '[]');
     return Array.isArray(parsed)
-      ? parsed.filter((tab) => typeof tab?.path === 'string').map((tab) => ({ path: tab.path }))
+      ? parsed
+          .filter((tab) => typeof tab?.path === 'string')
+          .map((tab) => ({
+            path: tab.path,
+            ...(typeof tab.url === 'string' ? { url: routeTabTarget(tab) } : {}),
+          }))
       : [];
   } catch {
     return [];
@@ -53,7 +59,9 @@ export function RouteTabs({ initialState }: { initialState?: InitialState }) {
     () => new Map(items.map((item) => [item.path, item.label.split(' / ').pop() ?? item.path])),
     [items],
   );
-  const pinned = useMemo(() => (labels.has(PINNED_PATH) ? [PINNED_PATH] : []), [labels]);
+  const hasPinned = labels.has(PINNED_PATH);
+  const pinned = useMemo(() => (hasPinned ? [PINNED_PATH] : []), [hasPinned]);
+  const authorizedPaths = items.map((item) => item.path).join('\0');
   const [stored, setStored] = useState<RouteTab[]>(readTabs);
   const tabs = stored.filter((tab) => labels.has(tab.path));
   const active = useMemo(
@@ -69,13 +77,23 @@ export function RouteTabs({ initialState }: { initialState?: InitialState }) {
 
   useEffect(() => {
     setStored((current) => {
+      const allowed = new Set(authorizedPaths.split('\0'));
+      const authorized = current.filter((tab) => allowed.has(tab.path));
       const next = active
-        ? reduceRouteTabs(current, { type: 'open', path: active }, pinned)
-        : reduceRouteTabs(current, { type: 'closeRight', path: '' }, pinned);
+        ? reduceRouteTabs(
+            authorized,
+            {
+              type: 'open',
+              path: active,
+              url: `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`,
+            },
+            pinned,
+          )
+        : reduceRouteTabs(authorized, { type: 'closeRight', path: '' }, pinned);
       writeTabs(next);
       return next;
     });
-  }, [active, pinned]);
+  }, [active, pinned, authorizedPaths, location.pathname, location.search, location.hash]);
 
   if (tabs.length === 0) return null;
 
@@ -130,7 +148,7 @@ export function RouteTabs({ initialState }: { initialState?: InitialState }) {
                 aria-current={current ? 'page' : undefined}
                 className="mss-route-tab-link"
                 type="button"
-                onClick={() => history.push(tab.path)}
+                onClick={() => history.push(routeTabTarget(tab))}
                 onAuxClick={(event) => {
                   if (event.button === 1 && !pinned.includes(tab.path)) {
                     dispatch({ type: 'close', path: tab.path });

@@ -111,6 +111,14 @@ export default function RoleManagement({
   });
   const remove = useMutation({
     mutationFn: (role: RoleSummary) => administrationAPI.roles.remove(role.id),
+    onError: (error) => {
+      void message.error(
+        intl.formatMessage(
+          { id: 'administration.delete.failed' },
+          { reason: getRequestErrorMessage(error) },
+        ),
+      );
+    },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: queryKeys.administration('roles') });
       void message.success(intl.formatMessage({ id: 'administration.delete.success' }));
@@ -239,7 +247,7 @@ export default function RoleManagement({
                   title: intl.formatMessage({ id: 'role.delete.confirm' }),
                   description: intl.formatMessage({ id: 'role.delete.description' }),
                 },
-                onClick: () => remove.mutate(role),
+                onClick: () => remove.mutateAsync(role),
               },
             ]}
           />

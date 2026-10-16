@@ -28,7 +28,7 @@ async function createCredentialSelfServiceUser(rootPage: Page) {
 
   const suffix = randomUUID().replaceAll('-', '').slice(0, 10);
   const credentials = {
-    username: `e2esecurity${suffix}`,
+    username: `e2es${suffix}`,
     password: 'E2eSecurity123!',
   };
   const response = await rootPage.request.post(`${BACKEND_API_BASE_URL}/users`, {
@@ -45,7 +45,7 @@ async function createCredentialSelfServiceUser(rootPage: Page) {
   expect(response.status()).toBe(201);
   const user = await readJSON(response);
   expect(typeof user.id === 'string' ? user.id : '').not.toBe('');
-  return credentials;
+  return { credentials, userID: user.id as string };
 }
 
 test('@settings application settings expose every migrated V6 section without warnings', async ({
@@ -108,7 +108,7 @@ test('@settings password rotation is user-owned and OAuth disconnect stays proof
 
   await setLocale(rootPage, 'en-US');
   await login(rootPage);
-  const credentials = await createCredentialSelfServiceUser(rootPage);
+  const { credentials, userID } = await createCredentialSelfServiceUser(rootPage);
   const replacementPassword = 'E2eRotated456!';
 
   try {
@@ -155,6 +155,13 @@ test('@settings password rotation is user-owned and OAuth disconnect stays proof
     expect(session).not.toHaveProperty('token');
     expect(consoleViolations).toEqual([]);
   } finally {
-    await rootContext.close();
+    try {
+      const removed = await rootPage.request.delete(`${BACKEND_API_BASE_URL}/users/${userID}`, {
+        headers: await csrfHeaders(rootPage),
+      });
+      expect(removed.status()).toBe(204);
+    } finally {
+      await rootContext.close();
+    }
   }
 });
