@@ -91,7 +91,7 @@ describe('authorized menu search', () => {
       fireEvent.change(input, { target: { value: 'no-such-page' } });
       await screen.findByText('未找到匹配页面');
       fireEvent.keyDown(input, { key: 'Escape', keyCode: 27 });
-      await waitFor(() => expect(document.activeElement).toBe(previous), { timeout: 2000 });
+      await waitFor(() => expect(document.activeElement).toBe(previous));
     }
     expect(push).not.toHaveBeenCalled();
   });
@@ -108,7 +108,9 @@ describe('authorized menu search', () => {
     await waitFor(() => expect(document.activeElement).toBe(input));
     fireEvent.change(input, { target: { value: 'no-such-page' } });
     await screen.findByText('未找到匹配页面');
+    // Native popup/input handlers may consume Escape before the window bubble phase.
+    input.addEventListener('keydown', (event) => event.stopPropagation());
     fireEvent.keyDown(input, { key: 'Escape', keyCode: 27 });
-    await waitFor(() => expect(document.activeElement).toBe(trigger), { timeout: 2000 });
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 });

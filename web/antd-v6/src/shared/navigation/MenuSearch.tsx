@@ -69,7 +69,6 @@ export default function MenuSearch({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const restoreFocusRef = useRef(false);
-  const restoreFocusFrameRef = useRef<number | undefined>(undefined);
   const show = useCallback(() => {
     if (!open) {
       returnFocusRef.current =
@@ -88,41 +87,21 @@ export default function MenuSearch({
     inputRef.current = node;
     if (openRef.current) node?.focus();
   }, []);
-  const restoreFocus = useCallback((complete: boolean) => {
-    if (openRef.current || !restoreFocusRef.current) return;
-    const previous = returnFocusRef.current;
-    const target =
-      previous?.isConnected && previous !== document.body ? previous : triggerRef.current;
-    if (complete) {
-      restoreFocusRef.current = false;
-      // A user may have focused another control while the popup was closing.
-      if (document.activeElement !== document.body && document.activeElement !== target) return;
-    }
-    target?.focus();
-  }, []);
-  const afterOpenChange = useCallback(
-    (visible: boolean) => {
-      if (visible || !restoreFocusRef.current) return;
-      // Finalize after exit motion; closing popup content can outlive the first frame.
-      restoreFocusFrameRef.current = window.requestAnimationFrame(() => restoreFocus(true));
-    },
-    [restoreFocus],
-  );
-  useEffect(
-    () => () => {
-      if (restoreFocusFrameRef.current !== undefined)
-        window.cancelAnimationFrame(restoreFocusFrameRef.current);
-    },
-    [],
-  );
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (open) inputRef.current?.focus();
-      // Also restore immediately when motion is disabled or a rapid close skips it.
-      else restoreFocus(false);
+      else if (restoreFocusRef.current) {
+        restoreFocusRef.current = false;
+        const previous = returnFocusRef.current;
+        const target =
+          previous?.isConnected && previous !== document.body ? previous : triggerRef.current;
+        // Do not steal focus if another control was selected while closing.
+        if (document.activeElement === document.body || document.activeElement === target)
+          target?.focus();
+      }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [open, restoreFocus]);
+  }, [open]);
   const allItems = useMemo(
     () => buildAuthorizedMenuSearchItems(items, (name) => formatMenuLabel(intl, name)),
     [intl, items],
@@ -140,16 +119,20 @@ export default function MenuSearch({
         event.preventDefault();
         show();
       }
-      if (event.key === 'Escape' && open) close();
+      if (event.key === 'Escape' && open) {
+        // Own Escape before nested inputs or popup handlers can consume it.
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [close, open, show]);
 
   return (
     <Popover
       arrow={false}
-      afterOpenChange={afterOpenChange}
       fresh
       open={open}
       placement="bottomRight"
