@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { App, ConfigProvider } from 'antd';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RowActions } from './RowActions';
@@ -63,43 +63,62 @@ describe('RowActions', () => {
     expect(await screen.findByRole('menuitem', { name: 'Details' })).toBeTruthy();
   });
 
-  it('keeps failed asynchronous confirmations open and permits a successful retry', async () => {
-    let reject: (error: Error) => void = () => {};
-    const remove = vi
-      .fn()
-      .mockImplementationOnce(
-        () =>
-          new Promise<void>((_resolve, fail) => {
+  it.each(['immediate', 'deferred'])(
+    'keeps a %s failure visible and resets the confirmation button for a successful retry',
+    async (timing) => {
+      const conflict = Object.assign(new Error('HTTP 409'), {
+        response: {
+          status: 409,
+          data: { errorCode: 'USER_IN_USE', errorMessage: 'This fixture is temporarily in use' },
+        },
+      });
+      let reject: (error: Error) => void = () => {};
+      const remove = vi
+        .fn()
+        .mockImplementationOnce(() => {
+          if (timing === 'immediate') return Promise.reject(conflict);
+          return new Promise<void>((_resolve, fail) => {
             reject = fail;
-          }),
-      )
-      .mockResolvedValueOnce(undefined);
-    render(
-      <ConfigProvider theme={{ token: { motion: false } }}>
-        <App>
-          <RowActions
-            more={[
-              {
-                key: 'delete',
-                label: 'Delete record',
-                danger: true,
-                confirm: { title: 'Confirm deletion' },
-                onClick: remove,
-              },
-            ]}
-          />
-        </App>
-      </ConfigProvider>,
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete record' }));
-    fireEvent.click(await screen.findByRole('button', { name: /OK/ }));
-    await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    await act(async () => reject(new Error('conflict')));
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /OK/ }));
-    await waitFor(() => expect(remove).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-  });
+          });
+        })
+        .mockResolvedValueOnce(undefined);
+      render(
+        <ConfigProvider theme={{ token: { motion: false } }}>
+          <App>
+            <RowActions
+              more={[
+                {
+                  key: 'delete',
+                  label: 'Delete record',
+                  danger: true,
+                  confirm: { title: 'Confirm deletion' },
+                  onClick: remove,
+                },
+              ]}
+            />
+          </App>
+        </ConfigProvider>,
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'actions.more' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete record' }));
+      fireEvent.click(await screen.findByRole('button', { name: /OK/ }));
+      await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
+      const dialog = within(screen.getByRole('dialog'));
+      if (timing === 'deferred') {
+        expect(await dialog.findByRole('img', { name: 'loading' })).toBeTruthy();
+        fireEvent.click(dialog.getByRole('button', { name: /OK/ }));
+        expect(remove).toHaveBeenCalledTimes(1);
+        await act(async () => reject(conflict));
+      }
+      expect((await dialog.findByRole('alert')).textContent).toContain(
+        'This fixture is temporarily in use',
+      );
+      await waitFor(() => expect(dialog.queryByRole('img', { name: 'loading' })).toBeNull());
+      const retry = dialog.getByRole('button', { name: 'OK' });
+      expect((retry as HTMLButtonElement).disabled).toBe(false);
+      fireEvent.click(retry);
+      await waitFor(() => expect(remove).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    },
+  );
 });

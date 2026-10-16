@@ -37,41 +37,35 @@ export function RowActions({
     if (action.disabled) return;
     if (action.confirm) {
       const confirmation = action.confirm;
-      let pending = false;
       const dialog = modal.confirm({
         title: action.confirm.title,
         content: action.confirm.description,
         okButtonProps: { danger: action.danger },
-        // The public callback form closes explicitly. Rejected action promises
-        // stay in this handler instead of becoming unhandled modal rejections.
-        onOk: (close: () => void) => {
-          if (pending) return;
-          pending = true;
-          dialog.update({ okButtonProps: { danger: action.danger, loading: true } });
-          void Promise.resolve()
+        // Return the action promise so the modal owns pending state, duplicate
+        // click protection and resetting the confirmation button after failure.
+        onOk: () =>
+          Promise.resolve()
             .then(() => action.onClick())
-            .then(
-              () => close(),
-              (error: unknown) => {
-                pending = false;
-                dialog.update({
-                  okButtonProps: { danger: action.danger, loading: false },
-                  content: (
-                    <div className="flex flex-col gap-3">
-                      {confirmation.description}
-                      <Alert
-                        showIcon
-                        type="error"
-                        title={intl.formatMessage({ id: 'actions.failed' })}
-                        description={getRequestErrorMessage(error)}
-                      />
-                    </div>
-                  ),
-                });
-              },
-            );
-        },
+            .catch((error: unknown) => {
+              dialog.update({
+                content: (
+                  <div className="flex flex-col gap-3">
+                    {confirmation.description}
+                    <Alert
+                      showIcon
+                      type="error"
+                      title={intl.formatMessage({ id: 'actions.failed' })}
+                      description={getRequestErrorMessage(error)}
+                    />
+                  </div>
+                ),
+              });
+              throw error;
+            }),
       });
+      // Hook modal's public await mode handles a rejected onOk promise without
+      // emitting an unhandled rejection; the visible error above stays open.
+      void Promise.resolve(dialog);
       return;
     }
     action.onClick();

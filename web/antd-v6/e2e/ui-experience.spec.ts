@@ -2,6 +2,16 @@ import { randomUUID } from 'node:crypto';
 import { expect, type Page, type Route, test } from '@playwright/test';
 import { API_BASE_URL, csrfHeaders, login, readJSON, setLocale } from './support/session';
 
+// Route compilation and authenticated presentation loading can exceed the
+// assertion default on a cold dev server. Wait on the actual usable surface.
+test.setTimeout(60_000);
+
+async function expectListReady(page: Page) {
+  await expect(page.locator('#mss-admin-name-filter')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('page-loading')).toHaveCount(0);
+  await expect(page.getByTestId('page-error')).toHaveCount(0);
+}
+
 interface FixtureUser {
   id: string;
   username: string;
@@ -38,8 +48,8 @@ async function withFixtureUser(page: Page, run: (user: FixtureUser) => Promise<v
 
 async function showFixtureUser(page: Page, user: FixtureUser) {
   await page.goto('/users');
+  await expectListReady(page);
   const filter = page.locator('#mss-admin-name-filter');
-  await expect(filter).toBeVisible();
   await filter.fill(user.name);
   const filtered = page.waitForResponse((response) => {
     const url = new URL(response.url());
@@ -71,8 +81,8 @@ test('@ui-experience Chinese menu search finds an editable nested user menu', as
   await setLocale(page, 'zh-CN');
   await login(page);
   await page.goto('/menu');
+  await expectListReady(page);
   const filter = page.locator('#mss-admin-name-filter');
-  await expect(filter).toBeVisible();
   await filter.fill('用户管理');
   const filtered = page.waitForResponse((response) => {
     const url = new URL(response.url());
@@ -114,6 +124,7 @@ test('@ui-experience desktop menu search restores keyboard focus on every openin
   await setLocale(page, 'en-US');
   await login(page);
   await page.goto('/users');
+  await expectListReady(page);
   const trigger = page.getByRole('button', { name: 'Open menu search', exact: true });
   const input = page.getByPlaceholder('Search accessible menus or paths');
   await trigger.focus();
@@ -190,8 +201,14 @@ test('@ui-experience mobile user cards retain identity and expose batch actions'
     await expect(bulk).toBeVisible();
     await expect(bulk.getByText('1 selected', { exact: true })).toBeVisible();
     await bulk.getByRole('button', { name: 'Delete selected', exact: true }).click();
-    await expect(page.getByText('Delete the 1 selected items?', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    const confirmation = page.getByRole('dialog', {
+      name: 'Delete the 1 selected items?',
+      exact: true,
+    });
+    await expect(confirmation).toBeVisible();
+    await expect(confirmation.getByRole('button', { name: 'OK', exact: true })).toBeEnabled();
+    await confirmation.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(confirmation).toBeHidden();
     await bulk.getByRole('button', { name: 'Esc to cancel', exact: true }).click();
     await expect(bulk).toHaveCount(0);
     await page.reload();
@@ -244,7 +261,7 @@ test('@ui-experience failed user deletion preserves confirmation and succeeds af
     try {
       await row.getByRole('button', { name: 'More actions', exact: true }).click();
       await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
-      const confirmation = page.getByRole('dialog').filter({ hasText: 'Delete this user?' });
+      const confirmation = page.getByRole('dialog', { name: 'Delete this user?', exact: true });
       await expect(confirmation).toBeVisible();
       const rejected = page.waitForResponse(
         (response) => response.url() === url && response.request().method() === 'DELETE',
@@ -253,6 +270,12 @@ test('@ui-experience failed user deletion preserves confirmation and succeeds af
       expect((await rejected).status()).toBe(409);
       await expect(page.getByText(/Deletion failed:.*temporarily in use/)).toBeVisible();
       await expect(confirmation).toBeVisible();
+      // The mutation's toast precedes RowActions' promise rejection handler.
+      // Its inline error and restored button are applied in one modal update.
+      const failure = confirmation.getByRole('alert');
+      await expect(
+        failure.getByText('This fixture is temporarily in use', { exact: true }),
+      ).toBeVisible();
       await expect(confirmation.getByRole('button', { name: 'OK', exact: true })).toBeEnabled();
       expect((await page.request.get(url)).status()).toBe(200);
 

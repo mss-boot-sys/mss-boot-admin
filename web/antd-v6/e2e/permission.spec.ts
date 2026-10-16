@@ -138,7 +138,7 @@ test.describe('V6 authorization boundaries', () => {
       expect(menuContainsPath(authorizedMenu, '/security/online-sessions')).toBe(false);
 
       await page.goto('/suppliers');
-      await expect(page.getByText('403', { exact: true })).toBeVisible();
+      await expect(page.getByText('403', { exact: true })).toBeVisible({ timeout: 30_000 });
       expect(page.url().startsWith(APP_BASE_URL)).toBe(true);
 
       if (process.env.MSS_V6_AVATAR_PROBE === '1') {
@@ -186,11 +186,22 @@ test.describe('V6 authorization boundaries', () => {
       expect(deniedSessions.status()).toBe(403);
 
       await page.goto('/security/online-sessions');
-      await expect(page.getByText('403', { exact: true })).toBeVisible();
+      await expect(page.getByText('403', { exact: true })).toBeVisible({ timeout: 30_000 });
       expect(page.url().startsWith(APP_BASE_URL)).toBe(true);
     } finally {
       await page.close();
       try {
+        // Role deletion protects references from soft-deleted users as well.
+        // Detach the fixture while it is still mutable, then remove both.
+        const detached = await rootPage.request.put(`${BACKEND_API_BASE_URL}/users/${userID}`, {
+          data: { roleID: '' },
+          headers: await csrfHeaders(rootPage),
+        });
+        expect(detached.status()).toBe(200);
+        const detachedUser = await readJSON(
+          await rootPage.request.get(`${BACKEND_API_BASE_URL}/users/${userID}`),
+        );
+        expect(detachedUser.roleID).toBe('');
         const userRemoval = await rootPage.request.delete(
           `${BACKEND_API_BASE_URL}/users/${userID}`,
           {
