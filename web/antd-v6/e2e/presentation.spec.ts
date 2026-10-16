@@ -73,8 +73,9 @@ async function expectUsableList(page: Page) {
   // rendered data or a confirmed empty state so parser failures cannot pass.
   await expect(
     page
-      .locator('section.mss-surface')
+      .locator('section.mss-surface, [role="tabpanel"]')
       .filter({ has: page.locator('table, ul, [data-testid="page-empty"]') })
+      .filter({ visible: true })
       .first(),
   ).toBeVisible();
   // Closed detail drawers can retain their pending children in the DOM.
