@@ -1,8 +1,8 @@
 import GithubOutlined from '@ant-design/icons/GithubOutlined';
 import MenuOutlined from '@ant-design/icons/MenuOutlined';
-import { Link, useIntl } from '@umijs/max';
+import { Link, useIntl, useLocation } from '@umijs/max';
 import { Button, Grid, Typography } from 'antd';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import type { InitialState, StartupFailure } from '../auth/types';
 import { PageError } from '../design-system/PageState';
 import { AvatarMenu, HeaderActions } from './HeaderActions';
@@ -61,6 +61,15 @@ export function ApplicationBrand({
   );
 }
 
+function focusPage() {
+  const page =
+    document.querySelector<HTMLElement>('main') ?? document.querySelector<HTMLElement>('h1');
+  if (page) {
+    if (!page.hasAttribute('tabindex')) page.setAttribute('tabindex', '-1');
+    page.focus({ preventScroll: true });
+  }
+}
+
 export function AccessibleMobileHeader({
   collapsed,
   initialState,
@@ -72,6 +81,18 @@ export function AccessibleMobileHeader({
 }) {
   const intl = useIntl();
   const { logo, title } = applicationIdentity(initialState);
+  const location = useLocation();
+  const route = `${location.pathname}${location.search ?? ''}${location.hash ?? ''}`;
+  const previousRoute = useRef(route);
+  const pendingPageFocus = useRef(false);
+  useEffect(() => {
+    if (previousRoute.current !== route && collapsed === false) {
+      pendingPageFocus.current = true;
+      onCollapse?.(true);
+      focusPage();
+    }
+    previousRoute.current = route;
+  }, [route, collapsed, onCollapse]);
   const navigationLabel = intl.formatMessage({
     id: collapsed ? 'navigation.sidebar.open' : 'navigation.sidebar.close',
   });
@@ -83,7 +104,18 @@ export function AccessibleMobileHeader({
         aria-label={navigationLabel}
         htmlType="button"
         icon={<MenuOutlined />}
-        onClick={() => onCollapse?.(!collapsed)}
+        onClick={() => {
+          pendingPageFocus.current = false;
+          onCollapse?.(!collapsed);
+        }}
+        onFocus={() => {
+          // The Drawer restores its trigger after the closing animation.
+          // Following a successful navigation the new page owns focus instead.
+          if (pendingPageFocus.current) {
+            pendingPageFocus.current = false;
+            focusPage();
+          }
+        }}
         type="text"
       />
       <Link

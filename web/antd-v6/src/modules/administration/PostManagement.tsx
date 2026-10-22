@@ -96,6 +96,14 @@ export default function PostManagement({
   });
   const remove = useMutation({
     mutationFn: (post: PostSummary) => administrationAPI.posts.remove(post.id),
+    onError: (error) => {
+      void message.error(
+        intl.formatMessage(
+          { id: 'administration.delete.failed' },
+          { reason: getRequestErrorMessage(error) },
+        ),
+      );
+    },
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: queryKeys.administration('posts') });
       void message.success(intl.formatMessage({ id: 'administration.delete.success' }));
@@ -197,7 +205,7 @@ export default function PostManagement({
                 title: intl.formatMessage({ id: 'post.delete.confirm' }),
                 description: intl.formatMessage({ id: 'post.delete.description' }),
               },
-              onClick: () => remove.mutate(post),
+              onClick: () => remove.mutateAsync(post),
             },
           ]}
         />

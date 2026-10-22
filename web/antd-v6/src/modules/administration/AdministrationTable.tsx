@@ -71,6 +71,7 @@ interface AdministrationTableProps<T extends { id: string }> {
    * renders the floating batch-action bar content.
    */
   bulkActions?: (selected: T[], clear: () => void) => ReactNode;
+  isRowSelectable?: (row: T) => boolean;
   /** Additional filter chips (e.g. "+ 角色 / + 部门"), rendered after status. */
   extraFilters?: ReactNode;
   /** Persists column visibility / density per operator in this browser. */
@@ -114,6 +115,7 @@ export default function AdministrationTable<T extends { id: string }>({
   searchCollapsedByDefault = false,
   toolbar,
   bulkActions,
+  isRowSelectable,
   extraFilters,
   settingsKey,
 }: AdministrationTableProps<T>) {
@@ -144,8 +146,8 @@ export default function AdministrationTable<T extends { id: string }>({
       : statusSearch;
   const rows = query.data?.data ?? [];
   const selectedRows = useMemo(
-    () => rows.filter((row) => selectedKeys.includes(row.id)),
-    [rows, selectedKeys],
+    () => rows.filter((row) => selectedKeys.includes(row.id) && (isRowSelectable?.(row) ?? true)),
+    [rows, selectedKeys, isRowSelectable],
   );
 
   useEffect(() => {
@@ -153,6 +155,39 @@ export default function AdministrationTable<T extends { id: string }>({
       setSearchExpanded(!searchCollapsedByDefault);
     }
   }, [searchCollapsedByDefault]);
+
+  const identityKey =
+    ['username', 'name', 'email', 'id'].find((key) =>
+      columns.some((column) => columnKeyOf(column) === key),
+    ) ??
+    mobileColumnKeys.find(
+      (key) => key !== 'actions' && columns.some((column) => columnKeyOf(column) === key),
+    ) ??
+    columns.map(columnKeyOf).find((key) => key && key !== 'actions');
+  const settingsColumns = columns.flatMap((column) => {
+    const key = columnKeyOf(column);
+    if (!key || key === 'actions') return [];
+    const title = 'title' in column && typeof column.title === 'string' ? column.title : key;
+    return [{ key, title, required: key === identityKey }];
+  });
+  const effectiveHidden = settingsKey
+    ? preferences.hidden.filter(
+        (key) => key !== identityKey && settingsColumns.some((column) => column.key === key),
+      )
+    : [];
+  const hiddenKeys = new Set(effectiveHidden);
+  const visibleColumns = columns.filter((column) => !hiddenKeys.has(columnKeyOf(column) ?? ''));
+  const effectiveMobileKeys = identityKey
+    ? [...new Set([identityKey, ...mobileColumnKeys])]
+    : mobileColumnKeys;
+
+  // Repair old preferences that hid the identity or reference removed fields.
+  // Render from the normalized value immediately, before the persistence effect.
+  useEffect(() => {
+    if (settingsKey && effectiveHidden.join('\0') !== preferences.hidden.join('\0')) {
+      updatePreferences({ ...preferences, hidden: effectiveHidden });
+    }
+  }, [settingsKey, effectiveHidden, preferences, updatePreferences]);
 
   if (status === 403) {
     return <PageForbidden message={intl.formatMessage({ id: 'administration.forbidden.read' })} />;
@@ -180,21 +215,6 @@ export default function AdministrationTable<T extends { id: string }>({
   const activeStatus = params.status ?? 'all';
   const presentationDensity: TableDensity = density === 'compact' ? 'small' : (density ?? 'large');
   const effectiveDensity = preferences.density ?? presentationDensity;
-  const settingsColumns = columns.flatMap((column) => {
-    const key = columnKeyOf(column);
-    if (!key || key === 'actions') return [];
-    const title = 'title' in column && typeof column.title === 'string' ? column.title : key;
-    return [{ key, title }];
-  });
-  const hiddenKeys = new Set(
-    settingsKey
-      ? preferences.hidden.filter((key) => settingsColumns.some((column) => column.key === key))
-      : [],
-  );
-  const visibleColumns =
-    hiddenKeys.size >= settingsColumns.length
-      ? columns
-      : columns.filter((column) => !hiddenKeys.has(columnKeyOf(column) ?? ''));
   const applyStatus = (value: AdministrationStatusFilter) =>
     setParams((current) => ({ ...current, current: 1, status: value }));
   const clearSelection = () => setSelectedKeys([]);
@@ -232,7 +252,7 @@ export default function AdministrationTable<T extends { id: string }>({
                   <TableSettings
                     columns={settingsColumns}
                     density={effectiveDensity}
-                    hidden={preferences.hidden}
+                    hidden={effectiveHidden}
                     onDensityChange={(value) =>
                       updatePreferences({ ...preferences, density: value })
                     }
@@ -346,13 +366,14 @@ export default function AdministrationTable<T extends { id: string }>({
           dataSource={rows}
           loading={query.isFetching}
           locale={{ emptyText: <PageEmpty description={emptyText} /> }}
-          mobileColumnKeys={mobileColumnKeys}
+          mobileColumnKeys={effectiveMobileKeys}
           size={effectiveDensity}
           rowClassName={() => 'mss-row-enter'}
           rowSelection={
             bulkActions
               ? {
-                  selectedRowKeys: selectedKeys,
+                  selectedRowKeys: selectedRows.map((row) => row.id),
+                  getCheckboxProps: (row) => ({ disabled: !(isRowSelectable?.(row) ?? true) }),
                   onChange: (keys) => setSelectedKeys(keys.map(String)),
                 }
               : undefined

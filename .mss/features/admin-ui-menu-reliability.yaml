@@ -1,0 +1,141 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: admin-ui-menu-reliability
+  displayName: Admin UI and menu reliability repairs
+  description: Repairs the data-contract, menu-tree and interaction defects reproduced on main 3eb58cf.
+  owner: admin-platform
+spec:
+  problem: >-
+    A server-accepted username can break the entire user list. Menu writes admit invalid
+    trees, list filters ignore descendants, deep nodes disappear and expected authorization
+    conflicts become server errors. Mobile selection and column visibility, repeated menu
+    search, asynchronous delete feedback and navigation state lose supported interactions.
+  goals:
+    - Make accepted user data readable without silently rewriting existing identities.
+    - Preserve a valid, consistently searchable and manageable menu hierarchy.
+    - Keep backend authorization authoritative during menu changes.
+    - Restore mobile action parity, keyboard focus and route query state.
+    - Prove business content has loaded instead of accepting only a page title.
+  nonGoals:
+    - Publish a release or modify production data.
+    - Replace the existing single application or its authentication and authorization system.
+    - Automatically truncate usernames, delete malformed legacy records or reparent authorized menus.
+    - Introduce a new business-workspace taxonomy without a separate navigation contract.
+  actors:
+    - id: operator
+      displayName: Authorized desktop or mobile operator
+    - id: root
+      displayName: Platform administrator
+  modules:
+    - name: user-contract
+      operation: extend
+    - name: menu-contract
+      operation: extend
+    - name: shared-interactions
+      operation: extend
+  requirements:
+    - id: valid-user-identities
+      title: Consistent username writes and compatible reads
+      description: Username validation must not depend on database varchar enforcement.
+      priority: must
+      actor: root
+      module: user-contract
+      rules:
+        - New or changed usernames use the same length and format contract on the server and client.
+        - Invalid writes return a field validation error without persisting data.
+        - Existing legacy identifiers remain visible and are never silently truncated or deleted.
+        - Browser fixtures use valid identifiers and verify the resulting user list.
+    - id: manageable-menu-trees
+      title: Valid menu trees with truthful search and conflicts
+      description: Menu mutations and list projections share consistent tree semantics.
+      priority: must
+      actor: root
+      module: menu-contract
+      rules:
+        - Reject missing parents, invalid parent types, self references and ancestor cycles transactionally.
+        - Search descendants and retain ancestor context while preserving branch pagination.
+        - Supported deep nodes remain reachable in the management list and parent selector.
+        - Referenced authorization paths remain protected and expected conflicts return 409.
+        - Preserve nested menu translation identifiers.
+    - id: interaction-parity
+      title: Preserve supported interactions across viewports
+      description: List controls and shell navigation remain usable after state changes.
+      priority: must
+      actor: operator
+      module: shared-interactions
+      rules:
+        - Mobile cards support the same authorized selection and bulk actions as the desktop table.
+        - Column preferences cannot hide every identifying field at the current breakpoint.
+        - Table preferences are isolated by authenticated operator identity.
+        - Reopening menu search focuses its input and closing restores meaningful focus.
+        - Confirmed asynchronous deletion waits for completion and presents failures with a retry path.
+        - Route tabs retain the last safe query and fragment while access checks remain path based.
+        - Successful mobile navigation closes the drawer and exposes page content.
+        - Menu metadata changes refresh navigation without requiring a browser reload.
+    - id: truthful-browser-evidence
+      title: Require actual business data readiness
+      description: Page presentation checks must not pass on loading or error states.
+      priority: must
+      actor: operator
+      module: shared-interactions
+      rules:
+        - Browser checks wait for the business request and a populated or confirmed-empty surface.
+        - Failed parsing or a visible page error fails the test even when a configured title is visible.
+  constraints:
+    - id: permissions
+      type: security
+      statement: Preserve existing root and API permission checks; directory placement never grants access.
+    - id: existing-data
+      type: compatibility
+      statement: Preserve existing URLs, role assignments, custom menu parents and persisted identifiers.
+    - id: locales
+      type: ux
+      statement: Add user-facing messages to both zh-CN and en-US catalogs.
+  acceptance:
+    - id: backend-boundaries
+      requirement: manageable-menu-trees
+      statement: Positive and negative API tests cover valid trees, invalid parents, descendant search, depth, conflicts and locale keys.
+      level: integration
+      required: true
+      evidence:
+        - type: path
+          value: admin/apis
+    - id: username-boundaries
+      requirement: valid-user-identities
+      statement: Server tests exercise length and format boundaries and client tests keep legacy rows readable.
+      level: integration
+      required: true
+      evidence:
+        - type: path
+          value: admin/models
+        - type: test
+          value: web/antd-v6/src/modules/administration/contract.test.ts
+    - id: ui-regressions
+      requirement: interaction-parity
+      statement: Focused component tests and desktop/mobile browser checks reproduce and close the audited interactions.
+      level: e2e
+      required: true
+      evidence:
+        - type: path
+          value: web/antd-v6/e2e
+    - id: presentation-readiness
+      requirement: truthful-browser-evidence
+      statement: Presentation checks require real business surfaces and reject loading or failed lists.
+      level: e2e
+      required: true
+      evidence:
+        - type: test
+          value: web/antd-v6/e2e/presentation.spec.ts
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+      - corepack pnpm@10.34.5 --dir web/antd-v6 lint
+      - corepack pnpm@10.34.5 --dir web/antd-v6 test:ci
+      - corepack pnpm@10.34.5 --dir web/antd-v6 test:e2e
+      - corepack pnpm@10.34.5 --dir web/antd-v6 build:release
+  rollout:
+    strategy: phased
+    migration: No destructive data migration. New writes enforce contracts while legacy identities remain readable.
+    rollback: Revert application changes through a reviewed pull request without rewriting identities or authorization data.

@@ -6,6 +6,16 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+- Preserve legacy usernames when reading and editing existing identities; keep
+  new or changed usernames aligned with the server's 3–20 character contract.
+- Make menu searches include translated descendant labels, display protected
+  regrouping conflicts, and refresh changed navigation metadata immediately.
+- Restore mobile card selection and tree expansion, protect identifying
+  columns, isolate table preferences by account, refocus repeated menu searches,
+  retain route tab queries/fragments and close mobile navigation after routing.
+- Await confirmed row and batch deletion, retain the confirmation with visible
+  failure details for retry, and assert usable business data in browser checks.
+
 - Refresh exact source dependencies to Ant Design 6.6.6, React Query 5.104.2,
   Vitest 5.0.4 and Happy DOM 21.0.1; align runtime overrides and the Thin Host
   manifest contract. Preserve Node 24, pnpm 10.34.5 and immutable v1.6.1 artifacts.

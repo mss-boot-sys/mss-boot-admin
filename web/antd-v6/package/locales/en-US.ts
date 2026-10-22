@@ -220,10 +220,25 @@ export default {
   'states.forbidden':
     "Sorry, you don't have access to this page yet. Contact an administrator to request it.",
   'states.notFound': 'Sorry, the page you are looking for does not exist or has been removed.',
+  'actions.failed': 'Action failed. Try again.',
   'errors.offline': 'The network is unavailable. Check your connection and try again.',
   'actions.backToPrevious': 'Go back',
   'states.retrying': 'Loading failed. Retrying automatically…',
   'administration.total': '{total} total',
+  'administration.bulk.selectAll': 'Select selectable rows on this page',
+  'administration.bulk.selectRow': 'Select record {name}',
+  'administration.delete.failed': 'Deletion failed: {reason}. Review the error and try again.',
+  'user.validation.username': 'Use 3–20 letters, numbers, or underscores for the username',
+  'menu.error.hierarchy':
+    'The parent must exist and support this menu type. A menu cannot contain itself or an ancestor. At most 64 levels are supported.',
+  'menu.error.authorizationInUse':
+    'This menu or its descendants still have role grants. Revoke those grants in role authorization before changing the group, identity or status, then explicitly grant access again.',
+  'menu.error.permissionConflict':
+    'Another enabled menu or action already uses this permission path. Use a unique path.',
+  'menu.error.notFound': 'This menu no longer exists. Refresh and try again.',
+  'administration.table.expand': 'Expand {name}',
+  'administration.table.collapse': 'Collapse {name}',
+  'administration.table.level': 'Level {level}',
   'administration.bulk.label': 'Batch actions',
   'administration.bulk.selected': '{count} selected',
   'administration.bulk.clear': 'Esc to cancel',

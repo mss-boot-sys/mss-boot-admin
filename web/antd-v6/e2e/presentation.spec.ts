@@ -42,6 +42,51 @@ const pages = [
   { pageKey: 'log.runtime', route: '/log' },
 ] as const;
 
+const listEndpoints: Readonly<Record<string, string>> = {
+  'user.list': '/users',
+  'role.list': '/roles',
+  'menu.list': '/menus',
+  'department.list': '/departments',
+  'post.list': '/posts',
+  'task.list': '/tasks',
+  'notice.list': '/notices',
+  'language.list': '/languages',
+  'option.list': '/options',
+  'system-config.list': '/system-configs',
+  'online-session.list': '/online-sessions',
+  'log.login': '/audit-logs/login',
+  'log.audit': '/audit-logs/operation',
+  'log.runtime': '/logs',
+};
+
+async function waitForListResponse(page: Page, pageKey: string) {
+  const response = await page.waitForResponse(
+    (candidate) =>
+      candidate.request().method() === 'GET' &&
+      new URL(candidate.url()).pathname === `/admin/api${listEndpoints[pageKey]}`,
+  );
+  expect(response.status(), `actual list response ${pageKey}`).toBe(200);
+}
+
+async function expectUsableList(page: Page) {
+  // A published title is outside the list's loading/error boundary. Require
+  // rendered data or a confirmed empty state so parser failures cannot pass.
+  await expect(
+    page
+      .locator('section.mss-surface, [role="tabpanel"]')
+      .filter({ has: page.locator('table, ul, [data-testid="page-empty"]') })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  // Closed detail drawers can retain their pending children in the DOM.
+  // Only states visible to the operator describe the current list surface.
+  await expect(page.getByTestId('page-loading').filter({ visible: true })).toHaveCount(0);
+  await expect(page.getByTestId('page-error').filter({ visible: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Retry', exact: true }).filter({ visible: true }),
+  ).toHaveCount(0);
+}
+
 function unwrapData<T>(body: Record<string, unknown>): T {
   return ('data' in body ? body.data : body) as T;
 }
@@ -190,11 +235,23 @@ async function expectConfiguredPage(
       );
       expect(response.status(), `effective profile ${pageKey}`).toBe(200);
     });
-    await Promise.all([navigate(), ...profiles]);
+    const initialPageKey = pageKeys[0];
+    if (!initialPageKey) throw new Error('configured route has no page key');
+    const list = waitForListResponse(page, initialPageKey);
+    await Promise.all([navigate(), list, ...profiles]);
     for (const pageKey of pageKeys) {
       const title = titles.get(pageKey);
       if (!title) throw new Error(`missing configured title for ${pageKey}`);
       await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+    }
+    await expectUsableList(page);
+    // Log profiles share one route, but each tab has its own data contract.
+    for (const pageKey of pageKeys.slice(1)) {
+      await Promise.all([
+        waitForListResponse(page, pageKey),
+        page.getByRole('tab', { name: titles.get(pageKey), exact: true }).click(),
+      ]);
+      await expectUsableList(page);
     }
     await expectNoDocumentOverflow(page);
   };

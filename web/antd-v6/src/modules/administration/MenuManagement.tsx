@@ -1,4 +1,5 @@
 import { getRequestErrorMessage, getRequestStatus } from '@mss-admin-core/shared/api/errors';
+import { requestAuthorizationRefresh } from '@mss-admin-core/shared/auth/freshness';
 import { DetailDrawer, FormModal } from '@mss-admin-core/shared/design-system/Overlay';
 import { RowActions } from '@mss-admin-core/shared/design-system/RowActions';
 import {
@@ -40,6 +41,7 @@ import {
   type MenuSummary,
   type MenuWriteValues,
 } from './contract';
+import { localizedMenuNameKeys, menuWriteErrorMessage } from './menuFeedback';
 import {
   useAdministrationAPICatalog,
   useAdministrationPage,
@@ -83,7 +85,12 @@ export default function MenuManagement({
     ? presentation.list.pageSize
     : initialParams.pageSize;
   const [params, setParams] = usePresentationPageParams(initialParams, configuredPageSize);
-  const menus = useAdministrationPage('menus', params);
+  const menus = useAdministrationPage('menus', {
+    ...params,
+    nameKeys: localizedMenuNameKeys(intl.messages, params.name),
+  });
+  const writeErrorMessage = (error: unknown) =>
+    menuWriteErrorMessage(error, (id) => intl.formatMessage({ id }));
   const menuCatalog = useMenuTree();
   const [editing, setEditing] = useState<MenuSummary | 'create'>();
   const [bindingMenu, setBindingMenu] = useState<MenuSummary>();
@@ -112,16 +119,26 @@ export default function MenuManagement({
       form.resetFields();
       finishManagementRouteIntent(routeIntent, '/menu');
       void message.success(intl.formatMessage({ id: 'administration.save.success' }));
+      requestAuthorizationRefresh();
     },
   });
   const remove = useMutation({
     mutationFn: (menu: MenuSummary) => administrationAPI.menus.remove(menu.id),
+    onError: (error) => {
+      void message.error(
+        intl.formatMessage(
+          { id: 'administration.delete.failed' },
+          { reason: writeErrorMessage(error) },
+        ),
+      );
+    },
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.administration('menus') }),
         client.invalidateQueries({ queryKey: ['authorization'] }),
       ]);
       void message.success(intl.formatMessage({ id: 'administration.delete.success' }));
+      requestAuthorizationRefresh();
     },
   });
   const bindAPIs = useMutation({
@@ -139,6 +156,7 @@ export default function MenuManagement({
       setBindingMenu(undefined);
       setBoundAPIKeys([]);
       void message.success(intl.formatMessage({ id: 'menu.apiBinding.success' }));
+      requestAuthorizationRefresh();
     },
   });
 
@@ -261,7 +279,7 @@ export default function MenuManagement({
                 title: intl.formatMessage({ id: 'menu.delete.confirm' }),
                 description: intl.formatMessage({ id: 'menu.delete.description' }),
               },
-              onClick: () => remove.mutate(menu),
+              onClick: () => remove.mutateAsync(menu),
             },
           ]}
         />
@@ -337,7 +355,7 @@ export default function MenuManagement({
         {save.isError ? (
           <Alert
             className="mb-4"
-            description={getRequestErrorMessage(save.error)}
+            description={writeErrorMessage(save.error)}
             showIcon
             type={getRequestStatus(save.error) === 409 ? 'warning' : 'error'}
           />

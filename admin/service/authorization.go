@@ -766,7 +766,10 @@ func ValidateMenuMetadataCreate(ctx context.Context, db *gorm.DB, menu *models.M
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return normalizeAndRejectAmbiguousAuthorizationPath(ctx, db, menu)
+	if err := normalizeAndRejectAmbiguousAuthorizationPath(ctx, db, menu); err != nil {
+		return err
+	}
+	return validateMenuHierarchy(ctx, db, menu)
 }
 
 // ValidateMenuMetadataUpdate blocks an authority-identity/status mutation when
@@ -780,6 +783,9 @@ func ValidateMenuMetadataUpdate(ctx context.Context, db *gorm.DB, next *models.M
 		ctx = context.Background()
 	}
 	if err := normalizeAndRejectAmbiguousAuthorizationPath(ctx, db, next); err != nil {
+		return err
+	}
+	if err := validateMenuHierarchy(ctx, db, next); err != nil {
 		return err
 	}
 	var current models.Menu
@@ -830,9 +836,15 @@ func normalizeAndRejectAmbiguousAuthorizationPath(ctx context.Context, db *gorm.
 // target or any descendant still has a Casbin policy. Batch generic deletion is
 // deliberately unsupported because the legacy hook does not expose bound IDs.
 func ValidateMenuMetadataDelete(ctx context.Context, db *gorm.DB, menuID string) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	menuID = strings.TrimSpace(menuID)
 	if menuID == "" || menuID == "batch" {
 		return fmt.Errorf("generic batch menu deletion is not supported")
+	}
+	if _, err := lockConfigRevision(db.WithContext(ctx), globalAuthorizationRevisionKey()); err != nil {
+		return err
 	}
 	return rejectReferencedMenuSubtree(ctx, db, menuID)
 }
@@ -856,11 +868,20 @@ func rejectReferencedMenuSubtree(ctx context.Context, db *gorm.DB, menuID string
 	if err := db.WithContext(ctx).Where("ptype = ?", "p").Find(&policies).Error; err != nil {
 		return err
 	}
+	roleIDs := make(map[string]bool)
 	for i := range policies {
 		key := policies[i].V1 + "\x00" + policies[i].V2
 		if _, referenced := tuples[key]; referenced {
-			return ErrAuthorizationMetadataInUse
+			roleIDs[policies[i].V0] = true
 		}
+	}
+	if len(roleIDs) > 0 {
+		roles := make([]string, 0, len(roleIDs))
+		for id := range roleIDs {
+			roles = append(roles, id)
+		}
+		sort.Strings(roles)
+		return &MenuAuthorizationInUseError{RoleIDs: roles}
 	}
 	return nil
 }

@@ -78,7 +78,7 @@ func TestUserControllerUpdatesStatisticsAfterMutationCommit(t *testing.T) {
 	request := httptest.NewRequest(
 		http.MethodPost,
 		"/admin/api/users",
-		bytes.NewBufferString(`{"username":"statistics-user","password":"Statistics123!"}`),
+		bytes.NewBufferString(`{"username":"statistics_user","password":"Statistics123!"}`),
 	)
 	request.Header.Set("Content-Type", "application/json")
 	result := httptest.NewRecorder()
@@ -111,7 +111,7 @@ func TestUserControllerUpdatesStatisticsAfterMutationCommit(t *testing.T) {
 	}
 
 	var created models.User
-	if err := db.Where("username = ?", "statistics-user").Take(&created).Error; err != nil {
+	if err := db.Where("username = ?", "statistics_user").Take(&created).Error; err != nil {
 		t.Fatalf("load created user: %v", err)
 	}
 	deleteRequest := httptest.NewRequest(http.MethodDelete, "/admin/api/users/"+created.ID, nil)

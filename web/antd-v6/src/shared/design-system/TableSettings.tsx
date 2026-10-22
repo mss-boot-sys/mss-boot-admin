@@ -7,6 +7,8 @@ export type TableDensity = 'small' | 'middle' | 'large';
 export interface TableSettingsColumn {
   key: string;
   title: string;
+  /** The row identity remains available at every breakpoint. */
+  required?: boolean;
 }
 
 export function TableSettings({
@@ -55,7 +57,7 @@ export function TableSettings({
                 key={column.key}
                 checked={checked}
                 // Keep at least one business column visible.
-                disabled={checked && visible.length <= 1}
+                disabled={column.required || (checked && visible.length <= 1)}
                 onChange={(event) =>
                   onHiddenChange(
                     event.target.checked
