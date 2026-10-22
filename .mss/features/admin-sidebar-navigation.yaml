@@ -1,0 +1,135 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: admin-sidebar-navigation
+  displayName: Compact route-aware Admin sidebar navigation
+  owner: frontend
+  labels:
+    implementation-status: implemented
+    release-status: unreleased
+    release-baseline: v1.6.1
+spec:
+  problem: >-
+    The v1.6.1 sidebar exposes directory contents together, making the navigation
+    increasingly difficult to scan as authorized business menus grow. Users need
+    compact directories without losing their current location or menu search.
+  goals:
+    - Show collapsible directories and open the current route's ancestor chain.
+    - Keep only one top-level directory open while allowing manual collapse.
+    - Preserve existing search, responsive navigation, visual tokens, and authorization.
+    - Reuse ProLayout rendering and route matching with a small public-prop accordion adapter.
+  nonGoals:
+    - Change backend menu records, route registration, permission rules, or database schema.
+    - Add favorites, recent destinations, a second search system, or a new top-level navigation layout.
+    - Change published v1.6.1 artifacts or introduce new persisted theme fields.
+  actors:
+    - id: admin-user
+      displayName: Authenticated Admin user
+  modules:
+    - name: admin-web
+      kind: infrastructure
+      operation: extend
+      description: Existing ProLayout configuration and navigation presentation.
+  requirements:
+    - id: compact-directories
+      title: Use collapsible directories with focused expansion
+      description: Limit visible navigation to the user's current task and explicitly opened directory.
+      priority: must
+      actor: admin-user
+      module: admin-web
+      rules:
+        - Configure ProLayout menu.type as sub and defaultOpenAll as false; omit autoClose to retain automatic closing because the pinned API only accepts false as an opt-out.
+        - Use the public menuContentRender slot and openKeys and onOpenChange props to enforce top-level accordion interaction; autoClose alone only closes unrelated directories on route changes.
+        - Clicking a directory title toggles its contents without navigating to its first child.
+        - Opening another top-level directory closes the previously open top-level directory.
+        - Users can manually close an open directory, including the current route's directory.
+        - Ordinary rerenders must not reopen a directory the user has manually closed.
+    - id: route-location
+      title: Retain the user's navigation context
+      description: Reuse ProLayout route matching and selection for direct visits and page changes.
+      priority: must
+      actor: admin-user
+      module: admin-web
+      rules:
+        - Initial loading and route changes reveal the active route's ancestors without expanding unrelated directories.
+        - Deep links, refresh, browser history, and existing menu-search navigation preserve active selection.
+        - Keep existing route metadata and hidden-detail-page selection behavior instead of inventing a new matching algorithm.
+        - Collapsing and restoring the sidebar must not expand every directory.
+        - Existing sidebar popup navigation remains usable while the sidebar is collapsed.
+    - id: shared-navigation
+      title: Preserve responsive and authorized navigation
+      description: Keep the same menu source and existing desktop and mobile navigation capabilities.
+      priority: must
+      actor: admin-user
+      module: admin-web
+      rules:
+        - Retain the existing permission-filtered menu tree, menu-search component, and backend authorization boundary.
+        - Preserve mobile navigation opening, directory toggling, destination selection, and dismissal through existing layout components.
+        - Preserve keyboard interaction, visible focus, localized menu labels, and collapsed-menu title access.
+        - Retain the existing 232px sidebar, 36px menu rows, brand color tokens, and light and dark themes.
+        - Do not add a parallel persisted open-key store or new application or user theme setting.
+  constraints:
+    - id: existing-layout
+      type: dependency
+      statement: Use existing ProLayout rendering and route behavior with a lightweight public-slot accordion adapter; do not add a menu framework, duplicate route matching, or a dependency.
+    - id: authorization
+      type: security
+      statement: Menu expansion and search only present existing authorized destinations; backend permission enforcement remains authoritative.
+    - id: compatibility
+      type: compatibility
+      statement: This unreleased change after v1.6.1 changes presentation only and requires no backend API, database, route, or persisted theme migration.
+    - id: visual-continuity
+      type: ux
+      statement: Preserve established navigation dimensions, system typography, and theme tokens; distinguish directories by their existing icons and expansion affordances.
+  acceptance:
+    - id: expansion-interaction
+      requirement: compact-directories
+      statement: A menu with several top-level and nested directories starts compact, switches top-level branches, and supports manual closing without redirecting.
+      level: integration
+      required: true
+      evidence:
+        - type: manual
+          value: Use the built-in browser to check initial load, directory toggles, top-level switching, and rerender after manual closing.
+    - id: route-interaction
+      requirement: route-location
+      statement: Direct visits, refresh, search navigation, and history correctly reveal the active branch; sidebar collapse and restore never open every branch.
+      level: integration
+      required: true
+      evidence:
+        - type: manual
+          value: Use the built-in browser to exercise a nested route, refresh, history navigation, search selection, and sidebar collapse and restore.
+    - id: responsive-and-permission
+      requirement: shared-navigation
+      statement: Desktop and mobile navigation retain authorized destinations, keyboard access, localization, and readable light and dark themes.
+      level: manual
+      required: true
+      evidence:
+        - type: manual
+          value: Review 1440x900 and 390x844 views, restricted menu fixtures, Chinese and English labels, light and dark themes, and keyboard interactions in the built-in browser.
+    - id: source-validation
+      statement: The feature contract, focused frontend tests, lint, TypeScript, frontend build, and documentation build pass before the change is handed off.
+      level: contract
+      required: true
+      evidence:
+        - type: command
+          value: go run ./cmd/mss spec validate .mss/features/admin-sidebar-navigation.yaml --format json
+        - type: command
+          value: make web-lint web-test web-build
+        - type: command
+          value: make docs-build
+  risks:
+    - id: component-behavior-drift
+      description: ProLayout menu defaults or route-driven opening may vary across dependency versions and restore unwanted expansion.
+      severity: medium
+      mitigation: Explicitly configure submenu behavior and verify it against the installed dependency with realistic multi-level menus and route changes.
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+    custom:
+      - go run ./cmd/mss spec validate .mss/features/admin-sidebar-navigation.yaml --format json
+      - make web-lint web-test web-build
+      - make docs-build
+  rollout:
+    strategy: direct
+    migration: No database, backend API, menu data, route, or persisted theme migration; adoption follows a future coordinated distribution release after v1.6.1.
+    rollback: Revert the presentation change through a follow-up pull request; no data restoration or published v1.6.1 artifact mutation is required.
