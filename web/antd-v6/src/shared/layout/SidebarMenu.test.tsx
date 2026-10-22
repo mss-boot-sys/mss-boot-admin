@@ -1,5 +1,5 @@
 import { ProLayout } from '@ant-design/pro-components';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type ReactNode, StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthorizedMenuItem, InitialState } from '../auth/types';
@@ -194,6 +194,61 @@ describe('runtime sidebar navigation', () => {
     await expectExpanded('Operations', true);
     await expectExpanded('Logs', true);
     await expectExpanded('Organization', false);
+  });
+
+  it('keeps the exact route branch when a shorter matching URL belongs to another directory', async () => {
+    const overlappingPathsMenu: AuthorizedMenuItem[] = [
+      {
+        key: 'organization',
+        name: 'Organization',
+        path: '/organization',
+        children: [{ key: 'users', name: 'Users', path: '/users' }],
+      },
+      {
+        key: 'operations',
+        name: 'Operations',
+        path: '/operations',
+        children: [
+          { key: 'user-logs', name: 'User logs', path: '/users/log' },
+          { key: 'audit', name: 'Audit', path: '/audit' },
+        ],
+      },
+    ];
+    const view = render(<Fixture pathname="/audit" items={overlappingPathsMenu} />);
+    await expectExpanded('Operations', true);
+    await expectExpanded('Organization', false);
+
+    // The route change should leave the same branch open. Flush its effects
+    // before asserting, so the old state cannot make this regression pass.
+    await act(async () => {
+      view.rerender(<Fixture pathname="/users/log" items={overlappingPathsMenu} />);
+    });
+    await expectExpanded('Operations', true);
+    await expectExpanded('Organization', false);
+
+    view.rerender(<Fixture pathname="/users" items={overlappingPathsMenu} />);
+    await expectExpanded('Organization', true);
+    await expectExpanded('Operations', false);
+  });
+
+  it('closes directories when the exact route is a standalone top-level page', async () => {
+    const standaloneMenu: AuthorizedMenuItem[] = [
+      {
+        key: 'organization',
+        name: 'Organization',
+        path: '/organization',
+        children: [{ key: 'users', name: 'Users', path: '/users' }],
+      },
+      { key: 'user-report', name: 'User report', path: '/users/report' },
+    ];
+    const view = render(<Fixture pathname="/users" items={standaloneMenu} />);
+    await expectExpanded('Organization', true);
+
+    view.rerender(<Fixture pathname="/users/report" items={standaloneMenu} />);
+    await expectExpanded('Organization', false);
+    expect(screen.getByRole('link', { name: 'User report' }).getAttribute('href')).toBe(
+      '/users/report',
+    );
   });
 
   it('closes the previous top-level directory when another directory is opened', async () => {

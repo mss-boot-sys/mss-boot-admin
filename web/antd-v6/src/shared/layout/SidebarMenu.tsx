@@ -36,8 +36,8 @@ function indexMenuRoots(items: readonly MenuDataItem[]) {
   };
   for (const item of items) {
     const key = item.key || item.path;
-    if (!key || item.hideInMenu || item.hideChildrenInMenu || !item.children?.length) continue;
-    roots.add(key);
+    if (!key || item.hideInMenu) continue;
+    if (!item.hideChildrenInMenu && item.children?.length) roots.add(key);
     visit([item], key, []);
   }
   return { roots, rootByKey, branches, ancestorsByKey };
