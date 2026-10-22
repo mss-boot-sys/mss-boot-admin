@@ -13,6 +13,7 @@ import {
   SideLayoutFrame,
   StartupFailureView,
 } from './LayoutChrome';
+import { SidebarMenu } from './SidebarMenu';
 
 export const runtimeLayout: RunTimeLayoutConfig = ({ initialState }) => {
   const sideLayout = (initialState?.settings?.layout ?? 'side') === 'side';
@@ -63,22 +64,25 @@ export const runtimeLayout: RunTimeLayoutConfig = ({ initialState }) => {
       <ApplicationBrand collapsed={props?.collapsed} initialState={initialState} />
     ),
     menu: {
-      // Side layout renders top-level directories as group titles (mockup
-      // treatment); the menu tree itself stays backend-driven.
-      type: sideLayout ? 'group' : 'sub',
+      type: 'sub',
+      defaultOpenAll: false,
+      // Keep ProLayout's automatic route closing (autoClose only accepts false).
       params: { authorizationVersion: initialState?.authorizationVersion ?? 0 },
       request: async () => initialState?.authorizedMenu ?? [],
     },
     menuDataRender: resolveMenuIcons,
+    menuContentRender: (props, defaultDom) => (
+      <SidebarMenu menuData={props.menuData}>{defaultDom}</SidebarMenu>
+    ),
     menuHeaderRender:
       (initialState?.settings?.layout ?? 'mix') === 'mix'
         ? false
         : (_logo, _title, props) => (
             <ApplicationBrand collapsed={props?.collapsed} initialState={initialState} />
           ),
-    menuItemRender: (item, dom) =>
+    menuItemRender: (item, dom, props) =>
       item.path ? (
-        <Link to={item.path} prefetch>
+        <Link to={item.path} prefetch onClick={props.isMobile ? item.onClick : undefined}>
           {dom}
         </Link>
       ) : (

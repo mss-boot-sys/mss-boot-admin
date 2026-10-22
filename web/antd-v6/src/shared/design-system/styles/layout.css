@@ -124,24 +124,12 @@
   color: var(--mss-color-text);
 }
 
-/* Sidebar: compact rows; top-level directories render as quiet group titles. */
+/* Sidebar: compact, collapsible directories keep large navigation trees scannable. */
 .ant-pro-sider .ant-menu-item,
 .ant-pro-sider .ant-menu-submenu-title {
   height: 36px;
   margin-block: 1px;
   line-height: 36px;
-}
-
-.ant-pro-sider .ant-menu-item-group-title {
-  padding-top: 12px;
-  padding-bottom: 4px;
-  color: var(--mss-color-text-tertiary);
-  font-size: 12px;
-}
-
-.ant-pro-sider .ant-menu-item-group-title .anticon,
-.ant-pro-sider .ant-menu-item-divider {
-  display: none;
 }
 
 .mss-menu-plain {
