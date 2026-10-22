@@ -6,7 +6,11 @@ import type { AuthorizedMenuItem, InitialState } from '../auth/types';
 
 vi.mock('@umijs/max', () => ({
   history: { location: { pathname: '/workplace' } },
-  Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
+  Link: ({ children, to, onClick }: { children: ReactNode; to: string; onClick?: () => void }) => (
+    <a href={to} onClick={onClick}>
+      {children}
+    </a>
+  ),
 }));
 vi.mock('./HeaderActions', () => ({
   AvatarMenu: () => null,
@@ -46,6 +50,31 @@ const menu: AuthorizedMenuItem[] = [
         key: 'logs',
         name: 'Logs',
         path: '/logs',
+        children: [
+          { key: 'audit', name: 'Audit', path: '/audit' },
+          { key: 'runtime', name: 'Runtime', path: '/runtime' },
+        ],
+      },
+    ],
+  },
+];
+
+// The route registry removes directory paths that are not compiled pages.
+// Multiple pathless directories must retain their distinct tree ancestry.
+const pathlessMenu: AuthorizedMenuItem[] = [
+  { key: 'home', name: 'Workplace', path: '/workplace' },
+  {
+    key: 'organization',
+    name: 'Organization',
+    children: [{ key: 'users', name: 'Users', path: '/users' }],
+  },
+  {
+    key: 'operations',
+    name: 'Operations',
+    children: [
+      {
+        key: 'logs',
+        name: 'Logs',
         children: [
           { key: 'audit', name: 'Audit', path: '/audit' },
           { key: 'runtime', name: 'Runtime', path: '/runtime' },
@@ -117,6 +146,34 @@ afterEach(() => {
 });
 
 describe('runtime sidebar navigation', () => {
+  it.each([
+    { mode: 'mobile', isMobile: true, closeCount: 1 },
+    { mode: 'desktop', isMobile: false, closeCount: 0 },
+  ])(
+    'only closes the mobile drawer when a $mode menu link is selected',
+    ({ isMobile, closeCount }) => {
+      const config = runtimeLayout({
+        initialState: { settings: { layout: 'side' }, authorizedMenu: [] },
+      } as never);
+      if (typeof config.menuItemRender !== 'function') {
+        throw new Error('Runtime layout must render navigable menu links');
+      }
+      const closeDrawer = vi.fn();
+      render(
+        config.menuItemRender(
+          { key: 'users', name: 'Users', path: '/users', isUrl: false, onClick: closeDrawer },
+          <span>Users</span>,
+          { isMobile },
+        ),
+      );
+
+      const link = screen.getByRole('link', { name: 'Users' });
+      expect(link.getAttribute('href')).toBe('/users');
+      fireEvent.click(link);
+      expect(closeDrawer).toHaveBeenCalledTimes(closeCount);
+    },
+  );
+
   it('starts with directories closed on the workplace and keeps hidden entries absent', async () => {
     render(<Fixture />);
 
@@ -154,6 +211,47 @@ describe('runtime sidebar navigation', () => {
     fireEvent.click(directory('Organization'));
     await expectExpanded('Organization', true);
     await expectExpanded('Operations', false);
+  });
+
+  it('locates a leaf under a pathless directory without undoing a manual close', async () => {
+    const view = render(<Fixture pathname="/users" items={pathlessMenu} />);
+    await expectExpanded('Organization', true);
+    await expectExpanded('Operations', false);
+
+    fireEvent.click(directory('Organization'));
+    await expectExpanded('Organization', false);
+    view.rerender(<Fixture pathname="/users" items={pathlessMenu} />);
+    await expectExpanded('Organization', false);
+
+    fireEvent.click(directory('Operations'));
+    await expectExpanded('Operations', true);
+    await expectExpanded('Organization', false);
+  });
+
+  it('recovers all pathless ancestors for route changes while keeping nested closes manual', async () => {
+    const view = render(<Fixture pathname="/audit" items={pathlessMenu} />);
+    await expectExpanded('Operations', true);
+    await expectExpanded('Logs', true);
+    await expectExpanded('Organization', false);
+
+    fireEvent.click(directory('Logs'));
+    await expectExpanded('Logs', false);
+    view.rerender(<Fixture pathname="/audit" items={pathlessMenu} />);
+    await expectExpanded('Logs', false);
+    await expectExpanded('Operations', true);
+
+    fireEvent.click(directory('Operations'));
+    await expectExpanded('Operations', false);
+    view.rerender(<Fixture pathname="/audit" items={pathlessMenu} />);
+    await expectExpanded('Operations', false);
+
+    view.rerender(<Fixture pathname="/users" items={pathlessMenu} />);
+    await expectExpanded('Organization', true);
+    await expectExpanded('Operations', false);
+    view.rerender(<Fixture pathname="/runtime" items={pathlessMenu} />);
+    await expectExpanded('Operations', true);
+    await expectExpanded('Logs', true);
+    await expectExpanded('Organization', false);
   });
 
   it('respects a manual close across an ordinary rerender and follows the next route', async () => {

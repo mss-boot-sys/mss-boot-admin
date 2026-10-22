@@ -80,9 +80,9 @@ export const runtimeLayout: RunTimeLayoutConfig = ({ initialState }) => {
         : (_logo, _title, props) => (
             <ApplicationBrand collapsed={props?.collapsed} initialState={initialState} />
           ),
-    menuItemRender: (item, dom) =>
+    menuItemRender: (item, dom, props) =>
       item.path ? (
-        <Link to={item.path} prefetch>
+        <Link to={item.path} prefetch onClick={props.isMobile ? item.onClick : undefined}>
           {dom}
         </Link>
       ) : (

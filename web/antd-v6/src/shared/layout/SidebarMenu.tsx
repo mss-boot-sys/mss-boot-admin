@@ -19,21 +19,28 @@ interface MenuExpansionProps {
 function indexMenuRoots(items: readonly MenuDataItem[]) {
   const roots = new Set<string>();
   const rootByKey = new Map<string, string>();
-  const visit = (nodes: readonly MenuDataItem[], root: string) => {
+  const branches = new Set<string>();
+  const ancestorsByKey = new Map<string, string[]>();
+  const visit = (nodes: readonly MenuDataItem[], root: string, ancestors: string[]) => {
     for (const node of nodes) {
       if (node.hideInMenu) continue;
       const key = node.key || node.path;
-      if (key) rootByKey.set(key, root);
-      if (!node.hideChildrenInMenu && node.children) visit(node.children, root);
+      if (!key) continue;
+      rootByKey.set(key, root);
+      ancestorsByKey.set(key, ancestors);
+      if (!node.hideChildrenInMenu && node.children?.length) {
+        branches.add(key);
+        visit(node.children, root, [...ancestors, key]);
+      }
     }
   };
   for (const item of items) {
     const key = item.key || item.path;
     if (!key || item.hideInMenu || item.hideChildrenInMenu || !item.children?.length) continue;
     roots.add(key);
-    visit([item], key);
+    visit([item], key, []);
   }
-  return { roots, rootByKey };
+  return { roots, rootByKey, branches, ancestorsByKey };
 }
 
 /**
@@ -66,7 +73,18 @@ export function SidebarMenu({
       queueMicrotask(() => {
         if (update !== pendingUpdate.current) return;
         setOpenKeys((previous) => {
-          const keys = next || [];
+          // Pathless backend directories share '/' inside ProLayout's matcher,
+          // which can report only the matched leaf. Recover its tree ancestors.
+          // Store only directory keys so a user's close event never looks like
+          // a route notification and cannot force the current branch back open.
+          const matchedLeaf = (next || []).findLast(
+            (key) => !index.branches.has(key) && index.ancestorsByKey.has(key),
+          );
+          // A route can also match less-specific pages in another directory.
+          // Follow its last matched leaf, never treat those ancestors as clicks.
+          const keys = matchedLeaf
+            ? (index.ancestorsByKey.get(matchedLeaf) ?? [])
+            : (next || []).filter((key) => index.branches.has(key));
           const rootKeys = keys.filter((key) => index.roots.has(key));
           const root = rootKeys.findLast((key) => !previous?.includes(key)) ?? rootKeys.at(-1);
           const focused = root ? keys.filter((key) => index.rootByKey.get(key) === root) : [];
@@ -80,7 +98,7 @@ export function SidebarMenu({
   if (!isValidElement<MenuExpansionProps>(children)) return children;
   return cloneElement(children, {
     // Remove stale keys immediately when the authorized tree changes.
-    openKeys: openKeys?.filter((key) => index.rootByKey.has(key)),
+    openKeys: openKeys?.filter((key) => index.branches.has(key)),
     onOpenChange,
   });
 }

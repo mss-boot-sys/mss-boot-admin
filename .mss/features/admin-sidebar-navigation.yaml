@@ -53,6 +53,7 @@ spec:
       rules:
         - Initial loading and route changes reveal the active route's ancestors without expanding unrelated directories.
         - Deep links, refresh, browser history, and existing menu-search navigation preserve active selection.
+        - Complete ancestors from matched leaf keys for pathless directories using the authorized tree; persist only directory keys so manual closing remains possible.
         - Keep existing route metadata and hidden-detail-page selection behavior instead of inventing a new matching algorithm.
         - Collapsing and restoring the sidebar must not expand every directory.
         - Existing sidebar popup navigation remains usable while the sidebar is collapsed.
@@ -64,7 +65,7 @@ spec:
       module: admin-web
       rules:
         - Retain the existing permission-filtered menu tree, menu-search component, and backend authorization boundary.
-        - Preserve mobile navigation opening, directory toggling, destination selection, and dismissal through existing layout components.
+        - Preserve mobile navigation opening and directory toggling; invoke the existing menu-item callback on mobile selection to dismiss the drawer.
         - Preserve keyboard interaction, visible focus, localized menu labels, and collapsed-menu title access.
         - Retain the existing 232px sidebar, 36px menu rows, brand color tokens, and light and dark themes.
         - Do not add a parallel persisted open-key store or new application or user theme setting.
@@ -88,6 +89,8 @@ spec:
       level: integration
       required: true
       evidence:
+        - type: path
+          value: web/antd-v6/src/shared/layout/SidebarMenu.test.tsx
         - type: manual
           value: Use the built-in browser to check initial load, directory toggles, top-level switching, and rerender after manual closing.
     - id: route-interaction
