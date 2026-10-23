@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.9
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/appconfigdata v1.32.4
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.70.3
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.3
 	github.com/aws/smithy-go v1.28.5
 	github.com/bsm/redislock v0.10.0
@@ -31,7 +31,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
-	github.com/hashicorp/consul/api v1.34.5
+	github.com/hashicorp/consul/api v1.35.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/kamva/mgm/v3 v3.5.0
 	github.com/mss-boot-io/redisqueue/v2 v2.0.0-20240222064111-d36e396df7f9
