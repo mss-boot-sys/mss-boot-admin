@@ -57,6 +57,7 @@ jobs:
         with:
           node-version: 24
       - name: Prepare exact package managers and dependencies
+        timeout-minutes: 15
         env:
           TMPDIR: ${{ runner.temp }}
         run: |
@@ -69,6 +70,16 @@ jobs:
           test "$(corepack pnpm@9.15.9 --version)" = '9.15.9'
           python3 -m pip install PyYAML==6.0.3
           make deps-release-preview web-install docs-install
+          # Keep browser dependency installation bounded when a runner mirror stalls.
+          # Use Ubuntu's signed official archive over HTTPS; retain apt signature checks.
+          sudo tee /etc/apt/apt.conf.d/99mss-release-downloads >/dev/null <<'APT'
+          Acquire::Retries "3";
+          Acquire::http::Timeout "30";
+          Acquire::https::Timeout "30";
+          APT
+          if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+            sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
           corepack pnpm@10.34.5 --dir web/antd-v6 exec playwright install --with-deps chromium
           docker info >/dev/null
           git diff --exit-code

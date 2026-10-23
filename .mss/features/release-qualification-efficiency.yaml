@@ -9,6 +9,7 @@ spec:
   goals:
   - Expose safe per-check progress and durations without publishing command output or secrets.
   - Preserve every release gate while eliminating redundant test passes.
+  - Bound runner dependency-download stalls while retaining browser installation and apt signature verification.
   nonGoals:
   - Merge during an active release, change publication order, or reuse evidence across commits.
   actors:
@@ -37,6 +38,7 @@ spec:
     rules:
     - Preserve shuffle, count=1, all-package coverage, coverage thresholds, vet and module checks.
     - Do not reuse artifacts or successful results from another commit or execution.
+    - Bound dependency preparation to fifteen minutes, configure thirty-second apt transport timeouts with three retries, and replace the runner Azure HTTP archive mirror with the official Ubuntu HTTPS archive.
   constraints:
   - id: isolation
     type: security
