@@ -21,6 +21,8 @@ overrides:
   source-map-js: 1.2.2
   proxy-addr: 2.0.8
   compression: 1.8.2
+  follow-redirects: 1.16.1
+  '@umijs/bundler-vite>vite': 7.3.7
 
 importers:
 
@@ -3861,8 +3863,8 @@ packages:
     resolution: {integrity: sha512-dVsPA/UwQ8+2uoFe5GHtiBMu48dWLTdsuEd7CKGlZlD78r1TTWBvDuFaFGKCo/ZfEr95Uk56vZoX86OsHkUeIg==}
     deprecated: flatten is deprecated in favor of utility frameworks such as lodash.
 
-  follow-redirects@1.16.0:
-    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+  follow-redirects@1.16.1:
+    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -6786,8 +6788,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vite@7.3.6:
-    resolution: {integrity: sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==}
+  vite@7.3.7:
+    resolution: {integrity: sha512-AHEzTORMbi7/7aXp7w7KZ5+DCUdSeLsJz0grY8xHpc9DHdYb0vQu6DqJfm2tOw3gDExNgPgnJTXxM6syYFHaCA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -9217,14 +9219,14 @@ snapshots:
       '@umijs/bundler-utils': 4.7.23
       '@umijs/bundler-webpack': 4.7.23(type-fest@0.20.2)(typescript@7.0.2)(webpack@5.109.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.29))
       '@umijs/utils': 4.7.23
-      '@vitejs/plugin-react': 5.2.0(vite@7.3.6(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0))
+      '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0))
       core-js: 3.34.0
       less: 4.1.3
       postcss-preset-env: 7.5.0(postcss@8.5.29)
       rollup-plugin-visualizer: 6.0.11(rolldown@1.2.13)(rollup@4.64.4)
       systemjs: 6.15.1
       terser: 5.49.0
-      vite: 7.3.6(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0)
+      vite: 7.3.7(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0)
     transitivePeerDependencies:
       - '@types/node'
       - '@types/webpack'
@@ -9705,7 +9707,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.6(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0))':
+  '@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -9713,7 +9715,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.6(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0)
+      vite: 7.3.7(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -10061,7 +10063,7 @@ snapshots:
 
   axios@0.34.0:
     dependencies:
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       form-data: 4.0.6
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -11471,7 +11473,7 @@ snapshots:
 
   flatten@1.0.3: {}
 
-  follow-redirects@1.16.0: {}
+  follow-redirects@1.16.1: {}
 
   for-each@0.3.5:
     dependencies:
@@ -14574,7 +14576,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@7.3.6(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0):
+  vite@7.3.7(@types/node@26.6.5)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.33.0)(sass@1.54.0)(terser@5.49.0):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.7)

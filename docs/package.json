@@ -60,7 +60,6 @@
       "react-router-dom@6.3.0": "6.30.4",
       "send": "0.19.2",
       "uuid": "11.1.1",
-      "vite@4.5.2": "6.4.3",
       "js-yaml@3": "3.15.2",
       "js-yaml@4": "4.3.2",
       "svgo@2": "2.8.4",
@@ -69,7 +68,8 @@
       "piscina@4": "4.9.4",
       "source-map-js": "1.2.2",
       "proxy-addr": "2.0.8",
-      "compression": "1.8.2"
+      "compression": "1.8.2",
+      "@umijs/bundler-vite>vite": "7.3.7"
     }
   },
   "devDependencies": {

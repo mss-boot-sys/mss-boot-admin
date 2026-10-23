@@ -51,6 +51,7 @@ spec:
       module: release
       rules:
         - Root, Framework, Admin, frontend, generator and real external-consumer checks pass.
+        - Resolve follow-redirects advisories with exact 1.16.1 and the transitive Vite 7 advisory with exact 7.3.7 in source and Thin Host locks; do not add security exceptions.
         - Verify fresh migrations, authorization denial, OIDC, installation, upgrade and browser journeys.
         - Use Go 1.27.2, Node 24 and the pinned package managers.
         - Build and inspect the Docs site before deployment.

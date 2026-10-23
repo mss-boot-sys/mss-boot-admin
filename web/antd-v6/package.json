@@ -247,7 +247,9 @@
       "piscina@4": "4.9.4",
       "source-map-js": "1.2.2",
       "proxy-addr": "2.0.8",
-      "compression": "1.8.2"
+      "compression": "1.8.2",
+      "follow-redirects": "1.16.1",
+      "@umijs/bundler-vite>vite": "7.3.7"
     }
   }
 }
