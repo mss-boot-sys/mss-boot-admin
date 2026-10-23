@@ -6,7 +6,8 @@ metadata:
   owner: frontend
   labels:
     implementation-status: implemented
-    release-status: unreleased
+    release-status: published
+    published-version: v1.6.2
     release-baseline: v1.6.1
 spec:
   problem: >-
@@ -78,7 +79,7 @@ spec:
       statement: Menu expansion and search only present existing authorized destinations; backend permission enforcement remains authoritative.
     - id: compatibility
       type: compatibility
-      statement: This unreleased change after v1.6.1 changes presentation only and requires no backend API, database, route, or persisted theme migration.
+      statement: This v1.6.2 change after v1.6.1 changes presentation only and requires no backend API, database, route, or persisted theme migration.
     - id: visual-continuity
       type: ux
       statement: Preserve established navigation dimensions, system typography, and theme tokens; distinguish directories by their existing icons and expansion affordances.
