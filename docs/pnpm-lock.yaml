@@ -23,7 +23,6 @@ overrides:
   react-router-dom@6.3.0: 6.30.4
   send: 0.19.2
   uuid: 11.1.1
-  vite@4.5.2: 6.4.3
   js-yaml@3: 3.15.2
   js-yaml@4: 4.3.2
   svgo@2: 2.8.4
@@ -33,6 +32,7 @@ overrides:
   source-map-js: 1.2.2
   proxy-addr: 2.0.8
   compression: 1.8.2
+  '@umijs/bundler-vite>vite': 7.3.7
 
 importers:
 
@@ -1563,7 +1563,7 @@ packages:
     resolution: {integrity: sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     peerDependencies:
-      vite: 6.4.3
+      vite: ^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
@@ -5619,8 +5619,8 @@ packages:
   vfile@5.3.7:
     resolution: {integrity: sha512-r7qlzkgErKjobAmyNIkkSpizsFPYiUPuJb5pNW1RB4JcYVZhs4lIbVqk8XPk033CV/1z8ss5pkax8SuhGpcG8g==}
 
-  vite@7.3.6:
-    resolution: {integrity: sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==}
+  vite@7.3.7:
+    resolution: {integrity: sha512-AHEzTORMbi7/7aXp7w7KZ5+DCUdSeLsJz0grY8xHpc9DHdYb0vQu6DqJfm2tOw3gDExNgPgnJTXxM6syYFHaCA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -7121,7 +7121,7 @@ snapshots:
       postcss: 8.5.23
       resolve-url-loader: 5.0.0
       sass: 1.54.0
-      sass-loader: 13.2.0(sass@1.54.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
+      sass-loader: 13.2.0(sass@1.105.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
     transitivePeerDependencies:
       - '@types/webpack'
       - bufferutil
@@ -7145,14 +7145,14 @@ snapshots:
       '@umijs/bundler-utils': 4.7.20
       '@umijs/bundler-webpack': 4.7.20(type-fest@0.20.2)(typescript@5.9.3)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
       '@umijs/utils': 4.7.20
-      '@vitejs/plugin-react': 5.2.0(vite@7.3.6(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1))
+      '@vitejs/plugin-react': 5.2.0(vite@7.3.7(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1))
       core-js: 3.34.0
       less: 4.1.3
       postcss-preset-env: 7.5.0(postcss@8.5.23)
       rollup-plugin-visualizer: 6.0.11(rollup@4.63.4)
       systemjs: 6.15.1
       terser: 5.49.0
-      vite: 7.3.6(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.54.0)(terser@5.49.0)(yaml@2.9.1)
+      vite: 7.3.7(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1)
     transitivePeerDependencies:
       - '@types/node'
       - '@types/webpack'
@@ -7481,7 +7481,7 @@ snapshots:
       postcss: 8.5.23
       resolve-url-loader: 5.0.0
       sass: 1.54.0
-      sass-loader: 13.2.0(sass@1.54.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
+      sass-loader: 13.2.0(sass@1.105.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23))
       semver: 7.8.5
       styled-jsx: 5.1.7(@babel/core@7.29.7)(react@18.3.1)
       ws: 8.21.3
@@ -7497,7 +7497,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@vitejs/plugin-react@5.2.0(vite@7.3.6(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1))':
+  '@vitejs/plugin-react@5.2.0(vite@7.3.7(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -7505,7 +7505,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-rc.3
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.6(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.54.0)(terser@5.49.0)(yaml@2.9.1)
+      vite: 7.3.7(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -11671,13 +11671,13 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  sass-loader@13.2.0(sass@1.54.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23)):
+  sass-loader@13.2.0(sass@1.105.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23)):
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
       webpack: 5.105.4(lightningcss@1.22.1)(postcss@8.5.23)
     optionalDependencies:
-      sass: 1.54.0
+      sass: 1.105.0
 
   sass-loader@16.0.8(sass@1.105.0)(webpack@5.105.4(lightningcss@1.22.1)(postcss@8.5.23)):
     dependencies:
@@ -12448,7 +12448,7 @@ snapshots:
       unist-util-stringify-position: 3.0.3
       vfile-message: 3.1.4
 
-  vite@7.3.6(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.54.0)(terser@5.49.0)(yaml@2.9.1):
+  vite@7.3.7(@types/node@26.6.2)(jiti@2.7.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.105.0)(terser@5.49.0)(yaml@2.9.1):
     dependencies:
       esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.7)
@@ -12462,7 +12462,7 @@ snapshots:
       jiti: 2.7.0
       less: 4.1.3
       lightningcss: 1.22.1
-      sass: 1.54.0
+      sass: 1.105.0
       terser: 5.49.0
       yaml: 2.9.1
 

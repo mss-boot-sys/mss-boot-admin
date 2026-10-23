@@ -16,6 +16,9 @@ migration, API or permission change.
 
 ### Fixed
 
+- Pin follow-redirects 1.16.1 and the transitive Vite 7 line to 7.3.7 to fix
+  newly reported credential-header and development-tool advisories. Preserve
+  release audit gates and do not add advisory acceptances.
 - Keep sidebar navigation compact with collapsible directories, a top-level
   accordion and route-aware ancestors. Preserve manual closing, support pathless
   directories and overlapping routes, and dismiss mobile navigation on selection.

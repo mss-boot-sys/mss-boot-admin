@@ -87,6 +87,10 @@ describe('Admin web package contract', () => {
     expect(packageManifest.pnpm.overrides).toMatchObject(
       packageManifest.mssAdminDistribution?.runtimeOverrides ?? {},
     );
+    expect(packageManifest.pnpm.overrides).toMatchObject({
+      'follow-redirects': '1.16.1',
+      '@umijs/bundler-vite>vite': '7.3.7',
+    });
     expect(Object.keys(packageManifest.mssAdminDistribution ?? {}).sort()).toEqual(
       ['buildOnlyDependencies', 'dependencyClasses', 'packageManager', 'runtimeOverrides'].sort(),
     );

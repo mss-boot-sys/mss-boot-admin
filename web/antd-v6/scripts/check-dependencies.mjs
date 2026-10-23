@@ -122,6 +122,7 @@ const allowedResolvedVersions = {
   '@tanstack/react-query': ['5.104.2'],
   '@umijs/max': ['4.7.23'],
   axios: ['0.34.0'],
+  'follow-redirects': ['1.16.1'],
   umi: ['4.7.23'],
   immer: ['8.0.4'],
 };
@@ -140,6 +141,11 @@ for (const [name, allowed] of Object.entries(allowedResolvedVersions)) {
   if (resolved.length !== 1) {
     failures.push(`${name} must resolve exactly one version, found: ${resolved.join(', ')}`);
   }
+}
+
+const vettedViteVersions = ['7.3.7', '8.3.4'];
+if (JSON.stringify(versionsFor('vite')) !== JSON.stringify(vettedViteVersions)) {
+  failures.push(`Vite must retain the patched tooling versions: ${vettedViteVersions.join(', ')}`);
 }
 
 for (const [name, version] of Object.entries(expected)) {

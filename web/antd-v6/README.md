@@ -94,3 +94,9 @@ Repository-source build and publication commands remain contributor-only in
 ## Workplace business content
 
 The compile-time contribution interface is described in [the adopter guide](../../docs/docs/admin/workplace-business-content.md). Introduced in v1.6.0, it remains available in v1.6.2 and preserves the core workplace.
+
+The v1.6.2 preparation also pins follow-redirects 1.16.1 for
+[GHSA-q3jh-wrc6-jgq8](https://github.com/advisories/GHSA-q3jh-wrc6-jgq8) and
+[GHSA-8r9p-f939-6h3c](https://github.com/advisories/GHSA-8r9p-f939-6h3c), and
+transitive Vite 7.3.7 for [GHSA-587h-7wmj-h5pm](https://github.com/advisories/GHSA-587h-7wmj-h5pm).
+These compatible patch pins are shared with generated hosts; no new audit acceptance is added.

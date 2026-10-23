@@ -12,6 +12,9 @@ No unreleased changes are recorded.
 
 Coordinated patch target; actual publication is verified from Release and registry assets.
 
+- Pin follow-redirects 1.16.1 and transitive Vite 7.3.7 to resolve release-audit
+  blockers without introducing new advisory acceptances.
+
 - Replace permanently expanded sidebar groups with collapsible directories and
   top-level accordion behavior. Follow active routes, pathless ancestors and
   overlapping page paths while respecting manual closing.

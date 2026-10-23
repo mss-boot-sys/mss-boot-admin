@@ -193,6 +193,8 @@ func TestApplicationTemplatePinsOneFrontendRuntimeWithoutPatches(t *testing.T) {
 		"source-map-js":              "1.2.2",
 		"proxy-addr":                 "2.0.8",
 		"compression":                "1.8.2",
+		"follow-redirects":           "1.16.1",
+		"@umijs/bundler-vite>vite":   "7.3.7",
 	}
 	if len(document.Pnpm.Overrides) != len(expected) {
 		t.Fatalf("Thin Host runtime overrides = %#v, want %#v", document.Pnpm.Overrides, expected)

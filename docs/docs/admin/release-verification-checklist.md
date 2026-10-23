@@ -10,7 +10,7 @@ keywords: [admin release checklist smoke regression]
 
 ## 使用方式
 
-本清单用于 v1.6.2 新仓库首发与业务 Thin Host 部署。发布变更先通过 PR 合入 `main`，
+本清单用于 v1.6.2 协调发行与业务 Thin Host 部署。发布变更先通过 PR 合入 `main`，
 再从精确且 tracked-clean 的提交执行一次本地完整验证。正式标签流水线仅校验来源、构建
 并发布对应制品，不重复宽泛质量矩阵，不依赖托管候选预览或稳定晋升轮次。
 
