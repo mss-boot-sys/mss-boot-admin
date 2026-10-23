@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly DEFAULT_VERSION="v1.6.1"
+readonly DEFAULT_VERSION="v1.6.2"
 readonly REPOSITORY="mss-boot-sys/mss-boot-admin"
 
 version="${DEFAULT_VERSION}"

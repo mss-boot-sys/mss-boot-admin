@@ -1,0 +1,115 @@
+apiVersion: mss.io/v1alpha1
+kind: Feature
+metadata:
+  name: foundation-v1-6-2-release
+  displayName: Coordinated v1.6.2 navigation and dependency patch
+  owner: release-engineering
+  labels:
+    target-version: v1.6.2
+    release-status: preparing
+spec:
+  problem: Publish the merged sidebar navigation, dependency refresh and qualification improvements as one compatible v1.6.2 distribution without changing immutable v1.6.1 artifacts.
+  goals:
+    - Publish v1.6.2 from one qualified merged-main commit in mss-boot-sys/mss-boot-admin.
+    - Align active component versions, checksums, templates, installers and current documentation while preserving the published v1.6.1 baseline.
+    - Publish Admin Web only to GitHub Packages and backend/frontend images to GHCR.
+    - Complete canonical exact-main qualification locally or use the existing isolated runner when Docker is unavailable; retain built-in browser acceptance.
+    - Deploy the aligned documentation site and verify its public version and commit.
+  nonGoals:
+    - Recover, recreate or reinterpret versions v1.3.8 and earlier published by mss-boot-io.
+    - Publish to npmjs or add candidate previews, OIDC publishers or separate stable-promotion approvals.
+    - Change business APIs, database schemas, permissions or automatically enable the OIDC Provider.
+  actors:
+    - id: maintainer
+      displayName: mss-boot-sys release operator
+    - id: adopter
+      displayName: Admin Distribution adopter
+  modules:
+    - name: release
+      kind: infrastructure
+      operation: extend
+    - name: consumer
+      kind: infrastructure
+      operation: extend
+  requirements:
+    - id: repository-identity
+      title: One new repository identity
+      description: All current Go modules, packages, generated hosts and installation commands resolve through mss-boot-sys.
+      priority: must
+      actor: adopter
+      module: consumer
+      rules:
+        - Root, Framework and Admin use github.com/mss-boot-sys/mss-boot-admin module paths.
+        - Admin Web uses @mss-boot-sys/admin-web at exact version 1.6.2 on npm.pkg.github.com.
+        - Registry credentials are process-scoped, never written into committed configuration or release artifacts.
+        - Previous releases retain their original mss-boot-io historical identity.
+    - id: local-qualification
+      title: Complete local release qualification
+      description: Validate the exact source locally before immutable publication.
+      priority: must
+      actor: maintainer
+      module: release
+      rules:
+        - Root, Framework, Admin, frontend, generator and real external-consumer checks pass.
+        - Verify fresh migrations, authorization denial, OIDC, installation, upgrade and browser journeys.
+        - Use Go 1.27.2, Node 24 and the pinned package managers.
+        - Build and inspect the Docs site before deployment.
+    - id: direct-publication
+      title: Simple tag-driven publication
+      description: Existing release workflows package and publish the qualified commit with lightweight source and artifact checks.
+      priority: must
+      actor: maintainer
+      module: release
+      rules:
+        - Tags identify one commit merged into main through a pull request and must never overwrite public core identities.
+        - Publish Framework, Admin, frontend, Root and Docs with the existing tag namespaces.
+        - Produce checksummed portable tools/runtime archives, frontend package, SBOMs and amd64/arm64 images.
+        - GitHub Packages is the only Admin Web package registry; there is no npmjs or stable-promotion dependency.
+        - Completion includes the deployed Docs site reporting v1.6.2 and the expected full commit.
+  constraints:
+    - id: compatibility
+      type: compatibility
+      statement: Preserve existing module and package imports, Go 1.27.2, Node 24, authorization and database schemas; document coordinated upgrade and rollback from v1.6.1.
+    - id: publication-safety
+      type: security
+      statement: Never disclose credentials or publish from unmerged or unqualified code. Preserve previous public artifacts and unrelated local work.
+  acceptance:
+    - id: code-and-consumer
+      requirement: local-qualification
+      statement: All local verification gates and the real generated consumer pass on the frozen source.
+      level: integration
+      required: true
+      evidence:
+        - type: command
+          value: go run ./cmd/mss verify --all
+    - id: registry-boundary
+      requirement: repository-identity
+      statement: Registry auth is confined to GitHub Packages and rejected redirects cannot leak credentials.
+      level: unit
+      required: true
+      evidence:
+        - type: command
+          value: go test ./internal/mss/blueprint ./internal/mss/verify
+    - id: publication-contract
+      requirement: direct-publication
+      statement: Workflows preserve immutable source identities and produce all required artifacts without hosted quality matrices.
+      level: unit
+      required: true
+      evidence:
+        - type: command
+          value: python3 -m unittest discover -s tools/release -p test_*.py
+    - id: docs-deployed
+      requirement: direct-publication
+      statement: Public Docs homepage, nested release page and release.json match v1.6.2.
+      level: e2e
+      required: true
+      evidence:
+        - type: manual
+          value: Inspect the production homepage and release page using the Codex in-app browser and record the deployed release.json.
+  validation:
+    changed: go run ./cmd/mss verify --changed
+    all: go run ./cmd/mss verify --all
+  rollout:
+    strategy: direct
+    migration: Merge preparation through a PR, qualify the merged commit locally, then publish component tags and deploy Docs from that commit.
+    rollback: Retain immutable v1.6.2 artifacts; roll back deployed application images and database snapshots together if needed. Consumers restore previous dependency locks; never overwrite a published tag or package.

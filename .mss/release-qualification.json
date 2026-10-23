@@ -1,6 +1,6 @@
 {
   "schema": "mss.io/release-qualification/v1",
-  "targetVersion": "v1.6.1",
+  "targetVersion": "v1.6.2",
   "features": [
     ".mss/features/foundation-v1-3-9-release.yaml",
     ".mss/features/native-oidc-provider.yaml",
@@ -14,7 +14,11 @@
     ".mss/features/admin-presentation-publication-workflow.yaml",
     ".mss/features/admin-presentation-generation.yaml",
     ".mss/features/admin-presentation-complete-design.yaml",
-    ".mss/features/admin-presentation-all-management-pages.yaml"
+    ".mss/features/admin-presentation-all-management-pages.yaml",
+    ".mss/features/foundation-v1-6-2-release.yaml",
+    ".mss/features/admin-sidebar-navigation.yaml",
+    ".mss/features/dependency-refresh-2026-10-16.yaml",
+    ".mss/features/release-qualification-efficiency.yaml"
   ],
   "excludedFeatures": [
     {

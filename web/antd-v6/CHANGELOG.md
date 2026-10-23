@@ -6,6 +6,18 @@ and the root changelog, not as a current release surface.
 
 ## Unreleased
 
+No unreleased changes are recorded.
+
+## [web/antd-v6/v1.6.2] - 2026-10-23
+
+Coordinated patch target; actual publication is verified from Release and registry assets.
+
+- Replace permanently expanded sidebar groups with collapsible directories and
+  top-level accordion behavior. Follow active routes, pathless ancestors and
+  overlapping page paths while respecting manual closing.
+- Dismiss the mobile navigation drawer after selecting a page. Preserve existing
+  menu authorization, search, theme tokens and collapsed popup navigation.
+
 - Refresh exact source dependencies to Ant Design 6.6.6, React Query 5.104.2,
   Vitest 5.0.4 and Happy DOM 21.0.1; align runtime overrides and the Thin Host
   manifest contract. Preserve Node 24, pnpm 10.34.5 and immutable v1.6.1 artifacts.

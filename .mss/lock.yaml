@@ -5,13 +5,13 @@ metadata:
 spec:
   distribution:
     name: mss-boot-admin
-    version: v1.6.1
+    version: v1.6.2
     backend:
       module: github.com/mss-boot-sys/mss-boot-admin/admin
-      version: v1.6.1
+      version: v1.6.2
     frontend:
       package: "@mss-boot-sys/admin-web"
-      version: 1.6.1
+      version: 1.6.2
   foundation:
     repository: mss-boot-sys/mss-boot-admin
     version: 0.1.0

@@ -8,6 +8,12 @@ and the project uses semantic versioning for nested-module releases.
 
 No unreleased changes are recorded.
 
+## [mss-boot/v1.6.2] - 2026-10-23
+
+Coordinated patch target. Update miniredis to 2.40.0 and the Lark Go SDK to
+3.12.1 through the reviewed dependency refresh. No Framework API or database
+schema changes. Publication requires verification of the actual release.
+
 ## [mss-boot/v1.6.1] - 2026-10-15
 
 Coordinated patch version with the v1.6.1 Admin Distribution. No Framework API

@@ -4,7 +4,7 @@ title: Native OIDC Provider and Proxmox VE
 
 # Native OIDC Provider and Proxmox VE
 
-This page describes the OIDC provider included in the v1.6.1 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
+This page describes the OIDC provider included in the v1.6.2 release scope of `mss-boot-sys/mss-boot-admin`. Protocol and live integration acceptance are separate; use the evidence boundaries below.
 
 Admin remains the account and policy authority. No separate identity service is required. Core authentication reuses its password verification, browser cookies, durable sessions, disabled-account checks and audit. `admin/oidc` owns the OIDC protocol; it uses the existing `golang-jwt/jwt/v4` library and Go crypto for RS256 and AES-GCM. It does not hand PVE an Admin JWT.
 
@@ -34,7 +34,7 @@ The canonical cookie stays host-only, HttpOnly, Secure and SameSite Lax. Cross-s
 
 ## Disabled Provider console state
 
-In v1.6.1, the SSO menu remains available according to existing menu permissions. When `oidc.enabled` is false, authenticated operators with the existing client-list API permission receive HTTP 503 with `errorCode: SSO_PROVIDER_DISABLED` from `GET /admin/api/sso/clients`. The console shows “SSO is not configured” and asks the operator to contact an administrator. This deterministic disabled state has no retry action and is not automatically retried. The patch adds no migration and does not enable the Provider; enabled-Provider behavior is unchanged. This response contains no configuration or secrets. Protocol and management mutation routes remain unmounted.
+In v1.6.2, the SSO menu remains available according to existing menu permissions. When `oidc.enabled` is false, authenticated operators with the existing client-list API permission receive HTTP 503 with `errorCode: SSO_PROVIDER_DISABLED` from `GET /admin/api/sso/clients`. The console shows “SSO is not configured” and asks the operator to contact an administrator. This deterministic disabled state has no retry action and is not automatically retried. The patch adds no migration and does not enable the Provider; enabled-Provider behavior is unchanged. This response contains no configuration or secrets. Protocol and management mutation routes remain unmounted.
 
 Unauthenticated requests still receive 401; users without API permission receive 403. Network failures, ordinary 404 responses (including an older backend), and other service errors retain the retryable load-error state. Deploy the backend and frontend fix together; the console does not infer disabled configuration from a missing route.
 

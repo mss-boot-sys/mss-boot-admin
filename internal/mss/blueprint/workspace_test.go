@@ -104,6 +104,13 @@ const Value = "local"
 		filepath.Join(destination, "admin", "go.mod"),
 		"require github.com/acme/workspace-admin/mss-boot v1.0.0",
 	)
+	// Model a real downstream checkout so Go can collect VCS metadata without
+	// depending on whether the test temporary directory is inside a Git tree.
+	runGit(t, destination, "init", "--initial-branch=main")
+	runGit(t, destination, "config", "user.name", "Test")
+	runGit(t, destination, "config", "user.email", "test@example.com")
+	runGit(t, destination, "add", ".")
+	runGit(t, destination, "commit", "-m", "test: initialize generated consumer")
 
 	command := exec.Command("go", "list", "./...", "./admin/...", "./mss-boot/...")
 	command.Dir = destination

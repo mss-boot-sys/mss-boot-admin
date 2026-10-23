@@ -63,7 +63,7 @@ class PublishedModuleSumsTest(unittest.TestCase):
     def test_repository_template_pins_the_candidate_v160_admin_sum(self):
         text = (REPOSITORY_ROOT / "templates/application/go.sum").read_text(encoding="utf-8")
         pinned = SUMS.parse_pinned(text)
-        self.assertIn((ADMIN, "v1.6.1"), pinned)
+        self.assertIn((ADMIN, "v1.6.2"), pinned)
         self.assertNotIn((ADMIN, "v1.5.0"), pinned)
 
     def test_parse_pinned_rejects_duplicate_foundation_entries(self):
