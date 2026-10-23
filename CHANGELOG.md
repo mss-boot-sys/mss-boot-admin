@@ -6,6 +6,22 @@ tag namespaces.
 
 ## [Unreleased]
 
+No unreleased changes are recorded.
+
+## [v1.6.2] - 2026-10-23
+
+Coordinated patch target for Root, Framework, Admin and Admin Web. Publication
+requires exact merged-main qualification and verified artifacts. No database
+migration, API or permission change.
+
+### Fixed
+
+- Keep sidebar navigation compact with collapsible directories, a top-level
+  accordion and route-aware ancestors. Preserve manual closing, support pathless
+  directories and overlapping routes, and dismiss mobile navigation on selection.
+- Initialize the generated consumer Git fixture before Go workspace resolution
+  so VCS metadata collection does not depend on the temporary directory.
+
 ### Changed
 
 - Consolidate dependency updates from PRs #48–54: miniredis 2.40.0, the Lark
@@ -18,6 +34,8 @@ tag namespaces.
   source commit `0107548689c66d4e2ec89dabaabbee7486d8e4b6`. The dependency
   updates above apply to unpublished source and do not alter existing
   v1.6.1 artifacts, tags or module checksums. No database migration.
+- Include observable per-check qualification progress and combined race/coverage
+  execution while preserving every release gate.
 
 ## [v1.6.1] - 2026-10-15
 

@@ -157,7 +157,7 @@ func TestAdminDistributionUpgradeRejectsRequestedVersionThatDoesNotMatchTarget(t
 		ApplicationRoot:              applicationRoot,
 		FoundationRoot:               newFoundation,
 		Application:                  application,
-		RequestedDistributionVersion: "v1.6.1",
+		RequestedDistributionVersion: "v1.6.2",
 		Write:                        true,
 	})
 	if err == nil || !strings.Contains(err.Error(), "does not match target Foundation blueprint Distribution v1.4.0") {

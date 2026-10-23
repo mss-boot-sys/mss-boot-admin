@@ -1,13 +1,13 @@
 ---
 title: 安全基线
 order: 7
-description: v1.6.1 发行版 Admin 身份、授权、密钥、浏览器与供应链最低要求
+description: v1.6.2 发行版 Admin 身份、授权、密钥、浏览器与供应链最低要求
 ---
 
-# v1.6.1 发行版安全基线
+# v1.6.2 发行版安全基线
 
 :::warning
-版本范围：**v1.6.1 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
+版本范围：**v1.6.2 是 `mss-boot-sys/mss-boot-admin` 的当前发行基线**（v1.3.9 为首发）；v1.3.8 及更早版本归属旧组织 `mss-boot-io`。
 Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 :::
 
@@ -91,7 +91,7 @@ auth:
 
 ## 供应链与发布
 
-- v1.6.1 的 Root 工具、Go Module、GitHub Packages 包和镜像绑定同一精确 merged-main
+- v1.6.2 的 Root 工具、Go Module、GitHub Packages 包和镜像绑定同一精确 merged-main
   提交；安装固定版本或 digest，并核验 checksum、tarball integrity 与来源；
 - 发布前本地完整验证；标签流水线构建和发布产物，不以单一绿色检查冒充全部验证；
 - GitHub Packages 下载使用只读认证，发布工作流只授予必要的 `contents` 与 `packages`
@@ -102,7 +102,7 @@ auth:
 ## 上线门禁
 
 Foundation 贡献者按 `.mss/commands.yaml` 运行源码诊断与验证；一般 `doctor`、`verify`
-合同可以保留，但这些结果不能替代 v1.6.1 公共制品证据，也不能证明已停止列车可用。
+合同可以保留，但这些结果不能替代 v1.6.2 公共制品证据，也不能证明已停止列车可用。
 
 同时完成迁移、权限正反例、真实业务流程、浏览器控制台和回滚演练。任何绕过项必须明确
 记录为阻断或剩余风险。

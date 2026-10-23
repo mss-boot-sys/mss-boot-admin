@@ -10,9 +10,10 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS_ROOT = Path("docs/docs")
-EXPECTED_DISTRIBUTION_VERSION = "v1.6.1"
-CURRENT_RELEASE_PAGE = Path("docs/docs/releases/v1-6-1.md")
+EXPECTED_DISTRIBUTION_VERSION = "v1.6.2"
+CURRENT_RELEASE_PAGE = Path("docs/docs/releases/v1-6-2.md")
 HISTORICAL_RELEASE_PAGES = {
+    Path("docs/docs/releases/v1-6-1.md"),
     Path("docs/docs/releases/v1-6-0.md"),
     Path("docs/docs/releases/v1-3-5.md"),
     Path("docs/docs/releases/v1-3-6.md"),

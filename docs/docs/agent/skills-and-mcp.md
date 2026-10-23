@@ -1,13 +1,13 @@
 ---
 title: Skills 与 MCP
 order: 5
-description: 面向人类的 v1.6.1 Foundation 维护 Skill、Thin Host 分发 Skill 与 MCP 安全合同
+description: 面向人类的 v1.6.2 Foundation 维护 Skill、Thin Host 分发 Skill 与 MCP 安全合同
 ---
 
 # Skills 与 MCP
 
 本页向人类说明 AI Agent 的本地工作流边界。真正的执行权威是目标仓库内最近的
-`AGENTS.md`、`.mss/` 和适用 `.agents/skills/`，网页不是 Agent 的授权来源。v1.6.1
+`AGENTS.md`、`.mss/` 和适用 `.agents/skills/`，网页不是 Agent 的授权来源。v1.6.2
 是当前发行基线（v1.3.9 为新仓库首发）；Docs 通过独立标签部署；网站延迟或失败不使已发布的不可变组件制品失效，但协调发行必须在生产 Docs 与 `/release.json` 验证通过后才算完成。
 
 Skill 描述一类可复用工作流；确定性 CLI、生成器和验证器承载实现。Skill 不应复制业务
@@ -29,9 +29,9 @@ Foundation 根 `.agents/skills/` 包含维护当前源仓库的工作流：
 发布验证器。发布、Docs 网站发布与 Foundation 自身变更都是维护者能力，不会因为源仓库
 中存在相应文件就自动授予下游 Agent。
 
-## v1.6.1 MCP 合同
+## v1.6.2 MCP 合同
 
-正式 `mss-mcp` 是 **stdio** 长驻服务器，并与 `mss` 报告同一个 v1.6.1、源提交与构建
+正式 `mss-mcp` 是 **stdio** 长驻服务器，并与 `mss` 报告同一个 v1.6.2、源提交与构建
 时间。客户端通过 MCP `tools/list` 核对工具清单；空目录最多允许
 `mss_plan_application` 返回新应用只读计划，其余规格、生成、验证和升级能力要求工作根
 存在有效 `.mss/project.yaml`。
@@ -52,7 +52,7 @@ Foundation 根 `.agents/skills/` 包含维护当前源仓库的工作流：
 
 ## Thin Host 分发 Skills
 
-v1.6.1 生成应用模板只分发以下七个本地 Skills：
+v1.6.2 生成应用模板只分发以下七个本地 Skills：
 
 - `mss-thin-host`：项目所有权和日常生成、验证边界；
 - `mss-add-module`：当前生成器支持的基础 CRUD 模块；

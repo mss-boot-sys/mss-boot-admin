@@ -1,8 +1,8 @@
 # @mss-boot-sys/admin-web
 
-## v1.6.1 release identity
+## v1.6.2 release identity
 
-`@mss-boot-sys/admin-web@1.6.1` is the sole complete Admin frontend package for
+`@mss-boot-sys/admin-web@1.6.2` is the sole complete Admin frontend package for
 `mss-boot-sys/mss-boot-admin`. It is published to GitHub Packages only, from the
 same exact merged-main commit as the Framework, Admin, Root tools, and images.
 Versions v1.3.8 and earlier belong to the former `mss-boot-io` organization.
@@ -20,9 +20,9 @@ ProComponents 3.1.15-7, React Query 5.104.1 and Umi Max 4.7.23.
 ProComponents intentionally follows the upstream
 [`beta` channel](https://registry.npmjs.org/@ant-design%2fpro-components/beta):
 the `latest` channel still points to the incompatible v2 line.
-These versions form the published v1.6.1 package baseline.
+These versions form the historical published v1.6.1 package baseline.
 
-The unpublished source dependency refresh tracks [Ant Design 6.6.6](https://github.com/ant-design/ant-design/releases/tag/6.6.6),
+The v1.6.2 release target includes [Ant Design 6.6.6](https://github.com/ant-design/ant-design/releases/tag/6.6.6),
 [React Query 5.104.2](https://github.com/TanStack/query/releases/tag/%40tanstack/react-query%405.104.2),
 [Vitest 5.0.4](https://github.com/vitest-dev/vitest/releases/tag/v5.0.4), and
 [Happy DOM 21.0.1](https://github.com/capricorn86/happy-dom/releases/tag/v21.0.1),
@@ -52,7 +52,7 @@ Admin Web is the Distribution's single complete browser application: React 19,
 Ant Design 6, Umi Max, React Query, generated API contracts, authentication
 shell, page states, locales, and the narrow business-route extension.
 
-The v1.6.1 npm package provides these declared exports:
+The v1.6.2 npm package provides these declared exports:
 
 - `@mss-boot-sys/admin-web` or `/runtime` for the packaged runtime;
 - `/business` for generated business registration;
@@ -84,7 +84,7 @@ is advisory to backend RBAC, and production business capability registration is
 empty so existing pages retain compiled defaults.
 
 Install the official public package with
-`corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.1`.
+`corepack pnpm@10.34.5 add --save-exact @mss-boot-sys/admin-web@1.6.2`.
 The frontend tag workflow publishes with the repository-scoped `GITHUB_TOKEN`. See
 [package status](../../docs/docs/getting-started/packages.md) and
 [mss-shop status](../../docs/docs/getting-started/mss-shop.md).
@@ -93,4 +93,4 @@ Repository-source build and publication commands remain contributor-only in
 
 ## Workplace business content
 
-The compile-time contribution interface is described in [the adopter guide](../../docs/docs/admin/workplace-business-content.md). Introduced in v1.6.0, it remains available in v1.6.1 and preserves the core workplace.
+The compile-time contribution interface is described in [the adopter guide](../../docs/docs/admin/workplace-business-content.md). Introduced in v1.6.0, it remains available in v1.6.2 and preserves the core workplace.

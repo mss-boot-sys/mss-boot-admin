@@ -4,7 +4,7 @@ title: Pull request checks
 
 # Pull request checks after the repository migration
 
-Development uses `mss-boot-sys/mss-boot-admin`. The current v1.6.1 baseline uses this Go module namespace
+Development uses `mss-boot-sys/mss-boot-admin`. The current v1.6.2 baseline uses this Go module namespace
 and the `@mss-boot-sys/admin-web` package identity. Consumers migrating from the
 legacy organization must update imports and configure GitHub Packages authentication.
 
