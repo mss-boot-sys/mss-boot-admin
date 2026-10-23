@@ -6,7 +6,7 @@ metadata:
   owner: release-engineering
   labels:
     target-version: v1.6.2
-    release-status: preparing
+    release-status: published
 spec:
   problem: Publish the merged sidebar navigation, dependency refresh and qualification improvements as one compatible v1.6.2 distribution without changing immutable v1.6.1 artifacts.
   goals:

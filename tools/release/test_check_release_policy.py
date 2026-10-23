@@ -25,7 +25,7 @@ class ReleasePolicyTest(unittest.TestCase):
 
     def test_first_sys_release_is_direct_and_legacy_identity_remains_historical(self):
         self.assertEqual(self.policy["publicationMode"], "direct")
-        self.assertEqual(self.policy["currentStableVersion"], "v1.6.1")
+        self.assertEqual(self.policy["currentStableVersion"], "v1.6.2")
         self.assertEqual(self.policy["nextPublicVersion"], "v1.6.2")
         self.assertEqual(self.policy["legacyRepository"], "mss-boot-io/mss-boot-admin")
         self.assertEqual(self.policy["legacyStableVersion"], "v1.3.8")
@@ -33,7 +33,7 @@ class ReleasePolicyTest(unittest.TestCase):
         self.assertNotIn("immutableStoppedTrains", self.policy)
         self.assertEqual(
             self.policy["currentStableCommit"],
-            "0107548689c66d4e2ec89dabaabbee7486d8e4b6",
+            "ea5a43eb2aa699550fc59bc7395e9cd831c0b5f7",
         )
 
     def test_canonical_components_publish_only_reviewed_version(self):
