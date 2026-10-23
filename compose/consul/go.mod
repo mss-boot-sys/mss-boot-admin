@@ -2,7 +2,7 @@ module github.com/mss-boot-sys/mss-boot-admin/compose/consul
 
 go 1.27.2
 
-require github.com/hashicorp/consul/api v1.34.5
+require github.com/hashicorp/consul/api v1.35.0
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
