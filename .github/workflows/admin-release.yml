@@ -111,7 +111,7 @@ jobs:
           '.tagName == $tag and .isDraft == false and .isPrerelease == $prerelease' \
           <<< "${framework_release}" >/dev/null
     - name: Setup Go for the public Framework boundary
-      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5
       with:
         go-version-file: admin/go.mod
         cache: false
@@ -164,7 +164,7 @@ jobs:
         echo "path=${notes_file}" >> "${GITHUB_OUTPUT}"
     - name: Publish immutable Admin module release
       if: steps.release-state.outputs.public != 'true'
-      uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+      uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3
       with:
         tag_name: ${{ github.ref_name }}
         target_commitish: ${{ github.sha }}
